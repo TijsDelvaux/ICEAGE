@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="C:\Users\Tijs\AndroidStudioProjects\ICEAGE - Copy\app\libs\android-support-v13.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="d1581cddcb7a8670146268559e8931d85822d4a0">
+        <dex dex="C:\Users\Tijs\AndroidStudioProjects\ICEAGE - Copy\app\build\intermediates\pre-dexed\debug\android-support-v13-a6b277015e133c13b1d467496c515fc3bc1a8712.jar" />
+    </item>
+    <item
+        jar="C:\Users\Tijs\AndroidStudioProjects\ICEAGE - Copy\app\libs\indoors-library-surface.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="1f62bdccbe7c6cb14eacf444e7d5f38a0c0d613c">
+        <dex dex="C:\Users\Tijs\AndroidStudioProjects\ICEAGE - Copy\app\build\intermediates\pre-dexed\debug\indoors-library-surface-59f2e7dcaf2da32db84f10b36fc7e437662bf0cd.jar" />
+    </item>
+    <item
+        jar="C:\Users\Tijs\AndroidStudioProjects\ICEAGE\app\libs\indoors-library-surface.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="1f62bdccbe7c6cb14eacf444e7d5f38a0c0d613c">
+        <dex dex="C:\Users\Tijs\AndroidStudioProjects\ICEAGE\app\build\intermediates\pre-dexed\debug\indoors-library-surface-85ccfc32f4b67bbb3c8646fc524d93112ea10e27.jar" />
+    </item>
+    <item
+        jar="C:\Users\Tijs\AndroidStudioProjects\ICEAGE\app\libs\android-support-v13.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="d1581cddcb7a8670146268559e8931d85822d4a0">
+        <dex dex="C:\Users\Tijs\AndroidStudioProjects\ICEAGE\app\build\intermediates\pre-dexed\debug\android-support-v13-f08e1edc313a3486caee917d5672153b9857d536.jar" />
+    </item>
+    <item
+        jar="C:\Users\Tijs\AndroidStudioProjects\ICEAGE - Copy\app\src\main\jniLibs\Vuforia.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="a466385a8bcc5a85cb96c8f9b88ec117b0f7d74b">
+        <dex dex="C:\Users\Tijs\AndroidStudioProjects\ICEAGE - Copy\app\build\intermediates\pre-dexed\debug\Vuforia-9ba4dd51ad30166d4c2d7f31dbd11a942b233c38.jar" />
+    </item>
+    <item
+        jar="C:\Users\Tijs\AndroidStudioProjects\ICEAGE\app\src\main\jniLibs\Vuforia.jar"
+        jumboMode="false"
+        revision="21.1.2"
+        sha1="a466385a8bcc5a85cb96c8f9b88ec117b0f7d74b">
+        <dex dex="C:\Users\Tijs\AndroidStudioProjects\ICEAGE\app\build\intermediates\pre-dexed\debug\Vuforia-676a5b5046cb510141aa4303f39144621cc99d81.jar" />
+    </item>
+
+</items>
