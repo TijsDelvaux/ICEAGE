@@ -82,6 +82,9 @@
     <string name="button_clear">Clear</string>
     <string name="button_delete">Delete</string>
     <string name="your_location">Your current location</string>
+    <string name="collect">Collect</string>
+    <string name="collected">Collected:</string>
+    <string name="zero">0</string>
 
     <!-- END VUFORIA STRINGS -->
     

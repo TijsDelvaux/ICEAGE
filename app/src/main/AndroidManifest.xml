@@ -46,7 +46,8 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
         	android:theme="@style/SampleAppsTheme"
             >
-    	</activity>        
+    	</activity>    
+
         
         
         <service
@@ -63,11 +64,12 @@
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
-       
+
+
+
         
     </application>
-    
-    
+
     
 
 </manifest>

@@ -26,10 +26,14 @@ import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mycompany.myfirstindoorsapp.R;
@@ -98,9 +102,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     boolean mIsDroidDevice = false;
 
+    //ICEAGE variable
 
+    private int count;
 
-    
+    private RelativeLayout countLayout;
+    private LinearLayout collectButtonLayout;
+
     // Called when the activity first starts or the user navigates back to an
     // activity.
     @Override
@@ -113,7 +121,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         startLoadingAnimation();
         mDatasetStrings.add("StonesAndChips.xml");
         mDatasetStrings.add("Tarmac.xml");
-        
+        mDatasetStrings.add("Foyer.xml");
+
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         
@@ -125,9 +134,49 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
             "droid");
 
+        count = 0;
+        /*
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+
+        countLayout = (LinearLayout) inflater.inflate(R.layout.count_overlay, null, false);
+        countLayout.setVisibility(View.VISIBLE);
+
+        addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
+        */
+        addOverlayView(false);
         Log.d(LOGTAG, "Vuforia end of onCreate");
     }
-    
+
+    //BEGIN ICEAGE STUFF
+
+    public void onClickCollectButton(View view){
+
+
+        final TextView counterText = (TextView) findViewById(id.counter);
+        count ++;
+        String countString = ""+count;
+        counterText.setText(countString);
+        //addOverlayView(false);
+
+        /*Button collectButton = (Button) findViewById(id.collect_button);
+        collectButton.setOnClickListener(new View.OnClickListener() {
+                 @Override
+                 public void onClick(View v) {
+                     final TextView counterText = (TextView) findViewById(R.id.counter);
+                     count = count + 1;
+                     Log.d("onClickCollectButton", "count: " + count);
+                     String countString = ""+count;
+                     counterText.setText(countString);
+                     Log.d("onClickCollectButton", "count: " + count);
+                 }
+             }
+        );*/
+    }
+
+    //END ICE STUFF
+
     // Process Single Tap event to trigger autofocus
     private class GestureListener extends
         GestureDetector.SimpleOnGestureListener
@@ -197,6 +246,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         
         try
         {
+            addOverlayView(false);
             vuforiaAppSession.resumeAR();
         } catch (SampleApplicationException e)
         {
@@ -221,6 +271,21 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         super.onConfigurationChanged(config);
         
         vuforiaAppSession.onConfigurationChanged();
+
+
+        // Removes the current layout and inflates a proper layout
+        // for the new screen orientation
+
+        if (mUILayout != null)
+        {
+            mUILayout.removeAllViews();
+            ((ViewGroup) mUILayout.getParent()).removeView(mUILayout);
+
+        }
+
+
+        addOverlayView(false);
+
     }
     
     
@@ -297,10 +362,51 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mRenderer = new ImageTargetRenderer(this, vuforiaAppSession);
         mRenderer.setTextures(mTextures);
         mGlView.setRenderer(mRenderer);
-        
+
+
+        //ICEAGE ADDED
+        addOverlayView(true);
     }
-    
-    
+
+    //ICEAGE ADDED
+    private void addOverlayView(boolean initLayout){
+        Log.d(LOGTAG, "addOverlayView");
+        // Inflates the Overlay Layout to be displayed above the Camera View
+        LayoutInflater inflater = LayoutInflater.from(this);
+        countLayout = (RelativeLayout) inflater.inflate(R.layout.count_overlay, null, false);
+        collectButtonLayout = (LinearLayout) inflater.inflate(R.layout.collect_button, null, false);
+
+        countLayout.setVisibility(View.VISIBLE);
+        collectButtonLayout.setVisibility(View.VISIBLE);
+
+        // If this is the first time that the application runs then the
+        // uiLayout background is set to BLACK color, will be set to
+        // transparent once the SDK is initialized and camera ready to draw
+        if (initLayout)
+        {
+            countLayout.setBackgroundColor(Color.BLACK);
+            collectButtonLayout.setBackgroundColor(Color.BLACK);
+        }
+
+        // Adds the inflated layout to the view
+        addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
+        addContentView(collectButtonLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
+
+        View collectedText = countLayout.findViewById(R.id.collect_text);
+        View counterText = countLayout.findViewById(R.id.counter);
+        collectedText.setVisibility(View.VISIBLE);
+        counterText.setVisibility(View.VISIBLE);
+        View collectButton = collectButtonLayout.findViewById(R.id.collect_button);
+        collectButton.setVisibility(View.VISIBLE);
+        countLayout.bringToFront();
+        collectButtonLayout.bringToFront();
+
+
+    }
+
+
     private void startLoadingAnimation()
     {
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -309,6 +415,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         
         mUILayout.setVisibility(View.VISIBLE);
         mUILayout.setBackgroundColor(Color.BLACK);
+
+
         
         // Gets a reference to the loading dialog
         loadingDialogHandler.mLoadingDialogContainer = mUILayout
@@ -423,6 +531,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             
             try
             {
+                addOverlayView(false);
                 vuforiaAppSession.startAR(CameraDevice.CAMERA.CAMERA_DEFAULT);
             } catch (SampleApplicationException e)
             {
@@ -644,8 +753,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mStartDatasetsIndex = CMD_DATASET_START_INDEX;
         mDatasetsNumber = mDatasetStrings.size();
         
-        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, true);
+        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, false);
         group.addRadioItem("Tarmac", mStartDatasetsIndex + 1, false);
+        group.addRadioItem("Test", mStartDatasetsIndex + 2, true);
         
         mSampleAppMenu.attachMenu();
     }
@@ -733,9 +843,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 
                 try
                 {
+                    addOverlayView(false);
                     vuforiaAppSession
                         .startAR(command == CMD_CAMERA_FRONT ? CameraDevice.CAMERA.CAMERA_FRONT
-                            : CameraDevice.CAMERA.CAMERA_BACK);
+                                : CameraDevice.CAMERA.CAMERA_BACK);
                 } catch (SampleApplicationException e)
                 {
                     showToast(e.getString());
