@@ -21,6 +21,7 @@ import com.customlbs.library.model.DebugInfo;
 import com.customlbs.library.model.Zone;
 import com.customlbs.shared.Coordinate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,34 +30,32 @@ import java.util.List;
 public class LocationActivity extends FragmentActivity implements IndoorsServiceCallback,
         IndoorsLocationListener, DebugInfoCallback{
 
-    private TextView textView;
+//    private TextView textView;
     private Indoors indoors;
+    private List<Zone> zones;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_location);
+        zones = new ArrayList<Zone>();
         IndoorsFactory.createInstance(this, "d2b8119f-49b4-4e21-a67b-67fa90a17b45", this, false);
-        Log.d("oncreateActivity", "");
-        textView = new TextView(this);
-        setContentView(R.layout.activity_location);
+        Log.d("oncreate", "LocationActivity");
+//        textView = new TextView(this);
+//        setContentView(R.layout.activity_location);
     }
 
     @Override
     public void connected() {
         indoors = IndoorsFactory.getInstance();
         Log.d("connected", "");
-
         indoors.registerLocationListener(this);
         indoors.setLocatedCloudBuilding((long) 281079350, new LocalizationParameters());
-//        indoors.getDebugInfo(this);
     }
 
     @Override
     public void onError(IndoorsException indoorsException) {
-        // TODO Auto-generated method stub
         Log.d("error listener", indoorsException.toString());
-        Toast.makeText(this, indoorsException.getMessage(), Toast.LENGTH_LONG).show();
+//        Toast.makeText(this, indoorsException.getMessage(), Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -64,30 +63,31 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
         super.onStop();
         Log.d("stopped", "");
         indoors.removeLocationListener(this);
-
+        Toast.makeText(this, "indoo.rs stopped", Toast.LENGTH_SHORT).show();
         IndoorsFactory.releaseInstance(this);
     }
 
     @Override
     public void buildingLoaded(Building building) {
-        // TODO Auto-generated method stub
         Log.d("building loaded", building.toString());
         Toast.makeText(
                 this,
                 "Building is located at " + building.getLatOrigin() / 1E6 + ","
                         + building.getLonOrigin() / 1E6, Toast.LENGTH_SHORT).show();
-        indoors.enableEvaluationMode();
+//        indoors.enableEvaluationMode();
     }
 
     @Override
     public void changedFloor(int floorLevel, String name) {
-        // TODO Auto-generated method stub
-}
+    }
 
     @Override
     public void enteredZones(List<Zone> zones) {
+        if(zones.size() > 0){
+            this.zones = zones;
+        }
         String s = "zones: ";
-        for(Zone zone: zones){
+        for(Zone zone: this.zones){
             Log.d("zone", zone.toString());
             s = s + zone.getName();
         }
@@ -101,13 +101,11 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
 
     @Override
     public void loadingBuilding(int progress) {
-        // TODO Auto-generated method stub
         Log.d("loading building", progress+"");
     }
 
     @Override
     public void orientationUpdated(float orientation) {
-        // TODO Auto-generated method stub
 //        Log.d("orientation update", orientation+"");
     }
 
@@ -118,8 +116,8 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
 //        Toast.makeText(
 //                this,
 //                s, Toast.LENGTH_SHORT).show();
-        textView.setText(s);
-        setContentView(textView);
+//        textView.setText(s);
+//        setContentView(textView);
     }
 
     @Override
