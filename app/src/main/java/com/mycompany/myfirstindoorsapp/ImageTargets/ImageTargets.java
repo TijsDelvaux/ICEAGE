@@ -12,6 +12,7 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -21,6 +22,7 @@ import android.hardware.Camera.CameraInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -28,22 +30,16 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mycompany.myfirstindoorsapp.R;
-import com.mycompany.myfirstindoorsapp.R.id;
-import com.mycompany.myfirstindoorsapp.R.layout;
 import com.mycompany.myfirstindoorsapp.R.string;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenu;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenuGroup;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenuInterface;
-import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenuView;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.LoadingDialogHandler;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleApplicationControl;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleApplicationException;
@@ -107,7 +103,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private int count;
 
     private RelativeLayout countLayout;
-    private LinearLayout collectButtonLayout;
+
+    private boolean showCollectButton;
 
     // Called when the activity first starts or the user navigates back to an
     // activity.
@@ -134,46 +131,41 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
             "droid");
 
-        count = 0;
-        /*
-
-        LayoutInflater inflater = LayoutInflater.from(this);
-
-        countLayout = (LinearLayout) inflater.inflate(R.layout.count_overlay, null, false);
-        countLayout.setVisibility(View.VISIBLE);
-
-        addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
-                LayoutParams.MATCH_PARENT));
-        */
-        addOverlayView(false);
+        addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
     }
 
     //BEGIN ICEAGE STUFF
 
+
     public void onClickCollectButton(View view){
 
+        count++;
+        String toastCollectedText = getString(R.string.collect_button_toast);
+        mRenderer.displayMessage(toastCollectedText);
 
-        final TextView counterText = (TextView) findViewById(id.counter);
-        count ++;
-        String countString = ""+count;
-        counterText.setText(countString);
-        //addOverlayView(false);
-
-        /*Button collectButton = (Button) findViewById(id.collect_button);
-        collectButton.setOnClickListener(new View.OnClickListener() {
-                 @Override
-                 public void onClick(View v) {
-                     final TextView counterText = (TextView) findViewById(R.id.counter);
-                     count = count + 1;
-                     Log.d("onClickCollectButton", "count: " + count);
-                     String countString = ""+count;
-                     counterText.setText(countString);
-                     Log.d("onClickCollectButton", "count: " + count);
-                 }
-             }
-        );*/
     }
+
+    public void onClickStatusButton(View view) {
+        String acorn_s = null;
+
+        //Just a difference between "1 acorn" and "x acorns".
+        if(count == 1){
+            acorn_s =  getString(string.status2_one_button_toast);
+        }else{
+            acorn_s =  getString(string.status2_button_toast);
+        }
+
+        String toastStatusText =  getString(string.status1_button_toast)
+                                + count
+                                + acorn_s;
+        if(count == 0){
+            toastStatusText += " :(";
+        }
+
+        mRenderer.displayMessage(toastStatusText);
+    }
+
 
     //END ICE STUFF
 
@@ -236,7 +228,25 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     {
         Log.d(LOGTAG, "onResume");
         super.onResume();
-        
+
+        // Create a new handler for the renderer thread to use
+        // This is necessary as only the main thread can make changes to the UI
+        mRenderer.ImageTargetHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what) {
+                    case 0:
+                        Context context = getApplicationContext();
+                        String text = (String) msg.obj;
+                        int duration = Toast.LENGTH_SHORT;
+                        Toast toast = Toast.makeText(context, text, duration);
+                        toast.show();
+                    case 1:
+                        showCollectButton = true;
+                }
+            }
+        };
+
         // This is needed for some Droid devices to force portrait
         if (mIsDroidDevice)
         {
@@ -246,7 +256,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         
         try
         {
-            addOverlayView(false);
+            addOverlayView();
             vuforiaAppSession.resumeAR();
         } catch (SampleApplicationException e)
         {
@@ -284,7 +294,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         }
 
 
-        addOverlayView(false);
+        addOverlayView();
 
     }
     
@@ -365,43 +375,35 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
 
         //ICEAGE ADDED
-        addOverlayView(true);
+        addOverlayView();
     }
 
     //ICEAGE ADDED
-    private void addOverlayView(boolean initLayout){
+    private void addOverlayView(){
         Log.d(LOGTAG, "addOverlayView");
         // Inflates the Overlay Layout to be displayed above the Camera View
         LayoutInflater inflater = LayoutInflater.from(this);
         countLayout = (RelativeLayout) inflater.inflate(R.layout.count_overlay, null, false);
-        collectButtonLayout = (LinearLayout) inflater.inflate(R.layout.collect_button, null, false);
 
         countLayout.setVisibility(View.VISIBLE);
-        collectButtonLayout.setVisibility(View.VISIBLE);
 
         // If this is the first time that the application runs then the
         // uiLayout background is set to BLACK color, will be set to
         // transparent once the SDK is initialized and camera ready to draw
-        if (initLayout)
-        {
-            countLayout.setBackgroundColor(Color.BLACK);
-            collectButtonLayout.setBackgroundColor(Color.BLACK);
-        }
 
         // Adds the inflated layout to the view
         addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
-        addContentView(collectButtonLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
-                LayoutParams.MATCH_PARENT));
 
-        View collectedText = countLayout.findViewById(R.id.collect_text);
-        View counterText = countLayout.findViewById(R.id.counter);
-        collectedText.setVisibility(View.VISIBLE);
-        counterText.setVisibility(View.VISIBLE);
-        View collectButton = collectButtonLayout.findViewById(R.id.collect_button);
-        collectButton.setVisibility(View.VISIBLE);
+        View collectButton = countLayout.findViewById(R.id.collect_button);
+        View statusButton = countLayout.findViewById(R.id.status_button);
+        statusButton.setVisibility(View.VISIBLE);
+        if(showCollectButton){
+            collectButton.setVisibility(View.VISIBLE);
+        }else {
+            collectButton.setVisibility(View.INVISIBLE);
+        }
         countLayout.bringToFront();
-        collectButtonLayout.bringToFront();
 
 
     }
@@ -531,7 +533,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             
             try
             {
-                addOverlayView(false);
+                addOverlayView();
                 vuforiaAppSession.startAR(CameraDevice.CAMERA.CAMERA_DEFAULT);
             } catch (SampleApplicationException e)
             {
@@ -843,7 +845,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 
                 try
                 {
-                    addOverlayView(false);
+                    addOverlayView();
                     vuforiaAppSession
                         .startAR(command == CMD_CAMERA_FRONT ? CameraDevice.CAMERA.CAMERA_FRONT
                                 : CameraDevice.CAMERA.CAMERA_BACK);
