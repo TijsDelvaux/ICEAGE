@@ -116,20 +116,57 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private boolean showCollectButton;
     private View collectButton;
 
+    // ICE AGE
     private void init() {
-        listDatasetStrings = new String[] {"CW.xml", "StonesAndChips.xml", "Tarmac.xml", "Foyer.xml"};
+        listDatasetStrings = new String[] {"StonesAndChips0.xml", // index 0: default
+                                           "StonesAndChips1.xml",
+                                           "StonesAndChips2.xml",
+                                           "StonesAndChips3.xml",
+                                           "CW.xml",
+                                           "StonesAndChips5.xml",
+                                           "StonesAndChips6.xml",
+                                           "StonesAndChips7.xml",
+                                           "StonesAndChips8.xml",
+                                           "StonesAndChips9.xml",
+                                           "StonesAndChips10.xml"};
         allZones = new HashMap<String,Integer>();
-        allZones.put("foyer_midden", 0);
+        allZones.put("automaten", 1); // index 0 = default
+        allZones.put("foyer_automaten", 2);
+        allZones.put("foyer_wc", 3);
+        allZones.put("midden_foyer", 4);
+        allZones.put("foyer_leslokaal_trappen", 5);
+        allZones.put("foyer_secr", 6);
+        allZones.put("uitgang_secr", 7);
+        allZones.put("gang_sols", 8);
+        allZones.put("solZ", 9);
+        allZones.put("solN", 10);
         //TODO: zones toevoegen
     }
 
+    // ICE AGE
     private void setTargetsToFollow(List<Zone> zones) {
+        Toast.makeText(this, "init targets", Toast.LENGTH_SHORT).show();
+
         mDatasetStrings.clear();
+        String targets = "targets:";
 
         for(Zone zone: zones) {
             int zoneIndex = allZones.get(zone.getName());
             mDatasetStrings.add(listDatasetStrings[zoneIndex]);
         }
+
+        if(mDatasetStrings.isEmpty()) {
+            mDatasetStrings.add(listDatasetStrings[0]);
+        }
+
+        for(String data: mDatasetStrings) {
+            targets += " " + data;
+        }
+
+        // TODO dit veroorzaakt problemen!!
+        doUnloadTrackersData();
+        doLoadTrackersData();
+        Toast.makeText(this, targets, Toast.LENGTH_SHORT).show();
     }
 
     // Called when the activity first starts or the user navigates back to an
@@ -144,7 +181,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
-        setTargetsToFollow(new ArrayList<Zone>());
 
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -160,6 +196,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         //ICEAGE this is temporary, should only become true when an object is detected.
 //        showCollectButton = true;
+
+        setTargetsToFollow(new ArrayList<Zone>());
 
         addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
@@ -420,13 +458,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     //ICEAGE ADDED
     public void enteredZones(List<Zone> zones){
+        setTargetsToFollow(zones); // zet de juiste targets
+
         String s = "zones: ";
         for(Zone zone: zones){
             Log.d("zone", zone.toString());
             s = s + zone.getName();
         }
         Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
-        // doe hier iets om te bepalen welke images targets zijn
     }
 
 
@@ -803,11 +842,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mStartDatasetsIndex = CMD_DATASET_START_INDEX;
         mDatasetsNumber = mDatasetStrings.size();
 
+        //TODO : mag dit weg?
         group.addRadioItem("CW", mStartDatasetsIndex, false); // ICEAGE : addtrackables
-        //group.addRadioItem("Stones & Chips", mStartDatasetsIndex + 1, false);
-        //group.addRadioItem("Tarmac", mStartDatasetsIndex + 2, false);
-        //group.addRadioItem("Test", mStartDatasetsIndex + 3, true);
-        //group.addRadioItem("Foyer", mStartDatasetsIndex + 4, true);
+        group.addRadioItem("Stones & Chips", mStartDatasetsIndex + 1, false);
+        group.addRadioItem("Tarmac", mStartDatasetsIndex + 2, false);
+        group.addRadioItem("Test", mStartDatasetsIndex + 3, true);
+        group.addRadioItem("Foyer", mStartDatasetsIndex + 4, true);
         
         mSampleAppMenu.attachMenu();
     }
