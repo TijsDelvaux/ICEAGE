@@ -136,7 +136,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         //ICEAGE this is temporary, should only become true when an object is detected.
 //        showCollectButton = true;
 
-
+        showCollectButton = false;
         addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
     }
@@ -145,7 +145,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
 
     public void onClickCollectButton(View view){
-
+        mRenderer.collectCurrentPicture();
         count++;
         String toastCollectedText = getString(R.string.collect_button_toast);
         mRenderer.displayMessage(toastCollectedText,0);
@@ -235,31 +235,40 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG, "onResume");
         super.onResume();
 
+        //ICEAGE
         // Create a new handler for the renderer thread to use
         // This is necessary as only the main thread can make changes to the UI
         mRenderer.ImageTargetHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what) {
-                    case 0: //show a toast with contents of the message (# acorns  gathered)
+                    case 0: //show a toast with contents of the message (ex: # acorns  gathered)
                         Context context = getApplicationContext();
                         String text = (String) msg.obj;
                         int duration = Toast.LENGTH_SHORT;
                         Toast toast = Toast.makeText(context, text, duration);
                         toast.show();
+                        break;
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
                         showCollectButton = false;
+                        break;
 //                        Log.d("ImageTargetHandler", (String) msg.obj);
-                        addOverlayView();
+//                        addOverlayView();
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
                         showCollectButton = true;
 //                        Log.d("ImageTargetHandler", (String) msg.obj);
-                        addOverlayView();
+//                        addOverlayView();
+                        break;
+                    default:
+//                        Log.d("ImageTargetHandler", "Nothing");
+                        break;
                 }
             }
         };
+        //End ICEAGE
+
 
         // This is needed for some Droid devices to force portrait
         if (mIsDroidDevice)
