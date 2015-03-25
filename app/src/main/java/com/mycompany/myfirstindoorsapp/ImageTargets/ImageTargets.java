@@ -105,6 +105,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private RelativeLayout countLayout;
 
     private boolean showCollectButton;
+    private View collectButton;
 
     // Called when the activity first starts or the user navigates back to an
     // activity.
@@ -131,6 +132,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
             "droid");
 
+
+        //ICEAGE this is temporary, should only become true when an object is detected.
+//        showCollectButton = true;
+
+
         addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
     }
@@ -142,7 +148,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         count++;
         String toastCollectedText = getString(R.string.collect_button_toast);
-        mRenderer.displayMessage(toastCollectedText);
+        mRenderer.displayMessage(toastCollectedText,0);
 
     }
 
@@ -163,7 +169,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             toastStatusText += " :(";
         }
 
-        mRenderer.displayMessage(toastStatusText);
+        mRenderer.displayMessage(toastStatusText,0);
     }
 
 
@@ -235,14 +241,16 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what) {
-                    case 0:
+                    case 0: //show a toast with contents of the message (# acorns  gathered)
                         Context context = getApplicationContext();
                         String text = (String) msg.obj;
                         int duration = Toast.LENGTH_SHORT;
                         Toast toast = Toast.makeText(context, text, duration);
                         toast.show();
-                    case 1:
-                        showCollectButton = true;
+                    case 1: //Hide the collect button
+                        collectButton.setVisibility(View.INVISIBLE);
+                    case 2: //Show the collect button
+                        collectButton.setVisibility(View.VISIBLE);
                 }
             }
         };
@@ -380,22 +388,18 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     //ICEAGE ADDED
     private void addOverlayView(){
-        Log.d(LOGTAG, "addOverlayView");
+//        Log.d("addOverlayView", "showCollectButton: " + showCollectButton);
         // Inflates the Overlay Layout to be displayed above the Camera View
         LayoutInflater inflater = LayoutInflater.from(this);
         countLayout = (RelativeLayout) inflater.inflate(R.layout.count_overlay, null, false);
 
         countLayout.setVisibility(View.VISIBLE);
 
-        // If this is the first time that the application runs then the
-        // uiLayout background is set to BLACK color, will be set to
-        // transparent once the SDK is initialized and camera ready to draw
-
         // Adds the inflated layout to the view
         addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
 
-        View collectButton = countLayout.findViewById(R.id.collect_button);
+        collectButton = countLayout.findViewById(R.id.collect_button);
         View statusButton = countLayout.findViewById(R.id.status_button);
         statusButton.setVisibility(View.VISIBLE);
         if(showCollectButton){
@@ -515,7 +519,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         if (exception == null)
         {
             initApplicationAR();
-            
+//            showCollectButton = true;
             mRenderer.mIsActive = true;
             
             // Now add the GL surface view. It is important
@@ -557,6 +561,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             Log.e(LOGTAG, exception.getString());
             showInitializationErrorMessage(exception.getString());
         }
+//        showCollectButton = false;
     }
     
     

@@ -16,6 +16,8 @@ import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.CubeShaders;
@@ -83,7 +85,6 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     {
         if (!mIsActive)
             return;
-        
         // Call our function to render content
         renderFrame();
     }
@@ -187,10 +188,15 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             GLES20.glFrontFace(GLES20.GL_CW); // Front camera
         else
             GLES20.glFrontFace(GLES20.GL_CCW); // Back camera
-            
+
+        if(state.getNumTrackableResults() != 0){
+            displayMessage("Nothing here!", 1);
+        }
+
         // did we find any trackables this frame?
         for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
         {
+            displayMessage("Found something", 2);
             TrackableResult result = state.getTrackableResult(tIdx);
             Trackable trackable = result.getTrackable();
             printUserData(trackable);
@@ -305,5 +311,37 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         mTextures = textures;
         
     }
-    
+
+
+
+    //ADDED ICEAGE STUFF
+
+    // A handler object for sending messages to the main activity thread
+    public static Handler ImageTargetHandler;
+
+    // Called from native to display a message
+    public void displayMessage(String text, int code)
+    {
+        // We use a handler because this thread cannot change the UI
+        Message message = new Message();
+        message.obj = text;
+        message.what = code;
+        ImageTargetHandler.sendMessage(message);
+    }
+
+//    public void showCollectButton(){
+//        Message message = new Message();
+//        message.obj = "";
+//        message.what = 1;
+//        ImageTargetHandler.sendMessage(message);
+//    }
+//
+//    public void hideCollectButton(){
+//        Message message = new Message();
+//        message.obj = "";
+//        message.what = 2;
+//        ImageTargetHandler.sendMessage(message);
+//    }
+
+
 }

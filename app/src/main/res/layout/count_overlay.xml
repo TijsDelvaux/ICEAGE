@@ -1,53 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:gravity="right"
     android:id="@+id/count_overlay"
-    android:layout_marginTop="10dp"
-    android:layout_marginRight="20dp"
     android:background="@color/transparent">
 
 
     <LinearLayout
-        android:id="@+id/count_linear_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:background="@color/transparent"
-        android:gravity="right|top"
-        android:orientation="horizontal"
-        android:visibility="visible"
-        android:weightSum="1" >
+        android:layout_height="match_parent"
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        android:gravity="right"
+        android:background="@color/transparent">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="# Acorns"
+            android:textSize="20dp"
+            android:id="@+id/status_button"
+            android:gravity="bottom|right"
+            android:onClick="onClickStatusButton"/>
 
     </LinearLayout>
 
-    <TextView
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="right|bottom"
+        android:background="@color/transparent">
+
+    <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/collected"
-        android:id="@+id/collect_text"
-        android:background="@color/transparent"
-        android:textColor="@color/white"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginRight="20dp"
-        android:shadowColor="@color/black"
-        />
+        android:text="@string/collect"
+        android:textSize="20dp"
+        android:id="@+id/collect_button"
+        android:gravity="bottom|right"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        android:onClick="onClickCollectButton"/>
 
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="@string/zero"
-        android:id="@+id/counter"
-        android:background="@color/transparent"
-        android:textColor="@color/white"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:shadowColor="@color/black"/>
+    </LinearLayout>
 
 </RelativeLayout>
