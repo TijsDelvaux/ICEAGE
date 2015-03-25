@@ -189,7 +189,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         else
             GLES20.glFrontFace(GLES20.GL_CCW); // Back camera
 
-        if(state.getNumTrackableResults() != 0){
+        if(state.getNumTrackableResults() == 0){
             displayMessage("Nothing here!", 1);
         }
 
@@ -342,6 +342,12 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 //        message.what = 2;
 //        ImageTargetHandler.sendMessage(message);
 //    }
+
+    //This method should be called when pressing the "collect" button when an acorn is visible.
+    //The picture then should be removed from the trackable list
+    public void collectCurrentPicture(){
+
+    }
 
 
 }

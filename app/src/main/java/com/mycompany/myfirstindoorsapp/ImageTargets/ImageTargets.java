@@ -249,8 +249,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         toast.show();
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
+                        showCollectButton = false;
+//                        Log.d("ImageTargetHandler", (String) msg.obj);
+                        addOverlayView();
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
+                        showCollectButton = true;
+//                        Log.d("ImageTargetHandler", (String) msg.obj);
+                        addOverlayView();
                 }
             }
         };
