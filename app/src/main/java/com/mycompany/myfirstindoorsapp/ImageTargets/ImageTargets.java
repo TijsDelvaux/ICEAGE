@@ -12,6 +12,7 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -21,11 +22,13 @@ import android.hardware.Camera.CameraInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.CheckBox;
 import android.widget.RelativeLayout;
@@ -33,13 +36,10 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import com.mycompany.myfirstindoorsapp.R;
-import com.mycompany.myfirstindoorsapp.R.id;
-import com.mycompany.myfirstindoorsapp.R.layout;
 import com.mycompany.myfirstindoorsapp.R.string;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenu;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenuGroup;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenuInterface;
-import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenuView;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.LoadingDialogHandler;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleApplicationControl;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleApplicationException;
@@ -98,9 +98,15 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     boolean mIsDroidDevice = false;
 
+    //ICEAGE variable
 
+    private int count;
 
-    
+    private RelativeLayout countLayout;
+
+    private boolean showCollectButton;
+    private View collectButton;
+
     // Called when the activity first starts or the user navigates back to an
     // activity.
     @Override
@@ -113,7 +119,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         startLoadingAnimation();
         mDatasetStrings.add("StonesAndChips.xml");
         mDatasetStrings.add("Tarmac.xml");
-        
+        mDatasetStrings.add("Foyer.xml");
+
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         
@@ -125,9 +132,49 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
             "droid");
 
+
+        //ICEAGE this is temporary, should only become true when an object is detected.
+//        showCollectButton = true;
+
+
+        addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
     }
-    
+
+    //BEGIN ICEAGE STUFF
+
+
+    public void onClickCollectButton(View view){
+
+        count++;
+        String toastCollectedText = getString(R.string.collect_button_toast);
+        mRenderer.displayMessage(toastCollectedText,0);
+
+    }
+
+    public void onClickStatusButton(View view) {
+        String acorn_s = null;
+
+        //Just a difference between "1 acorn" and "x acorns".
+        if(count == 1){
+            acorn_s =  getString(string.status2_one_button_toast);
+        }else{
+            acorn_s =  getString(string.status2_button_toast);
+        }
+
+        String toastStatusText =  getString(string.status1_button_toast)
+                                + count
+                                + acorn_s;
+        if(count == 0){
+            toastStatusText += " :(";
+        }
+
+        mRenderer.displayMessage(toastStatusText,0);
+    }
+
+
+    //END ICE STUFF
+
     // Process Single Tap event to trigger autofocus
     private class GestureListener extends
         GestureDetector.SimpleOnGestureListener
@@ -187,7 +234,33 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     {
         Log.d(LOGTAG, "onResume");
         super.onResume();
-        
+
+        // Create a new handler for the renderer thread to use
+        // This is necessary as only the main thread can make changes to the UI
+        mRenderer.ImageTargetHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what) {
+                    case 0: //show a toast with contents of the message (# acorns  gathered)
+                        Context context = getApplicationContext();
+                        String text = (String) msg.obj;
+                        int duration = Toast.LENGTH_SHORT;
+                        Toast toast = Toast.makeText(context, text, duration);
+                        toast.show();
+                    case 1: //Hide the collect button
+                        collectButton.setVisibility(View.INVISIBLE);
+                        showCollectButton = false;
+//                        Log.d("ImageTargetHandler", (String) msg.obj);
+                        addOverlayView();
+                    case 2: //Show the collect button
+                        collectButton.setVisibility(View.VISIBLE);
+                        showCollectButton = true;
+//                        Log.d("ImageTargetHandler", (String) msg.obj);
+                        addOverlayView();
+                }
+            }
+        };
+
         // This is needed for some Droid devices to force portrait
         if (mIsDroidDevice)
         {
@@ -197,6 +270,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         
         try
         {
+            addOverlayView();
             vuforiaAppSession.resumeAR();
         } catch (SampleApplicationException e)
         {
@@ -221,6 +295,21 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         super.onConfigurationChanged(config);
         
         vuforiaAppSession.onConfigurationChanged();
+
+
+        // Removes the current layout and inflates a proper layout
+        // for the new screen orientation
+
+        if (mUILayout != null)
+        {
+            mUILayout.removeAllViews();
+            ((ViewGroup) mUILayout.getParent()).removeView(mUILayout);
+
+        }
+
+
+        addOverlayView();
+
     }
     
     
@@ -297,10 +386,39 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mRenderer = new ImageTargetRenderer(this, vuforiaAppSession);
         mRenderer.setTextures(mTextures);
         mGlView.setRenderer(mRenderer);
-        
+
+
+        //ICEAGE ADDED
+        addOverlayView();
     }
-    
-    
+
+    //ICEAGE ADDED
+    private void addOverlayView(){
+//        Log.d("addOverlayView", "showCollectButton: " + showCollectButton);
+        // Inflates the Overlay Layout to be displayed above the Camera View
+        LayoutInflater inflater = LayoutInflater.from(this);
+        countLayout = (RelativeLayout) inflater.inflate(R.layout.count_overlay, null, false);
+
+        countLayout.setVisibility(View.VISIBLE);
+
+        // Adds the inflated layout to the view
+        addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
+
+        collectButton = countLayout.findViewById(R.id.collect_button);
+        View statusButton = countLayout.findViewById(R.id.status_button);
+        statusButton.setVisibility(View.VISIBLE);
+        if(showCollectButton){
+            collectButton.setVisibility(View.VISIBLE);
+        }else {
+            collectButton.setVisibility(View.INVISIBLE);
+        }
+        countLayout.bringToFront();
+
+
+    }
+
+
     private void startLoadingAnimation()
     {
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -309,6 +427,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         
         mUILayout.setVisibility(View.VISIBLE);
         mUILayout.setBackgroundColor(Color.BLACK);
+
+
         
         // Gets a reference to the loading dialog
         loadingDialogHandler.mLoadingDialogContainer = mUILayout
@@ -405,7 +525,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         if (exception == null)
         {
             initApplicationAR();
-            
+//            showCollectButton = true;
             mRenderer.mIsActive = true;
             
             // Now add the GL surface view. It is important
@@ -423,6 +543,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             
             try
             {
+                addOverlayView();
                 vuforiaAppSession.startAR(CameraDevice.CAMERA.CAMERA_DEFAULT);
             } catch (SampleApplicationException e)
             {
@@ -446,6 +567,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             Log.e(LOGTAG, exception.getString());
             showInitializationErrorMessage(exception.getString());
         }
+//        showCollectButton = false;
     }
     
     
@@ -644,8 +766,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mStartDatasetsIndex = CMD_DATASET_START_INDEX;
         mDatasetsNumber = mDatasetStrings.size();
         
-        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, true);
+        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, false);
         group.addRadioItem("Tarmac", mStartDatasetsIndex + 1, false);
+        group.addRadioItem("Test", mStartDatasetsIndex + 2, true);
         
         mSampleAppMenu.attachMenu();
     }
@@ -733,9 +856,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 
                 try
                 {
+                    addOverlayView();
                     vuforiaAppSession
                         .startAR(command == CMD_CAMERA_FRONT ? CameraDevice.CAMERA.CAMERA_FRONT
-                            : CameraDevice.CAMERA.CAMERA_BACK);
+                                : CameraDevice.CAMERA.CAMERA_BACK);
                 } catch (SampleApplicationException e)
                 {
                     showToast(e.getString());
