@@ -100,24 +100,24 @@ ADDED from AndroidManifest.xml:44:3
 	android:name
 		ADDED from AndroidManifest.xml:45:13
 service#com.customlbs.service.Worker
-ADDED from AndroidManifest.xml:52:9
+ADDED from AndroidManifest.xml:53:9
 	android:process
+		ADDED from AndroidManifest.xml:55:13
+	android:name
 		ADDED from AndroidManifest.xml:54:13
-	android:name
-		ADDED from AndroidManifest.xml:53:13
 service#com.customlbs.service.rest.batch.RestBatchService
-ADDED from AndroidManifest.xml:56:9
+ADDED from AndroidManifest.xml:57:9
 	android:name
-		ADDED from AndroidManifest.xml:56:18
+		ADDED from AndroidManifest.xml:57:18
 receiver#com.customlbs.service.rest.batch.ConnectivityReceiver
-ADDED from AndroidManifest.xml:59:9
+ADDED from AndroidManifest.xml:60:9
 	android:enabled
+		ADDED from AndroidManifest.xml:62:13
+	android:name
 		ADDED from AndroidManifest.xml:61:13
-	android:name
-		ADDED from AndroidManifest.xml:60:13
 intent-filter#android.net.conn.CONNECTIVITY_CHANGE
-ADDED from AndroidManifest.xml:62:13
+ADDED from AndroidManifest.xml:63:13
 action#android.net.conn.CONNECTIVITY_CHANGE
-ADDED from AndroidManifest.xml:63:17
+ADDED from AndroidManifest.xml:64:17
 	android:name
-		ADDED from AndroidManifest.xml:63:25
+		ADDED from AndroidManifest.xml:64:25

@@ -66,6 +66,9 @@
     <string name="button_reset">Reset</string>
     <string name="button_start">Start</string>
     <string name="camera_button">Play game</string>
+    <string name="collect">Collect</string>
+    <string name="collect_button_toast">You\'ve picked up an acorn!</string>
+    <string name="collected">Collected:</string>
     <string name="content_desc_camera_button">Camera Button</string>
     <string name="content_scrat">Image of Scrat, the nut searching squirrel</string>
     <string name="hello_world">Wait for position</string>
@@ -90,10 +93,14 @@
     <string name="menu_settings">Settings</string>
     <string name="overlay_build_target_help">Hold the device parallel to the target</string>
     <string name="splash_screen_description">Vuforia Splash</string>
+    <string name="status1_button_toast">You currently have\u0020</string>
+    <string name="status2_button_toast">\u0020acorns!</string>
+    <string name="status2_one_button_toast">\u0020acorn!</string>
     <string name="target_quality_error_desc">The image has very little detail, please try another.</string>
     <string name="target_quality_error_title">Low Quality Image</string>
     <string name="title_activity_main">Welcome!</string>
     <string name="your_location">Your current location</string>
+    <string name="zero">0</string>
     <!-- From: file:/C:/Users/Nele/Documents/Documents/School/Git/ICEAGE/app/src/main/res/values/styles.xml -->
     <eat-comment/>
     <style name="AppTheme" parent="android:Theme.Light"/>

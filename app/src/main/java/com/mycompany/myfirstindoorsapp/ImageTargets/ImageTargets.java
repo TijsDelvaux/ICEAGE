@@ -8,6 +8,9 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 package com.mycompany.myfirstindoorsapp.ImageTargets;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import android.app.Activity;
@@ -35,6 +38,7 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.customlbs.library.model.Zone;
 import com.mycompany.myfirstindoorsapp.R;
 import com.mycompany.myfirstindoorsapp.R.string;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenu;
@@ -98,7 +102,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     boolean mIsDroidDevice = false;
 
-    //ICEAGE variable
+    //ICEAGE variables
+    private String[] listDatasetStrings;
+    private Map<String,Integer> allZones;
 
     private int count;
 
@@ -107,19 +113,35 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private boolean showCollectButton;
     private View collectButton;
 
+    private void init() {
+        listDatasetStrings = new String[] {"CW.xml", "StonesAndChips.xml", "Tarmac.xml", "Foyer.xml"};
+        allZones = new HashMap<String,Integer>();
+        allZones.put("foyer_midden", 0);
+        //TODO: zones toevoegen
+    }
+
+    private void setTargetsToFollow(List<Zone> zones) {
+        mDatasetStrings.clear();
+
+        for(Zone zone: zones) {
+            int zoneIndex = allZones.get(zone.getName());
+            mDatasetStrings.add(listDatasetStrings[zoneIndex]);
+        }
+    }
+
     // Called when the activity first starts or the user navigates back to an
     // activity.
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        init();
+
         Log.d(LOGTAG, "ImageTargets: onCreate");
         super.onCreate(savedInstanceState);
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
-        mDatasetStrings.add("StonesAndChips.xml");
-        mDatasetStrings.add("Tarmac.xml");
-        mDatasetStrings.add("Foyer.xml");
+        setTargetsToFollow(new ArrayList<Zone>());
 
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -765,10 +787,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             .addGroup(getString(R.string.menu_datasets), true);
         mStartDatasetsIndex = CMD_DATASET_START_INDEX;
         mDatasetsNumber = mDatasetStrings.size();
-        
-        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, false);
-        group.addRadioItem("Tarmac", mStartDatasetsIndex + 1, false);
-        group.addRadioItem("Test", mStartDatasetsIndex + 2, true);
+
+        group.addRadioItem("CW", mStartDatasetsIndex, false); // ICEAGE : addtrackables
+        //group.addRadioItem("Stones & Chips", mStartDatasetsIndex + 1, false);
+        //group.addRadioItem("Tarmac", mStartDatasetsIndex + 2, false);
+        //group.addRadioItem("Test", mStartDatasetsIndex + 3, true);
+        //group.addRadioItem("Foyer", mStartDatasetsIndex + 4, true);
         
         mSampleAppMenu.attachMenu();
     }
