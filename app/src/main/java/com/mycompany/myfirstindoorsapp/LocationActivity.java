@@ -3,15 +3,10 @@ package com.mycompany.myfirstindoorsapp;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.widget.TextSwitcher;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.customlbs.coordinates.GeoCoordinate;
 import com.customlbs.library.Indoors;
 import com.customlbs.library.IndoorsException;
 import com.customlbs.library.IndoorsFactory;
-import com.customlbs.library.IndoorsLocationAdapter;
 import com.customlbs.library.IndoorsLocationListener;
 import com.customlbs.library.LocalizationParameters;
 import com.customlbs.library.callbacks.DebugInfoCallback;
@@ -20,6 +15,8 @@ import com.customlbs.library.model.Building;
 import com.customlbs.library.model.DebugInfo;
 import com.customlbs.library.model.Zone;
 import com.customlbs.shared.Coordinate;
+
+import com.mycompany.myfirstindoorsapp.ImageTargets.ImageTargets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,15 +30,13 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
 //    private TextView textView;
     private Indoors indoors;
     private List<Zone> zones;
+    private ImageTargets imageTargets;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public LocationActivity(ImageTargets imageTargets){
         zones = new ArrayList<Zone>();
-        IndoorsFactory.createInstance(this, "d2b8119f-49b4-4e21-a67b-67fa90a17b45", this, false);
+        this.imageTargets = imageTargets;
+        IndoorsFactory.createInstance(imageTargets, "d2b8119f-49b4-4e21-a67b-67fa90a17b45", this, false);
         Log.d("oncreate", "LocationActivity");
-//        textView = new TextView(this);
-//        setContentView(R.layout.activity_location);
     }
 
     @Override
@@ -55,7 +50,6 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
     @Override
     public void onError(IndoorsException indoorsException) {
         Log.d("error listener", indoorsException.toString());
-//        Toast.makeText(this, indoorsException.getMessage(), Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -63,18 +57,12 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
         super.onStop();
         Log.d("stopped", "");
         indoors.removeLocationListener(this);
-        Toast.makeText(this, "indoo.rs stopped", Toast.LENGTH_SHORT).show();
         IndoorsFactory.releaseInstance(this);
     }
 
     @Override
     public void buildingLoaded(Building building) {
         Log.d("building loaded", building.toString());
-        Toast.makeText(
-                this,
-                "Building is located at " + building.getLatOrigin() / 1E6 + ","
-                        + building.getLonOrigin() / 1E6, Toast.LENGTH_SHORT).show();
-//        indoors.enableEvaluationMode();
     }
 
     @Override
@@ -85,13 +73,8 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
     public void enteredZones(List<Zone> zones) {
         if(zones.size() > 0){
             this.zones = zones;
+            this.imageTargets.enteredZones(zones);
         }
-        String s = "zones: ";
-        for(Zone zone: this.zones){
-            Log.d("zone", zone.toString());
-            s = s + zone.getName();
-        }
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -112,12 +95,6 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
     @Override
     public void positionUpdated(Coordinate userPosition, int accuracy) {
         Log.d("located", userPosition.toString());
-        String s = "user is located at " + userPosition.toString();
-//        Toast.makeText(
-//                this,
-//                s, Toast.LENGTH_SHORT).show();
-//        textView.setText(s);
-//        setContentView(textView);
     }
 
     @Override
