@@ -1,0 +1,40 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:weightSum="1">
+
+  <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+    <Button
+        android:id="@+id/play_button"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:text="@string/camera_button"
+        android:onClick="startPlay"/>
+
+    <Button
+        android:id="@+id/map_button"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:text="@string/map_button"
+        android:onClick="startMap"/>
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/scrat"
+        android:layout_width="881dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:contentDescription="@string/content_scrat"
+        android:src="@drawable/ic_scrat"
+        android:layout_weight="0.23" />
+
+</LinearLayout>
+<!-- From: file:/C:/Users/Nele/Documents/Documents/School/Git/ICEAGE/app/src/main/res/layout/activity_main.xml -->
