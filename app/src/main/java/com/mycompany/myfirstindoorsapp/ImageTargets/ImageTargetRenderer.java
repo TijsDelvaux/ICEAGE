@@ -74,6 +74,10 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private ArrayList<String> excludedImageList = new ArrayList<String>();
     private String currentImage;
 
+
+    //ICEAGE
+    //Dit is de imageset die gebruikt wordt.
+    String imageSet = "foyer";
     
     public ImageTargetRenderer(ImageTargets activity,
         SampleApplicationSession session)
@@ -214,11 +218,13 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             Matrix44F modelViewMatrix_Vuforia = Tool
                 .convertPose2GLMatrix(result.getPose());
             float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
-            
-            int textureIndex = trackable.getName().equalsIgnoreCase("stones") ? 0
-                : 1;
-            textureIndex = trackable.getName().equalsIgnoreCase("tarmac") ? 2
-                : textureIndex;
+
+//            int textureIndex = trackable.getName().equalsIgnoreCase("stones") ? 0
+//                : 1;
+//            textureIndex = trackable.getName().equalsIgnoreCase("tarmac") ? 2
+//                : textureIndex;
+            int textureIndex = trackable.getName().equalsIgnoreCase(imageSet) ? 0:1;
+
             
             // deal with the modelview and projection matrices
             float[] modelViewProjection = new float[16];
@@ -341,6 +347,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     }
 
 //    public void showCollectButton(){
+//        Message message = new Message();
 //        Message message = new Message();
 //        message.obj = "";
 //        message.what = 1;

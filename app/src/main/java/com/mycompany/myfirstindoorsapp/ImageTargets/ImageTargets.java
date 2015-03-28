@@ -117,8 +117,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
-        mDatasetStrings.add("StonesAndChips.xml");
-        mDatasetStrings.add("Tarmac.xml");
+//        mDatasetStrings.add("StonesAndChips.xml");
+//        mDatasetStrings.add("Tarmac.xml");
         mDatasetStrings.add("Foyer.xml");
 
         vuforiaAppSession
@@ -567,10 +567,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             else
                 Log.e(LOGTAG, "Unable to enable continuous autofocus");
             
-            mSampleAppMenu = new SampleAppMenu(this, this, "Image Targets",
+            mSampleAppMenu = new SampleAppMenu(this, this, getString(string.app_name),
                 mGlView, mUILayout, null);
             setSampleAppMenuSettings();
-            
+
         } else
         {
             Log.e(LOGTAG, exception.getString());
@@ -775,9 +775,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mStartDatasetsIndex = CMD_DATASET_START_INDEX;
         mDatasetsNumber = mDatasetStrings.size();
         
-        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, false);
-        group.addRadioItem("Tarmac", mStartDatasetsIndex + 1, false);
-        group.addRadioItem("Test", mStartDatasetsIndex + 2, true);
+//        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, false);
+        //Ik denk dat dit puur cosmetisch is.
+        group.addRadioItem("TestImages", mStartDatasetsIndex, true);
+//        group.addRadioItem("Test", mStartDatasetsIndex + 2, true);
         
         mSampleAppMenu.attachMenu();
     }
