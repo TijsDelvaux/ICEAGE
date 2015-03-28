@@ -20,7 +20,6 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
-import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,9 +36,6 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import com.customlbs.library.model.Zone;
-import com.mycompany.myfirstindoorsapp.LocationActivity;
-import com.mycompany.myfirstindoorsapp.MapActivity;
 import com.mycompany.myfirstindoorsapp.R;
 import com.mycompany.myfirstindoorsapp.R.string;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenu;
@@ -141,10 +137,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         //ICEAGE this is temporary, should only become true when an object is detected.
 //        showCollectButton = true;
 
+
         addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
-        new LocationActivity(this);
-
     }
 
     //BEGIN ICEAGE STUFF
@@ -399,17 +394,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
     //ICEAGE ADDED
-    public void enteredZones(List<Zone> zones){
-        String s = "zones: ";
-        for(Zone zone: zones){
-            Log.d("zone", zone.toString());
-            s = s + zone.getName();
-        }
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
-        // doe hier iets om te bepalen welke images targets zijn
-    }
-
-
     private void addOverlayView(){
 //        Log.d("addOverlayView", "showCollectButton: " + showCollectButton);
         // Inflates the Overlay Layout to be displayed above the Camera View

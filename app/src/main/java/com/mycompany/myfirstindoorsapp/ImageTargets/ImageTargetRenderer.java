@@ -8,6 +8,7 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 package com.mycompany.myfirstindoorsapp.ImageTargets;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -69,7 +70,14 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     boolean mIsActive = false;
     
     private static final float OBJECT_SCALE_FLOAT = 3.0f;
-    
+
+    private ArrayList<String> excludedImageList = new ArrayList<String>();
+    private String currentImage;
+
+
+    //ICEAGE
+    //Dit is de imageset die gebruikt wordt.
+    String imageSet = "foyer";
     
     public ImageTargetRenderer(ImageTargets activity,
         SampleApplicationSession session)
@@ -196,18 +204,27 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         // did we find any trackables this frame?
         for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
         {
-            displayMessage("Found something", 2);
             TrackableResult result = state.getTrackableResult(tIdx);
             Trackable trackable = result.getTrackable();
+            currentImage = trackable.getName();
+            if(excludedImageList.contains(currentImage)){
+//                Log.d("ImageTargetRenderer", "Excluding currentImage");
+                continue;
+            }
+            //ICEAGE
+            //Enabling collect button
+            displayMessage("Found something!", 2);
             printUserData(trackable);
             Matrix44F modelViewMatrix_Vuforia = Tool
                 .convertPose2GLMatrix(result.getPose());
             float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
-            
-            int textureIndex = trackable.getName().equalsIgnoreCase("stones") ? 0
-                : 1;
-            textureIndex = trackable.getName().equalsIgnoreCase("tarmac") ? 2
-                : textureIndex;
+
+//            int textureIndex = trackable.getName().equalsIgnoreCase("stones") ? 0
+//                : 1;
+//            textureIndex = trackable.getName().equalsIgnoreCase("tarmac") ? 2
+//                : textureIndex;
+            int textureIndex = trackable.getName().equalsIgnoreCase(imageSet) ? 0:1;
+
             
             // deal with the modelview and projection matrices
             float[] modelViewProjection = new float[16];
@@ -331,6 +348,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 
 //    public void showCollectButton(){
 //        Message message = new Message();
+//        Message message = new Message();
 //        message.obj = "";
 //        message.what = 1;
 //        ImageTargetHandler.sendMessage(message);
@@ -346,7 +364,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     //This method should be called when pressing the "collect" button when an acorn is visible.
     //The picture then should be removed from the trackable list
     public void collectCurrentPicture(){
-
+        excludedImageList.add(currentImage);
     }
 
 
