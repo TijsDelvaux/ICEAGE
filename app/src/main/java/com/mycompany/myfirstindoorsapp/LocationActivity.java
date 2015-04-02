@@ -29,11 +29,13 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
 
 //    private TextView textView;
     private Indoors indoors;
+    private List<Zone> detectedZones;
     private List<Zone> zones;
     private ImageTargets imageTargets;
 
     public LocationActivity(ImageTargets imageTargets){
         zones = new ArrayList<Zone>();
+        detectedZones = new ArrayList<Zone>();
         this.imageTargets = imageTargets;
         IndoorsFactory.createInstance(imageTargets, "d2b8119f-49b4-4e21-a67b-67fa90a17b45", this, false);
         Log.d("oncreate", "LocationActivity");
@@ -72,8 +74,14 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
     @Override
     public void enteredZones(List<Zone> zones) {
         if(zones.size() > 0){
+            this.detectedZones = zones;
+            // hier nog zones uitbreiden met aanliggende zones
             this.zones = zones;
-            this.imageTargets.enteredZones(zones);
+            if(zones.containsAll(this.detectedZones) && this.detectedZones.containsAll(zones)){
+                //er is niets verandert
+            } else {
+                this.imageTargets.enteredZones(zones);
+            }
         }
     }
 
