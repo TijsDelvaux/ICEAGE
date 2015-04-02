@@ -40,6 +40,7 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import com.customlbs.library.model.Zone;
+import com.mycompany.myfirstindoorsapp.IceAge;
 import com.mycompany.myfirstindoorsapp.LocationActivity;
 import com.mycompany.myfirstindoorsapp.MapActivity;
 import com.mycompany.myfirstindoorsapp.R;
@@ -116,13 +117,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private boolean showCollectButton;
     private View collectButton;
 
-    // ICE AGE
+    @IceAge
     private void init() {
-        listDatasetStrings = new String[] {"StonesAndChips0.xml", // index 0: default
+        listDatasetStrings = new String[] {"CW.xml",
+                "StonesAndChips0.xml", // index 0: default
                                            "StonesAndChips1.xml",
                                            "StonesAndChips2.xml",
                                            "StonesAndChips3.xml",
-                                           "CW.xml",
                                            "StonesAndChips5.xml",
                                            "StonesAndChips6.xml",
                                            "StonesAndChips7.xml",
@@ -141,12 +142,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         allZones.put("solZ", 9);
         allZones.put("solN", 10);
         //TODO: zones toevoegen
+
+        Log.d(LOGTAG,"after targets init");
     }
 
-    // ICE AGE
+    @IceAge
     private void setTargetsToFollow(List<Zone> zones) {
-        Toast.makeText(this, "init targets", Toast.LENGTH_SHORT).show();
-
         mDatasetStrings.clear();
         String targets = "targets:";
 
@@ -159,13 +160,71 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             mDatasetStrings.add(listDatasetStrings[0]);
         }
 
+        // string used for logging and debugging
         for(String data: mDatasetStrings) {
             targets += " " + data;
         }
 
         // TODO dit veroorzaakt problemen!!
+        //doUnloadTrackersData();
+        // doLoadTrackersData();
+
+
+       // doLoadTrackersData();
+        /*
+        Log.d(LOGTAG,"setTargetsToFollow 1");
+        com.qualcomm.vuforia.Vuforia.init();
+        Log.d(LOGTAG,"setTargetsToFollow 2");
+        TrackerManager tManager = TrackerManager.getInstance();
+        Log.d(LOGTAG,"setTargetsToFollow 3");
+        com.qualcomm.vuforia.Vuforia.init();
+        Log.d(LOGTAG,"setTargetsToFollow 4");
+        ObjectTracker objectTracker = (ObjectTracker) tManager
+                .getTracker(ObjectTracker.getClassType());
+        Log.d(LOGTAG,"setTargetsToFollow 5");
+        com.qualcomm.vuforia.Vuforia.init();
+        Log.d(LOGTAG,"setTargetsToFollow 6");
+        mCurrentDataset = objectTracker.createDataSet();
+        Log.d(LOGTAG,"setTargetsToFollow 7");
+
+
+
+
+        /*
+        doDeinitTrackers();
+        doInitTrackers();
         doUnloadTrackersData();
         doLoadTrackersData();
+        if (tracker == null)
+        {
+            Log.e(
+                    LOGTAG,
+                    "Tracker not initialized. Tracker already initialized or the camera is already started");
+            result = false;
+        } else
+        {
+            Log.i(LOGTAG, "Tracker successfully initialized");
+        }
+        return result;
+
+
+        int numTrackables = mDatasetStrings.size();
+        for (int count = 0; count < numTrackables; count++)
+        {
+            Trackable trackable = mCurrentDataset.getTrackable(count);
+            if(isExtendedTrackingActive())
+            {
+                trackable.startExtendedTracking();
+            }
+
+            String name = "Current Dataset : " + trackable.getName();
+            trackable.setUserData(name);
+            Log.d(LOGTAG, "UserData:Set the following user data "
+                    + (String) trackable.getUserData());
+        }
+        */
+
+        Log.d(LOGTAG,"setTargetsToFollow " + targets);
         Toast.makeText(this, targets, Toast.LENGTH_SHORT).show();
     }
 
@@ -188,7 +247,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mGestureDetector = new GestureDetector(this, new GestureListener());
         // Load any sample specific textures:
         mTextures = new Vector<Texture>();
-        loadTextures();
+        loadTextures(); // loads the teapot
         Log.d(LOGTAG,"After loadTextures");
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
             "droid");
@@ -205,9 +264,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     }
 
-    //BEGIN ICEAGE STUFF
-
-
+    @IceAge
     public void onClickCollectButton(View view){
 
         count++;
@@ -216,6 +273,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     }
 
+    @IceAge
     public void onClickStatusButton(View view) {
         String acorn_s = null;
 
@@ -235,9 +293,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         mRenderer.displayMessage(toastStatusText,0);
     }
-
-
-    //END ICE STUFF
 
     // Process Single Tap event to trigger autofocus
     private class GestureListener extends
@@ -294,6 +349,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     // Called when the activity will start interacting with the user.
     @Override
+    @IceAge
     protected void onResume()
     {
         Log.d(LOGTAG, "onResume");
@@ -456,7 +512,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         addOverlayView();
     }
 
-    //ICEAGE ADDED
+    @IceAge
     public void enteredZones(List<Zone> zones){
         setTargetsToFollow(zones); // zet de juiste targets
 
@@ -468,7 +524,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
     }
 
-
+    @IceAge
     private void addOverlayView(){
 //        Log.d("addOverlayView", "showCollectButton: " + showCollectButton);
         // Inflates the Overlay Layout to be displayed above the Camera View
@@ -525,7 +581,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @Override
     public boolean doLoadTrackersData()
     {
+        com.qualcomm.vuforia.Vuforia.init();
         TrackerManager tManager = TrackerManager.getInstance();
+        com.qualcomm.vuforia.Vuforia.init();
         ObjectTracker objectTracker = (ObjectTracker) tManager
             .getTracker(ObjectTracker.getClassType());
         if (objectTracker == null)
