@@ -165,67 +165,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             targets += " " + data;
         }
 
-        // TODO dit veroorzaakt problemen!!
-        //doUnloadTrackersData();
-        // doLoadTrackersData();
-
-
-       // doLoadTrackersData();
-        /*
-        Log.d(LOGTAG,"setTargetsToFollow 1");
-        com.qualcomm.vuforia.Vuforia.init();
-        Log.d(LOGTAG,"setTargetsToFollow 2");
-        TrackerManager tManager = TrackerManager.getInstance();
-        Log.d(LOGTAG,"setTargetsToFollow 3");
-        com.qualcomm.vuforia.Vuforia.init();
-        Log.d(LOGTAG,"setTargetsToFollow 4");
-        ObjectTracker objectTracker = (ObjectTracker) tManager
-                .getTracker(ObjectTracker.getClassType());
-        Log.d(LOGTAG,"setTargetsToFollow 5");
-        com.qualcomm.vuforia.Vuforia.init();
-        Log.d(LOGTAG,"setTargetsToFollow 6");
-        mCurrentDataset = objectTracker.createDataSet();
-        Log.d(LOGTAG,"setTargetsToFollow 7");
-
-
-
-
-        /*
-        doDeinitTrackers();
-        doInitTrackers();
-        doUnloadTrackersData();
-        doLoadTrackersData();
-        if (tracker == null)
-        {
-            Log.e(
-                    LOGTAG,
-                    "Tracker not initialized. Tracker already initialized or the camera is already started");
-            result = false;
-        } else
-        {
-            Log.i(LOGTAG, "Tracker successfully initialized");
-        }
-        return result;
-
-
-        int numTrackables = mDatasetStrings.size();
-        for (int count = 0; count < numTrackables; count++)
-        {
-            Trackable trackable = mCurrentDataset.getTrackable(count);
-            if(isExtendedTrackingActive())
-            {
-                trackable.startExtendedTracking();
-            }
-
-            String name = "Current Dataset : " + trackable.getName();
-            trackable.setUserData(name);
-            Log.d(LOGTAG, "UserData:Set the following user data "
-                    + (String) trackable.getUserData());
-        }
-        */
+        vuforiaAppSession.doReloadTargets();
 
         Log.d(LOGTAG,"setTargetsToFollow " + targets);
-        Toast.makeText(this, targets, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, targets, Toast.LENGTH_SHORT).show();
     }
 
     // Called when the activity first starts or the user navigates back to an
@@ -521,7 +464,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             Log.d("zone", zone.toString());
             s = s + zone.getName();
         }
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+        Log.d(LOGTAG,s);
+        //Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
     }
 
     @IceAge
@@ -581,9 +525,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @Override
     public boolean doLoadTrackersData()
     {
-        com.qualcomm.vuforia.Vuforia.init();
         TrackerManager tManager = TrackerManager.getInstance();
-        com.qualcomm.vuforia.Vuforia.init();
         ObjectTracker objectTracker = (ObjectTracker) tManager
             .getTracker(ObjectTracker.getClassType());
         if (objectTracker == null)
@@ -611,7 +553,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             {
                 trackable.startExtendedTracking();
             }
-            
+
             String name = "Current Dataset : " + trackable.getName();
             trackable.setUserData(name);
             Log.d(LOGTAG, "UserData:Set the following user data "
