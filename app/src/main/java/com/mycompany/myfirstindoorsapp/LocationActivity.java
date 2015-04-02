@@ -29,13 +29,13 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
 
 //    private TextView textView;
     private Indoors indoors;
-    private List<Zone> detectedZones;
-    private List<Zone> zones;
+    private List<String> detectedZones;
+    private List<String> zones;
     private ImageTargets imageTargets;
 
     public LocationActivity(ImageTargets imageTargets){
-        zones = new ArrayList<Zone>();
-        detectedZones = new ArrayList<Zone>();
+        zones = new ArrayList<String>();
+        detectedZones = new ArrayList<String>();
         this.imageTargets = imageTargets;
         IndoorsFactory.createInstance(imageTargets, "d2b8119f-49b4-4e21-a67b-67fa90a17b45", this, false);
         Log.d("oncreate", "LocationActivity");
@@ -74,13 +74,17 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
     @Override
     public void enteredZones(List<Zone> zones) {
         if(zones.size() > 0){
-            this.detectedZones = zones;
-            // hier nog zones uitbreiden met aanliggende zones
-            this.zones = zones;
-            if(zones.containsAll(this.detectedZones) && this.detectedZones.containsAll(zones)){
-                //er is niets verandert
-            } else {
-                this.imageTargets.enteredZones(zones);
+            List<String> zone_names = new ArrayList<String>();
+            for(Zone zone: zones){
+                zone_names.add(zone.getName());
+            }
+            Boolean new_zones = !(zone_names.containsAll(this.detectedZones) && this.detectedZones.containsAll(zone_names));
+            if(new_zones){
+                Log.d("LocationActivity", "new zones " + zone_names.toString());
+                this.detectedZones = zone_names;
+                // hier nog zones uitbreiden met aanliggende zones
+                this.zones = zone_names;
+                this.imageTargets.enteredZones(this.zones);
             }
         }
     }
