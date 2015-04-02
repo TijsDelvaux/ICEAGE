@@ -546,6 +546,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             return false;
         
         int numTrackables = mCurrentDataset.getNumTrackables();
+        String dataString = "Current Dataset: ";
         for (int count = 0; count < numTrackables; count++)
         {
             Trackable trackable = mCurrentDataset.getTrackable(count);
@@ -556,9 +557,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
             String name = "Current Dataset : " + trackable.getName();
             trackable.setUserData(name);
-            Log.d(LOGTAG, "UserData:Set the following user data "
-                + (String) trackable.getUserData());
+            dataString += trackable.getName() + " ";
         }
+        Log.d(LOGTAG,dataString);
         
         return true;
     }
