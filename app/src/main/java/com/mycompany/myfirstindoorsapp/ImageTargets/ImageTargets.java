@@ -559,20 +559,16 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         for(int i = 0; i < mDatasetStrings.size(); i++) {
             mCurrentDatasetSelectionIndex = i;
             listDatasets[i] = objectTracker.createDataSet();
-            mCurrentDataset = objectTracker.createDataSet();
 
-            if (listDatasets[i] == null || mCurrentDataset == null)
+            if (listDatasets[i] == null)
                 return false;
 
             if (!listDatasets[i].load(
                     mDatasetStrings.get(mCurrentDatasetSelectionIndex),
-                    STORAGE_TYPE.STORAGE_APPRESOURCE) ||
-                !mCurrentDataset.load(
-                        mDatasetStrings.get(mCurrentDatasetSelectionIndex),
-                        STORAGE_TYPE.STORAGE_APPRESOURCE))
+                    STORAGE_TYPE.STORAGE_APPRESOURCE))
                 return false;
 
-            if (!objectTracker.activateDataSet(listDatasets[i]) || !objectTracker.activateDataSet(mCurrentDataset))
+            if (!objectTracker.activateDataSet(listDatasets[i]))
                 result = false;
 
             int numTrackables = listDatasets[i].getNumTrackables();
@@ -616,11 +612,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             // deactivate and destroy all current datasets
             for(DataSet data: listDatasets) {
                 if(!objectTracker.deactivateDataSet(data)) result = false;
-                if(!objectTracker.destroyDataSet(mCurrentDataset)) result = false;
             }
 
             listDatasets = null;
-            mCurrentDataset = null;
         }
         
         return result;
