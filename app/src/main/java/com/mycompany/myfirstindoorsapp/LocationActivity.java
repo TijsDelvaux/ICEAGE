@@ -95,6 +95,7 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
         Set<String> gangSols = new HashSet<String>();
         gangSols.add("solZ");
         gangSols.add("solN");
+        gangSols.add("foyer_secr")
         this.adjacentZones.put("gang_sols",gangSols);
         //solZ
         Set<String> solZ = new HashSet<String>();
