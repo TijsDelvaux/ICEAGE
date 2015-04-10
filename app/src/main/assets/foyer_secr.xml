@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="foyer_secr21" size="300.000000 225.044510" />
+    <ImageTarget name="foyer_secr20" size="300.000000 225.044510" />
+    <ImageTarget name="foyer_secr19" size="300.000000 225.044510" />
+    <ImageTarget name="foyer_secr18" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr17" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr16" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr15" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr14" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr13" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr12" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr10" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr11" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr9" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr8" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr7" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr6" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr5" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr4" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr3" size="300.000000 225.044510" />
+    <ImageTarget name="foyer_secr2" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_secr1" size="300.000000 399.920898" />
+  </Tracking>
+</QCARConfig>

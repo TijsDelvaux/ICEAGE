@@ -121,17 +121,18 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     @IceAge
     private void init() {
-        listDatasetStrings = new String[] {"CW.xml",
-                "StonesAndChips0.xml", // index 0: default
-                                           "StonesAndChips1.xml",
-                                           "StonesAndChips2.xml",
-                                           "StonesAndChips3.xml",
-                                           "StonesAndChips5.xml",
-                                           "StonesAndChips6.xml",
-                                           "StonesAndChips7.xml",
-                                           "StonesAndChips8.xml",
-                                           "StonesAndChips9.xml",
-                                           "StonesAndChips10.xml"};
+        listDatasetStrings = new String[] {"StonesAndChips.xml", // index 0: default
+                                           "automaten.xml",
+                                           "foyer_automaten.xml",
+                                           "foyer_wc.xml",
+                                           "midden_foyer.xml",
+                                           "foyer_leslokaal_trappen.xml",
+                                           "foyer_secr.xml",
+                                           "uitgang_secr.xml",
+                                           "gang_sols.xml",
+                                           "solZ.xml",
+                                           "solN.xml",
+                                           "printerlokaal.xml"};
         allZones = new HashMap<String,Integer>();
         allZones.put("automaten", 1); // index 0 = default
         allZones.put("foyer_automaten", 2);
@@ -143,6 +144,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         allZones.put("gang_sols", 8);
         allZones.put("solZ", 9);
         allZones.put("solN", 10);
+        allZones.put("printerlokaal", 10);
         //TODO: zones toevoegen
 
         Log.d(LOGTAG,"after targets init");

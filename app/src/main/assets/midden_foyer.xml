@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="midden_foyer9" size="300.000000 399.920898" />
+    <ImageTarget name="midden_foyer8" size="300.000000 579.357788" />
+    <ImageTarget name="midden_foyer7" size="300.000000 423.421600" />
+    <ImageTarget name="midden_foyer6" size="300.000000 466.666656" />
+    <ImageTarget name="midden_foyer5" size="300.000000 511.135864" />
+    <ImageTarget name="midden_foyer4" size="300.000000 399.920898" />
+    <ImageTarget name="midden_foyer3" size="300.000000 561.333313" />
+    <ImageTarget name="midden_foyer2" size="300.000000 383.535095" />
+    <ImageTarget name="midden_foyer1" size="300.000000 409.290955" />
+  </Tracking>
+</QCARConfig>
