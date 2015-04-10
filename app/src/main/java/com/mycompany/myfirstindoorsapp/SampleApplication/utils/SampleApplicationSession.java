@@ -478,8 +478,12 @@ public class SampleApplicationSession implements UpdateCallbackInterface
             synchronized (mShutdownLock)
             {
                 // Load the tracker data set:
-                mSessionControl.doUnloadTrackersData();
-                return mSessionControl.doLoadTrackersData();
+                if(mSessionControl.doUnloadTrackersData()) {
+                    return mSessionControl.doLoadTrackersData();
+                }
+                else {
+                    return false;
+                }
             }
         }
         

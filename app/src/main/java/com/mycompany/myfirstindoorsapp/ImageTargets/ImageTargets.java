@@ -7,7 +7,9 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 
 package com.mycompany.myfirstindoorsapp.ImageTargets;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +113,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private String[] listDatasetStrings;
     private Map<String,Integer> allZones;
     private String zonesString = "";
+    private DataSet[] listDatasets;
 
     private int count;
 
@@ -133,6 +136,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                                            "solZ.xml",
                                            "solN.xml",
                                            "printerlokaal.xml"};
+
         allZones = new HashMap<String,Integer>();
         allZones.put("automaten", 1); // index 0 = default
         allZones.put("foyer_automaten", 2);
@@ -157,7 +161,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     {
         init();
 
-        Log.d(LOGTAG, "ImageTargets: onCreate");
+        Log.d(LOGTAG, "\n\n================================================\nImageTargets: onCreate\n");
         super.onCreate(savedInstanceState);
         
         vuforiaAppSession = new SampleApplicationSession(this);
@@ -453,7 +457,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @IceAge
     private void setTargetsToFollow(List<String> zones) {
         mDatasetStrings.clear();
-        String targets = "Targets:\n";
 
         for(String zone: zones) {
             int zoneIndex = allZones.get(zone);
@@ -464,15 +467,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             mDatasetStrings.add(listDatasetStrings[0]);
         }
 
-        // string used for logging and debugging
-        for(String data: mDatasetStrings) {
-            targets += " - " + data + "\n";
-        }
-
         vuforiaAppSession.doReloadTargets();
-
-        Log.d(LOGTAG,"setTargetsToFollow " + targets);
-        Toast.makeText(this, targets, Toast.LENGTH_SHORT).show();
     }
 
     @IceAge
@@ -486,7 +481,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG,s);
 
         zonesString = s;
-        //Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
     }
 
     @IceAge
@@ -546,43 +541,61 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @Override
     public boolean doLoadTrackersData()
     {
+        // Indicate if the trackers were unloaded correctly
+        boolean result = true;
+
         TrackerManager tManager = TrackerManager.getInstance();
         ObjectTracker objectTracker = (ObjectTracker) tManager
             .getTracker(ObjectTracker.getClassType());
         if (objectTracker == null)
             return false;
         
-        if (mCurrentDataset == null)
-            mCurrentDataset = objectTracker.createDataSet();
-        
-        if (mCurrentDataset == null)
-            return false;
-        
-        if (!mCurrentDataset.load(
-            mDatasetStrings.get(mCurrentDatasetSelectionIndex),
-            STORAGE_TYPE.STORAGE_APPRESOURCE))
-            return false;
-        
-        if (!objectTracker.activateDataSet(mCurrentDataset))
-            return false;
-        
-        int numTrackables = mCurrentDataset.getNumTrackables();
-        String dataString = "Current Dataset: ";
-        for (int count = 0; count < numTrackables; count++)
-        {
-            Trackable trackable = mCurrentDataset.getTrackable(count);
-            if(isExtendedTrackingActive())
-            {
-                trackable.startExtendedTracking();
-            }
-
-            String name = "Current Dataset : " + trackable.getName();
-            trackable.setUserData(name);
-            dataString += trackable.getName() + " ";
+        if (listDatasets != null) {
+            doUnloadTrackersData();
         }
-        Log.d(LOGTAG,dataString);
-        
-        return true;
+
+        listDatasets = new DataSet[mDatasetStrings.size()];
+
+        for(int i = 0; i < mDatasetStrings.size(); i++) {
+            mCurrentDatasetSelectionIndex = i;
+            listDatasets[i] = objectTracker.createDataSet();
+            mCurrentDataset = objectTracker.createDataSet();
+
+            if (listDatasets[i] == null || mCurrentDataset == null)
+                return false;
+
+            if (!listDatasets[i].load(
+                    mDatasetStrings.get(mCurrentDatasetSelectionIndex),
+                    STORAGE_TYPE.STORAGE_APPRESOURCE) ||
+                !mCurrentDataset.load(
+                        mDatasetStrings.get(mCurrentDatasetSelectionIndex),
+                        STORAGE_TYPE.STORAGE_APPRESOURCE))
+                return false;
+
+            if (!objectTracker.activateDataSet(listDatasets[i]) || !objectTracker.activateDataSet(mCurrentDataset))
+                result = false;
+
+            int numTrackables = listDatasets[i].getNumTrackables();
+
+            String dataString = "";
+            for (int count = 0; count < numTrackables; count++)
+            {
+                Trackable trackable = listDatasets[i].getTrackable(count);
+                if(isExtendedTrackingActive())
+                {
+                    trackable.startExtendedTracking();
+                }
+
+                String name = "Current Dataset : " + trackable.getName();
+                trackable.setUserData(name);
+                dataString += trackable.getName() + " ";
+            }
+            Log.d(LOGTAG,"=====Current Dataset : " + dataString);
+        }
+        mCurrentDatasetSelectionIndex = 0;
+
+        Log.d(LOGTAG,objectTracker.getActiveDataSet().toString());
+        return result;
     }
     
     
@@ -598,17 +611,15 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         if (objectTracker == null)
             return false;
         
-        if (mCurrentDataset != null && mCurrentDataset.isActive())
+        if (listDatasets != null)
         {
-            if (objectTracker.getActiveDataSet().equals(mCurrentDataset)
-                && !objectTracker.deactivateDataSet(mCurrentDataset))
-            {
-                result = false;
-            } else if (!objectTracker.destroyDataSet(mCurrentDataset))
-            {
-                result = false;
+            // deactivate and destroy all current datasets
+            for(DataSet data: listDatasets) {
+                if(!objectTracker.deactivateDataSet(data)) result = false;
+                if(!objectTracker.destroyDataSet(mCurrentDataset)) result = false;
             }
-            
+
+            listDatasets = null;
             mCurrentDataset = null;
         }
         
