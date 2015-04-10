@@ -64,6 +64,7 @@ import com.qualcomm.vuforia.Tracker;
 import com.qualcomm.vuforia.TrackerManager;
 import com.qualcomm.vuforia.Vuforia;
 
+
 public class ImageTargets extends Activity implements SampleApplicationControl,
     SampleAppMenuInterface
 {
@@ -109,6 +110,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     //ICEAGE variables
     private String[] listDatasetStrings;
     private Map<String,Integer> allZones;
+    private String zonesString = "";
 
     private int count;
 
@@ -146,31 +148,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG,"after targets init");
     }
 
-    @IceAge
-    private void setTargetsToFollow(List<Zone> zones) {
-        mDatasetStrings.clear();
-        String targets = "targets:";
-
-        for(Zone zone: zones) {
-            int zoneIndex = allZones.get(zone.getName());
-            mDatasetStrings.add(listDatasetStrings[zoneIndex]);
-        }
-
-        if(mDatasetStrings.isEmpty()) {
-            mDatasetStrings.add(listDatasetStrings[0]);
-        }
-
-        // string used for logging and debugging
-        for(String data: mDatasetStrings) {
-            targets += " " + data;
-        }
-
-        vuforiaAppSession.doReloadTargets();
-
-        Log.d(LOGTAG,"setTargetsToFollow " + targets);
-        //Toast.makeText(this, targets, Toast.LENGTH_SHORT).show();
-    }
-
     // Called when the activity first starts or the user navigates back to an
     // activity.
     @Override
@@ -199,9 +176,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         //ICEAGE this is temporary, should only become true when an object is detected.
 //        showCollectButton = true;
 
-        setTargetsToFollow(new ArrayList<Zone>());
+        setTargetsToFollow(new ArrayList<String>());
 
+        showCollectButton = false;
         addOverlayView();
+
         Log.d(LOGTAG, "Vuforia end of onCreate");
         new LocationActivity(this);
 
@@ -209,7 +188,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     @IceAge
     public void onClickCollectButton(View view){
-
+        mRenderer.collectCurrentPicture();
         count++;
         String toastCollectedText = getString(R.string.collect_button_toast);
         mRenderer.displayMessage(toastCollectedText,0);
@@ -235,6 +214,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         }
 
         mRenderer.displayMessage(toastStatusText,0);
+    }
+
+    @IceAge
+    public void onClickZoneButton(View view) {
+        mRenderer.displayMessage(zonesString,0);
     }
 
     // Process Single Tap event to trigger autofocus
@@ -298,31 +282,40 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG, "onResume");
         super.onResume();
 
+        //ICEAGE
         // Create a new handler for the renderer thread to use
         // This is necessary as only the main thread can make changes to the UI
         mRenderer.ImageTargetHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what) {
-                    case 0: //show a toast with contents of the message (# acorns  gathered)
+                    case 0: //show a toast with contents of the message (ex: # acorns  gathered)
                         Context context = getApplicationContext();
                         String text = (String) msg.obj;
                         int duration = Toast.LENGTH_SHORT;
                         Toast toast = Toast.makeText(context, text, duration);
                         toast.show();
+                        break;
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
                         showCollectButton = false;
+                        break;
 //                        Log.d("ImageTargetHandler", (String) msg.obj);
-                        addOverlayView();
+//                        addOverlayView();
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
                         showCollectButton = true;
 //                        Log.d("ImageTargetHandler", (String) msg.obj);
-                        addOverlayView();
+//                        addOverlayView();
+                        break;
+                    default:
+//                        Log.d("ImageTargetHandler", "Nothing");
+                        break;
                 }
             }
         };
+        //End ICEAGE
+
 
         // This is needed for some Droid devices to force portrait
         if (mIsDroidDevice)
@@ -456,15 +449,41 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
     @IceAge
-    public void enteredZones(List<Zone> zones){
+    private void setTargetsToFollow(List<String> zones) {
+        mDatasetStrings.clear();
+        String targets = "Targets:\n";
+
+        for(String zone: zones) {
+            int zoneIndex = allZones.get(zone);
+            mDatasetStrings.add(listDatasetStrings[zoneIndex]);
+        }
+
+        if(mDatasetStrings.isEmpty()) {
+            mDatasetStrings.add(listDatasetStrings[0]);
+        }
+
+        // string used for logging and debugging
+        for(String data: mDatasetStrings) {
+            targets += " - " + data + "\n";
+        }
+
+        vuforiaAppSession.doReloadTargets();
+
+        Log.d(LOGTAG,"setTargetsToFollow " + targets);
+        Toast.makeText(this, targets, Toast.LENGTH_SHORT).show();
+    }
+
+    @IceAge
+    public void enteredZones(List<String> zones){
         setTargetsToFollow(zones); // zet de juiste targets
 
-        String s = "zones: ";
-        for(Zone zone: zones){
-            Log.d("zone", zone.toString());
-            s = s + zone.getName();
+        String s = "Zones:\n";
+        for(String zone: zones){
+            s = s + " - " + zone + "\n";
         }
         Log.d(LOGTAG,s);
+
+        zonesString = s;
         //Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
     }
 
@@ -635,10 +654,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             else
                 Log.e(LOGTAG, "Unable to enable continuous autofocus");
             
-            mSampleAppMenu = new SampleAppMenu(this, this, "Image Targets",
+            mSampleAppMenu = new SampleAppMenu(this, this, getString(string.app_name),
                 mGlView, mUILayout, null);
             setSampleAppMenuSettings();
-            
+
         } else
         {
             Log.e(LOGTAG, exception.getString());
@@ -844,11 +863,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mDatasetsNumber = mDatasetStrings.size();
 
         //TODO : mag dit weg?
-        group.addRadioItem("CW", mStartDatasetsIndex, false); // ICEAGE : addtrackables
-        group.addRadioItem("Stones & Chips", mStartDatasetsIndex + 1, false);
-        group.addRadioItem("Tarmac", mStartDatasetsIndex + 2, false);
-        group.addRadioItem("Test", mStartDatasetsIndex + 3, true);
-        group.addRadioItem("Foyer", mStartDatasetsIndex + 4, true);
+        //group.addRadioItem("CW", mStartDatasetsIndex, false); // ICEAGE : addtrackables
+        //group.addRadioItem("Stones & Chips", mStartDatasetsIndex + 1, false);
+        //group.addRadioItem("Tarmac", mStartDatasetsIndex + 2, false);
+        //group.addRadioItem("Test", mStartDatasetsIndex + 3, true);
+        //group.addRadioItem("Foyer", mStartDatasetsIndex + 4, true);
+
         
         mSampleAppMenu.attachMenu();
     }
