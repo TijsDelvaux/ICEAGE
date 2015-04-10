@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="foyer_leslokaal_trappen4" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_leslokaal_trappen3" size="300.000000 399.920898" />
+    <ImageTarget name="foyer_leslokaal_trappen2" size="300.000000 225.044510" />
+    <ImageTarget name="foyer_leslokaal_trappen1" size="300.000000 225.044510" />
+  </Tracking>
+</QCARConfig>

@@ -7,8 +7,12 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 
 package com.mycompany.myfirstindoorsapp.ImageTargets;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import android.app.Activity;
@@ -38,6 +42,7 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import com.customlbs.library.model.Zone;
+import com.mycompany.myfirstindoorsapp.IceAge;
 import com.mycompany.myfirstindoorsapp.LocationActivity;
 import com.mycompany.myfirstindoorsapp.MapActivity;
 import com.mycompany.myfirstindoorsapp.R;
@@ -60,6 +65,7 @@ import com.qualcomm.vuforia.Trackable;
 import com.qualcomm.vuforia.Tracker;
 import com.qualcomm.vuforia.TrackerManager;
 import com.qualcomm.vuforia.Vuforia;
+
 
 public class ImageTargets extends Activity implements SampleApplicationControl,
     SampleAppMenuInterface
@@ -103,7 +109,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     boolean mIsDroidDevice = false;
 
-    //ICEAGE variable
+    //ICEAGE variables
+    private String[] listDatasetStrings;
+    private Map<String,Integer> allZones;
+    private String zonesString = "";
+    private DataSet[] listDatasets;
 
     private int count;
 
@@ -112,19 +122,50 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private boolean showCollectButton;
     private View collectButton;
 
+    @IceAge
+    private void init() {
+        listDatasetStrings = new String[] {"StonesAndChips.xml", // index 0: default
+                                           "automaten.xml",
+                                           "foyer_automaten.xml",
+                                           "foyer_wc.xml",
+                                           "midden_foyer.xml",
+                                           "foyer_leslokaal_trappen.xml",
+                                           "foyer_secr.xml",
+                                           "uitgang_secr.xml",
+                                           "gang_sols.xml",
+                                           "solZ.xml",
+                                           "solN.xml",
+                                           "printerlokaal.xml"};
+
+        allZones = new HashMap<String,Integer>();
+        allZones.put("automaten", 1); // index 0 = default
+        allZones.put("foyer_automaten", 2);
+        allZones.put("foyer_wc", 3);
+        allZones.put("midden_foyer", 4);
+        allZones.put("foyer_leslokaal_trappen", 5);
+        allZones.put("foyer_secr", 6);
+        allZones.put("uitgang_secr", 7);
+        allZones.put("gang_sols", 8);
+        allZones.put("solZ", 9);
+        allZones.put("solN", 10);
+        allZones.put("printerlokaal", 10);
+        //TODO: zones toevoegen
+
+        Log.d(LOGTAG,"after targets init");
+    }
+
     // Called when the activity first starts or the user navigates back to an
     // activity.
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-        Log.d(LOGTAG, "ImageTargets: onCreate");
+        init();
+
+        Log.d(LOGTAG, "\n\n================================================\nImageTargets: onCreate\n");
         super.onCreate(savedInstanceState);
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
-//        mDatasetStrings.add("StonesAndChips.xml");
-//        mDatasetStrings.add("Tarmac.xml");
-        mDatasetStrings.add("Foyer.xml");
 
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -132,7 +173,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mGestureDetector = new GestureDetector(this, new GestureListener());
         // Load any sample specific textures:
         mTextures = new Vector<Texture>();
-        loadTextures();
+        loadTextures(); // loads the teapot
         Log.d(LOGTAG,"After loadTextures");
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
             "droid");
@@ -141,16 +182,17 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         //ICEAGE this is temporary, should only become true when an object is detected.
 //        showCollectButton = true;
 
+        setTargetsToFollow(new ArrayList<String>());
+
         showCollectButton = false;
         addOverlayView();
+
         Log.d(LOGTAG, "Vuforia end of onCreate");
         new LocationActivity(this);
 
     }
 
-    //BEGIN ICEAGE STUFF
-
-
+    @IceAge
     public void onClickCollectButton(View view){
         mRenderer.collectCurrentPicture();
         count++;
@@ -159,6 +201,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     }
 
+    @IceAge
     public void onClickStatusButton(View view) {
         String acorn_s = null;
 
@@ -179,8 +222,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mRenderer.displayMessage(toastStatusText,0);
     }
 
-
-    //END ICE STUFF
+    @IceAge
+    public void onClickZoneButton(View view) {
+        mRenderer.displayMessage(zonesString,0);
+    }
 
     // Process Single Tap event to trigger autofocus
     private class GestureListener extends
@@ -237,6 +282,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     // Called when the activity will start interacting with the user.
     @Override
+    @IceAge
     protected void onResume()
     {
         Log.d(LOGTAG, "onResume");
@@ -408,18 +454,37 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         addOverlayView();
     }
 
-    //ICEAGE ADDED
-    public void enteredZones(List<Zone> zones){
-        String s = "zones: ";
-        for(Zone zone: zones){
-            Log.d("zone", zone.toString());
-            s = s + zone.getName();
+    @IceAge
+    private void setTargetsToFollow(List<String> zones) {
+        mDatasetStrings.clear();
+
+        for(String zone: zones) {
+            int zoneIndex = allZones.get(zone);
+            mDatasetStrings.add(listDatasetStrings[zoneIndex]);
         }
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
-        // doe hier iets om te bepalen welke images targets zijn
+
+        if(mDatasetStrings.isEmpty()) {
+            mDatasetStrings.add(listDatasetStrings[0]);
+        }
+
+        vuforiaAppSession.doReloadTargets();
     }
 
+    @IceAge
+    public void enteredZones(List<String> zones){
+        setTargetsToFollow(zones); // zet de juiste targets
 
+        String s = "Zones:\n";
+        for(String zone: zones){
+            s = s + " - " + zone + "\n";
+        }
+        Log.d(LOGTAG,s);
+
+        zonesString = s;
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+    }
+
+    @IceAge
     private void addOverlayView(){
 //        Log.d("addOverlayView", "showCollectButton: " + showCollectButton);
         // Inflates the Overlay Layout to be displayed above the Camera View
@@ -476,42 +541,57 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @Override
     public boolean doLoadTrackersData()
     {
+        // Indicate if the trackers were unloaded correctly
+        boolean result = true;
+
         TrackerManager tManager = TrackerManager.getInstance();
         ObjectTracker objectTracker = (ObjectTracker) tManager
             .getTracker(ObjectTracker.getClassType());
         if (objectTracker == null)
             return false;
         
-        if (mCurrentDataset == null)
-            mCurrentDataset = objectTracker.createDataSet();
-        
-        if (mCurrentDataset == null)
-            return false;
-        
-        if (!mCurrentDataset.load(
-            mDatasetStrings.get(mCurrentDatasetSelectionIndex),
-            STORAGE_TYPE.STORAGE_APPRESOURCE))
-            return false;
-        
-        if (!objectTracker.activateDataSet(mCurrentDataset))
-            return false;
-        
-        int numTrackables = mCurrentDataset.getNumTrackables();
-        for (int count = 0; count < numTrackables; count++)
-        {
-            Trackable trackable = mCurrentDataset.getTrackable(count);
-            if(isExtendedTrackingActive())
-            {
-                trackable.startExtendedTracking();
-            }
-            
-            String name = "Current Dataset : " + trackable.getName();
-            trackable.setUserData(name);
-            Log.d(LOGTAG, "UserData:Set the following user data "
-                + (String) trackable.getUserData());
+        if (listDatasets != null) {
+            doUnloadTrackersData();
         }
-        
-        return true;
+
+        listDatasets = new DataSet[mDatasetStrings.size()];
+
+        for(int i = 0; i < mDatasetStrings.size(); i++) {
+            mCurrentDatasetSelectionIndex = i;
+            listDatasets[i] = objectTracker.createDataSet();
+
+            if (listDatasets[i] == null)
+                return false;
+
+            if (!listDatasets[i].load(
+                    mDatasetStrings.get(mCurrentDatasetSelectionIndex),
+                    STORAGE_TYPE.STORAGE_APPRESOURCE))
+                return false;
+
+            if (!objectTracker.activateDataSet(listDatasets[i]))
+                result = false;
+
+            int numTrackables = listDatasets[i].getNumTrackables();
+
+            String dataString = "";
+            for (int count = 0; count < numTrackables; count++)
+            {
+                Trackable trackable = listDatasets[i].getTrackable(count);
+                if(isExtendedTrackingActive())
+                {
+                    trackable.startExtendedTracking();
+                }
+
+                String name = "Current Dataset : " + trackable.getName();
+                trackable.setUserData(name);
+                dataString += trackable.getName() + " ";
+            }
+            Log.d(LOGTAG,"=====Current Dataset : " + dataString);
+        }
+        mCurrentDatasetSelectionIndex = 0;
+
+        Log.d(LOGTAG,objectTracker.getActiveDataSet().toString());
+        return result;
     }
     
     
@@ -527,18 +607,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         if (objectTracker == null)
             return false;
         
-        if (mCurrentDataset != null && mCurrentDataset.isActive())
+        if (listDatasets != null)
         {
-            if (objectTracker.getActiveDataSet().equals(mCurrentDataset)
-                && !objectTracker.deactivateDataSet(mCurrentDataset))
-            {
-                result = false;
-            } else if (!objectTracker.destroyDataSet(mCurrentDataset))
-            {
-                result = false;
+            // deactivate and destroy all current datasets
+            for(DataSet data: listDatasets) {
+                if(!objectTracker.deactivateDataSet(data)) result = false;
             }
-            
-            mCurrentDataset = null;
+
+            listDatasets = null;
         }
         
         return result;
@@ -792,11 +868,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             .addGroup(getString(R.string.menu_datasets), true);
         mStartDatasetsIndex = CMD_DATASET_START_INDEX;
         mDatasetsNumber = mDatasetStrings.size();
-        
-//        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, false);
-        //Ik denk dat dit puur cosmetisch is.
-        group.addRadioItem("TestImages", mStartDatasetsIndex, true);
-//        group.addRadioItem("Test", mStartDatasetsIndex + 2, true);
+
+        //TODO : mag dit weg?
+        //group.addRadioItem("CW", mStartDatasetsIndex, false); // ICEAGE : addtrackables
+        //group.addRadioItem("Stones & Chips", mStartDatasetsIndex + 1, false);
+        //group.addRadioItem("Tarmac", mStartDatasetsIndex + 2, false);
+        //group.addRadioItem("Test", mStartDatasetsIndex + 3, true);
+        //group.addRadioItem("Foyer", mStartDatasetsIndex + 4, true);
+
         
         mSampleAppMenu.attachMenu();
     }

@@ -9,6 +9,8 @@
 
 # Android Studio
 local.properties
+app/build
 build
 gradle
 .idea
+.gradle

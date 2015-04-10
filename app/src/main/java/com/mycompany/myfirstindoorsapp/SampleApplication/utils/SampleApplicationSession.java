@@ -17,6 +17,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
 
+import com.mycompany.myfirstindoorsapp.IceAge;
 import com.mycompany.myfirstindoorsapp.R;
 import com.mycompany.myfirstindoorsapp.R.string;
 import com.qualcomm.vuforia.CameraCalibration;
@@ -35,7 +36,7 @@ import com.qualcomm.vuforia.Vuforia.UpdateCallbackInterface;
 public class SampleApplicationSession implements UpdateCallbackInterface
 {
     
-    private static final String LOGTAG = "Vuforia_Sample_Applications";
+    private static final String LOGTAG = "Vuforia_Sample_Apps";
     
     // Reference to the current activity
     private Activity mActivity;
@@ -76,7 +77,24 @@ public class SampleApplicationSession implements UpdateCallbackInterface
     {
         mSessionControl = sessionControl;
     }
-    
+
+
+    @IceAge
+    public void doReloadTargets() {
+        if (mLoadTrackerTask != null
+                && mLoadTrackerTask.getStatus() != LoadTrackerTask.Status.FINISHED)
+        {
+            mLoadTrackerTask.cancel(true);
+        }
+
+        try
+        {
+            mLoadTrackerTask.restart();
+        } catch (Exception e)
+        {
+            Log.e(LOGTAG, "Loading tracking data set failed");
+        }
+    }
     
     // Initializes Vuforia and sets up preferences.
     public void initAR(Activity activity, int screenOrientation)
@@ -451,6 +469,23 @@ public class SampleApplicationSession implements UpdateCallbackInterface
                 return mSessionControl.doLoadTrackersData();
             }
         }
+
+        @IceAge
+        public Boolean restart()
+        {
+            Log.d(LOGTAG,"restart loadTracker");
+            // Prevent the onDestroy() method to overlap:
+            synchronized (mShutdownLock)
+            {
+                // Load the tracker data set:
+                if(mSessionControl.doUnloadTrackersData()) {
+                    return mSessionControl.doLoadTrackersData();
+                }
+                else {
+                    return false;
+                }
+            }
+        }
         
         
         protected void onPostExecute(Boolean result)
@@ -466,9 +501,10 @@ public class SampleApplicationSession implements UpdateCallbackInterface
                 String logMessage = "Failed to load tracker data.";
                 // Error loading dataset
                 Log.e(LOGTAG, logMessage);
-                vuforiaException = new SampleApplicationException(
-                    SampleApplicationException.LOADING_TRACKERS_FAILURE,
-                    logMessage);
+                // ICEAGE
+                //vuforiaException = new SampleApplicationException(
+                //    SampleApplicationException.LOADING_TRACKERS_FAILURE,
+                //    logMessage);
             } else
             {
                 // Hint to the virtual machine that it would be a good time to
