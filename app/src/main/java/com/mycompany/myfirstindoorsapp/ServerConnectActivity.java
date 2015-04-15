@@ -3,6 +3,8 @@ package com.mycompany.myfirstindoorsapp;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.view.View;
 import android.widget.EditText;
 import com.mycompany.myfirstindoorsapp.ImageTargets.ImageTargets;
@@ -17,6 +19,9 @@ public class ServerConnectActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server_connect);
+        EditText userNameText = (EditText) findViewById(R.id.username);
+        userNameText.setFilters(new InputFilter[] { filter });
+
     }
 
 
@@ -33,4 +38,22 @@ public class ServerConnectActivity extends Activity {
         startActivity(i);
 
     }
+
+    //This prevents the using from using ":" in his/her username
+    //Since this character is used to separate different messages sent to the server.
+    private String blockCharacterSet = ":";
+
+    private InputFilter filter = new InputFilter() {
+
+        @Override
+        public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+
+            if (source != null && blockCharacterSet.contains(("" + source))) {
+                return "";
+            }
+            return null;
+        }
+    };
+
+
 }

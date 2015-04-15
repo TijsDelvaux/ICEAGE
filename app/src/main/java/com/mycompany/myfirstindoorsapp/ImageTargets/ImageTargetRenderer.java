@@ -363,8 +363,9 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 
     //This method should be called when pressing the "collect" button when an acorn is visible.
     //The picture then should be removed from the trackable list
-    public void collectCurrentPicture(){
+    public String collectCurrentPicture(){
         excludedImageList.add(currentImage);
+        return currentImage;
     }
 
 

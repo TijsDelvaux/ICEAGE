@@ -122,7 +122,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private String serverIP;
     private String username;
     private int port;
-    private Socket client;
+//    private Socket client;
 //    NetworkTask networktask;
 
     // Called when the activity first starts or the user navigates back to an
@@ -138,7 +138,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         username = b.getString("username");
         port = 4444;
 
-        sendMessage("Hello");
+        sendMessage(0,"Hello");
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
@@ -163,11 +163,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     //ICEAGE
     public void onClickCollectButton(View view){
-        mRenderer.collectCurrentPicture();
+        String currentImage = mRenderer.collectCurrentPicture();
         count++;
         String toastCollectedText = getString(R.string.collect_button_toast);
         mRenderer.displayMessage(toastCollectedText,0);
-        sendMessage("I picked up an Acorn");
+        // 0 as code for picking up things
+        // this way the server knows it has to add the image to
+        sendMessage(0, currentImage);
     }
 
     //ICEAGE
@@ -963,8 +965,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
     //ICEAGE
-    public void sendMessage(String message){
-        String userMessage = username + ": " + message;
+    // :'s are used so the server can distinguish different parts of the message.
+    public void sendMessage(int code, String message){
+        String userMessage = username + ":" + code + ":" + message;
         ClientTask clientTask = new ClientTask(serverIP,port, userMessage);
         clientTask.execute();
     }
@@ -1003,11 +1006,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 response = dataInputStream.readUTF();
 
             } catch (UnknownHostException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 response = "UnknownHostException: " + e.toString();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 response = "IOException: " + e.toString();
             } finally {
@@ -1015,7 +1016,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     try {
                         socket.close();
                     } catch (IOException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
@@ -1024,7 +1024,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     try {
                         dataOutputStream.close();
                     } catch (IOException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
@@ -1033,7 +1032,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     try {
                         dataInputStream.close();
                     } catch (IOException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
@@ -1043,9 +1041,32 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         @Override
         protected void onPostExecute(Void result) {
-            showToast(response);
+            String[] splitResponse = response.split(":");
+            String responseCode = splitResponse[0];
+            String rsp = splitResponse[1];
+            switch (Integer.parseInt(responseCode)){
+                //Don't do anything
+                case 0:
+                    break;
+                //Show a toast
+                case 1:
+                    showToast(rsp);
+                    break;
+                //update the client's excludedList in ImageTargetRenderer
+                case 2:
+                    updateExcludedList(rsp);
+                default:
+                    break;
+
+            }
             super.onPostExecute(result);
         }
+
+    }
+
+    public void updateExcludedList(String excludes){
+        String[] list = excludes.split(";");
+        //TODO the rest
 
     }
 
