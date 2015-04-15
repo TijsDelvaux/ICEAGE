@@ -4,18 +4,45 @@
     android:orientation="vertical"
     android:gravity="center">
 
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Username"
+        android:layout_gravity="center_horizontal"
+        android:textSize="20sp"
+        android:textColor="@color/light_gray"/>
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/username"
+        android:text="Scrat"
+        android:layout_marginBottom="20dp"
+        android:textSize="20sp"/>
+    <requestFocus/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Server ip"
+        android:layout_gravity="center_horizontal"
+        android:textSize="20sp"
+        android:textColor="@color/light_gray"/>
+
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/server_ip"
-        android:text="192.168.1.100"
-        android:layout_marginBottom="20dp"/>
+        android:text="192.168.1.104"
+        android:layout_marginBottom="20dp"
+        android:textSize="20sp"/>
     <requestFocus/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/button_server_connect"
-        android:text="Connect"
+        android:text="Start playing!"
         android:onClick="connectToServer"/>
 </LinearLayout>

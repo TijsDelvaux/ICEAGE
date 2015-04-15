@@ -7,6 +7,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.InetAddress; 
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * This is a simple server application. This server receive a string message
@@ -20,6 +22,14 @@ public class Server {
   private static InputStreamReader inputStreamReader;
   private static BufferedReader bufferedReader;
   private static String message;
+
+  //Deze map bevat voor elke zone een lijst van NIET beschikbare targets (dingen waarop een eikel wordt getoont)
+  //Als een persoon een zone binnenstapt moet de juiste lijst (en misschien de lijsten van naburige zones)
+  //naar die persoon gestuurd worden.
+  //Wanneer een target de app een target detecteert, dan zal deze kijken naar deze lijst.
+  //Als de naam van de target in de lijst zit, dan verschijnt er geen eikel.
+  //{<"midden_foyer",["foto1",foto9"]>,<"",["foto4",foto2"]>,...}
+  private HashMap<String, ArrayList<String>> excludedTargets = new HashMap<String, ArrayList<String>>();
  
   public static void main(String[] args) {
     try {
@@ -42,6 +52,7 @@ public class Server {
       try {
  
         clientSocket = serverSocket.accept(); // accept the client connection
+        System.out.println("Connection with: " + clientSocket.getInetAddress().getHostName());
         inputStreamReader = new InputStreamReader(clientSocket.getInputStream());
         bufferedReader = new BufferedReader(inputStreamReader); // get the client message
         message = bufferedReader.readLine();

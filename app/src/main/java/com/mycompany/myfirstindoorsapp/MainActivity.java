@@ -19,9 +19,11 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
     }
     
-    public void startPlay(View view) { startActivity(new Intent(this, ImageTargets.class));
+//    public void startPlay(View view) { startActivity(new Intent(this, ImageTargets.class));
+//    }
+    public void startPlay(View view) {  startActivity(new Intent(this,ServerConnectActivity.class));
     }
-    
+
     public void startMap(View view) {
         startActivity(new Intent(this, MapActivity.class));
     }

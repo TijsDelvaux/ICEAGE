@@ -12,6 +12,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import org.apache.http.conn.ClientConnectionManager;
+
 /**
  * This is a simple Android mobile client
  * This application read any string massage typed on the text field and 
