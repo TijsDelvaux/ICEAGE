@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.mycompany.myfirstindoorsapp.SampleApplication.utils.Acorn;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.CubeShaders;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.LoadingDialogHandler;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleApplication3DModel;
@@ -60,7 +61,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     
     private int texSampler2DHandle;
     
-    private Teapot mTeapot;
+    private Acorn acorn;
     
     private float kBuildingScale = 12.0f;
     private SampleApplication3DModel mBuildingsModel;
@@ -126,7 +127,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     // Function for initializing the renderer.
     private void initRendering()
     {
-        mTeapot = new Teapot();
+        acorn = new Acorn();
         
         mRenderer = Renderer.getInstance();
         
@@ -251,11 +252,11 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             if (!mActivity.isExtendedTrackingActive())
             {
                 GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, mTeapot.getVertices());
+                    false, 0, acorn.getVertices());
                 GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, mTeapot.getNormals());
+                    false, 0, acorn.getNormals());
                 GLES20.glVertexAttribPointer(textureCoordHandle, 2,
-                    GLES20.GL_FLOAT, false, 0, mTeapot.getTexCoords());
+                    GLES20.GL_FLOAT, false, 0, acorn.getTexCoords());
                 
                 GLES20.glEnableVertexAttribArray(vertexHandle);
                 GLES20.glEnableVertexAttribArray(normalHandle);
@@ -272,9 +273,11 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                     modelViewProjection, 0);
                 
                 // finally draw the teapot
-                GLES20.glDrawElements(GLES20.GL_TRIANGLES,
-                    mTeapot.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT,
-                    mTeapot.getIndices());
+                // https://developer.vuforia.com/forum/android/convert-obj-my-own-java-meshobject
+//                GLES20.glDrawElements(GLES20.GL_TRIANGLES,
+//                    mTeapot.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT,
+//                    mTeapot.getIndices());
+                GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, acorn.getNumObjectVertex());
                 
                 // disable the enabled arrays
                 GLES20.glDisableVertexAttribArray(vertexHandle);
