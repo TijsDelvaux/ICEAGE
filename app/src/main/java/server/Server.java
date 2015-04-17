@@ -10,17 +10,24 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 
 public class Server   {
 
     private ServerSocket serverSocket;
     private int port = 4444;
 
-    private ArrayList<String> excludedList;
+    private ArrayList<String> clientNames;
+    private HashSet<String> excludedList;
+    int count;
+    int total;
 
 
     public Server(){
-        excludedList = new ArrayList<String>();
+        count = 0;
+        total = 56;
+        clientNames = new ArrayList<String>();
+        excludedList = new HashSet<String>();
         Thread socketServerThread = new Thread(new SocketServerThread());
         socketServerThread.start();
     }
@@ -59,37 +66,69 @@ public class Server   {
                     //If no message sent from client, this code will block the program
                     messageFromClient = dataInputStream.readUTF();
 
-                    System.out.println(messageFromClient);
+//                    System.out.println(messageFromClient);
+
                     String[] splitMessage = messageFromClient.split(":");
                     String clientName = splitMessage[0];
                     String messageCode = splitMessage[1];
                     String msg = splitMessage[2];
 
+                    if(!clientNames.contains(clientName)){
+                        clientNames.add(clientName);
+                    }
+
                     String printMessage = "";
+                    String reply = "";
+
 
                     switch (Integer.parseInt(messageCode)){
                         //Client picked up an acorn, add the picture-name to the excluded list
                         //TODO add zones!!
                         case 0:
-                            excludeFromList(msg);
+                            excludedList.add(msg);
+                            count++;
                             printMessage = "I picked up: " + msg;
+                            String message = clientName + ": " + printMessage;
+                            System.out.println(message);
+                            reply = "1:" + count + "/" + total + " are found";
                             break;
                         //Just a message
                         case 1:
                             printMessage = msg;
+                            reply = "0:0";
+                            message = clientName + ": " + printMessage;
+                            System.out.println(message);
+                            break;
+                        case 2:
+                            //TODO entering new zone, update excluded list on client
+                            printMessage = "Shouldn't be able to get here yet...";
+                            reply = "0:0";
+                            break;
+                        //Check if the asked picture is in the excluded list
+                        case 3:
+                            boolean isTaken = excludedList.contains(msg);
+                            if(isTaken){
+                                reply = "3:" + msg;
+                                printMessage = "This picture ("+ msg +") has already been taken";
+                            }else{
+                                reply = "3:free:" + msg;
+                                printMessage = "This picture ("+ msg +") is free!";
+                            }
+
                             break;
                         default:
                             printMessage = "Something went wrong, invalid messagecode";
+                            reply = "0:0";
                             break;
+
                     }
 
 
-                    String message = clientName + ": " + printMessage;
-                    System.out.println(message);
+//                    String message = clientName + ": " + printMessage;
+//                    System.out.println(message);
 
-                    String msgReply = "0:rubbish";
-                    System.out.println("Sending message to " + clientName + ": " + msgReply);
-                    dataOutputStream.writeUTF(msgReply);
+//                    System.out.println("Sending message to " + clientName + ": " + reply);
+                    dataOutputStream.writeUTF(reply);
 
                 }
             } catch (IOException e) {

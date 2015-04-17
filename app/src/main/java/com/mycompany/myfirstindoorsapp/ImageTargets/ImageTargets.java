@@ -7,12 +7,9 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 
 package com.mycompany.myfirstindoorsapp.ImageTargets;
 
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -21,7 +18,6 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -138,11 +134,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         username = b.getString("username");
         port = 4444;
 
-        sendMessage(0,"Hello");
+        sendMessageToServer(1, "Hello");
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
-        mDatasetStrings.add("Foyer.xml");
+        mDatasetStrings.add("Thuis.xml");
 
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -157,7 +153,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         showCollectButton = false;
         addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
-        new LocationActivity(this);
+//        new LocationActivity(this);
 
     }
 
@@ -169,7 +165,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mRenderer.displayMessage(toastCollectedText,0);
         // 0 as code for picking up things
         // this way the server knows it has to add the image to
-        sendMessage(0, currentImage);
+        sendMessageToServer(0, currentImage);
     }
 
     //ICEAGE
@@ -268,14 +264,15 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
                         showCollectButton = false;
+//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
                         break;
-//                        Log.d("ImageTargetHandler", (String) msg.obj);
-//                        addOverlayView();
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
                         showCollectButton = true;
-//                        Log.d("ImageTargetHandler", (String) msg.obj);
-//                        addOverlayView();
+//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
+                        break;
+                    case 3: //Check if the detected image already has been taken
+                        sendMessageToServer(3, (String) msg.obj);
                         break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
@@ -310,6 +307,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         }
         
     }
+
     
     
     // Callback for configuration changes the activity handles itself
@@ -966,7 +964,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     //ICEAGE
     // :'s are used so the server can distinguish different parts of the message.
-    public void sendMessage(int code, String message){
+    // 0 = Picking up an image
+    // 1 = just a plain message to the server
+    // 2 = for entering a new zone
+    // 3 = to check if the detected image is already taken
+    public void sendMessageToServer(int code, String message){
         String userMessage = username + ":" + code + ":" + message;
         ClientTask clientTask = new ClientTask(serverIP,port, userMessage);
         clientTask.execute();
@@ -1041,23 +1043,38 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         @Override
         protected void onPostExecute(Void result) {
+            try {
             String[] splitResponse = response.split(":");
             String responseCode = splitResponse[0];
             String rsp = splitResponse[1];
-            switch (Integer.parseInt(responseCode)){
-                //Don't do anything
-                case 0:
-                    break;
-                //Show a toast
-                case 1:
-                    showToast(rsp);
-                    break;
-                //update the client's excludedList in ImageTargetRenderer
-                case 2:
-                    updateExcludedList(rsp);
-                default:
-                    break;
+                switch (Integer.parseInt(responseCode)) {
+                    //Don't do anything
+                    case 0:
+                        break;
+                    //Show a toast
+                    case 1:
+                        showToast(rsp);
+                        break;
+                    //update the client's excludedList in ImageTargetRenderer
+                    case 2:
+                        updateExcludedList(rsp);
+                        break;
+                    //Reply from isTaken
+                    case 3:
+                        if (!rsp.equals("free")) {
+                            mRenderer.addToExcludedSet(rsp);
+//                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
+                        } else {
+                            mRenderer.addToFreeSet(splitResponse[2]);
+//                            Log.d("CLIENTTASK", "adding image " + splitResponse[2] + " to freeSet");
+                        }
+                        break;
+                    default:
+                        break;
 
+                }
+            }catch(Exception e){
+                Log.e("CLIENTTASK",e.getMessage() + "\nResponse: " + response);
             }
             super.onPostExecute(result);
         }

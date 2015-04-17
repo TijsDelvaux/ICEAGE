@@ -8,7 +8,7 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 package com.mycompany.myfirstindoorsapp.ImageTargets;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Vector;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -71,7 +71,8 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     
     private static final float OBJECT_SCALE_FLOAT = 3.0f;
 
-    private ArrayList<String> excludedImageList = new ArrayList<String>();
+    private HashSet<String> excludedImageSet = new HashSet<String>();
+    private HashSet<String> freeImageSet = new HashSet<String>();
     private String currentImage;
 
 
@@ -204,17 +205,25 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         // did we find any trackables this frame?
         for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
         {
+
             TrackableResult result = state.getTrackableResult(tIdx);
             Trackable trackable = result.getTrackable();
             currentImage = trackable.getName();
-            if(excludedImageList.contains(currentImage)){
-//                Log.d("ImageTargetRenderer", "Excluding currentImage");
+            if(excludedImageSet.contains(currentImage)){
+                disableCollectButton();
                 continue;
             }
+
+            isTaken(currentImage);
             //ICEAGE
             //Enabling collect button
-            displayMessage("Found something!", 2);
-            printUserData(trackable);
+//            if(freeImageSet.contains(currentImage)){
+                enableCollectButton();
+//            }else{
+//                disableCollectButton();
+//            }
+
+//            printUserData(trackable);
             Matrix44F modelViewMatrix_Vuforia = Tool
                 .convertPose2GLMatrix(result.getPose());
             float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
@@ -316,11 +325,11 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     }
     
     
-    private void printUserData(Trackable trackable)
-    {
-        String userData = (String) trackable.getUserData();
-        Log.d(LOGTAG, "UserData:Retreived User Data	\"" + userData + "\"");
-    }
+//    private void printUserData(Trackable trackable)
+//    {
+//        String userData = (String) trackable.getUserData();
+//        Log.d(LOGTAG, "UserData:Retreived User Data	\"" + userData + "\"");
+//    }
     
     
     public void setTextures(Vector<Texture> textures)
@@ -346,27 +355,42 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         ImageTargetHandler.sendMessage(message);
     }
 
-//    public void showCollectButton(){
-//        Message message = new Message();
-//        Message message = new Message();
-//        message.obj = "";
-//        message.what = 1;
-//        ImageTargetHandler.sendMessage(message);
-//    }
-//
-//    public void hideCollectButton(){
-//        Message message = new Message();
-//        message.obj = "";
-//        message.what = 2;
-//        ImageTargetHandler.sendMessage(message);
-//    }
+
+    public void disableCollectButton(){
+        displayMessage("Disabling collect button", 1);
+    }
+
+    public void enableCollectButton(){
+        displayMessage("Enabling collect button", 2);
+    }
+
+    public void isTaken(String image){
+        displayMessage(image, 3);
+    }
+
+
 
     //This method should be called when pressing the "collect" button when an acorn is visible.
     //The picture then should be removed from the trackable list
     public String collectCurrentPicture(){
-        excludedImageList.add(currentImage);
+        excludedImageSet.add(currentImage);
         return currentImage;
     }
+
+    public void addToFreeSet(String image){
+        freeImageSet.add(image);
+    }
+
+    public void addToExcludedSet(String image){
+        excludedImageSet.add(image);
+        if(freeImageSet.contains(image)){
+            freeImageSet.remove(image);
+        }
+    }
+
+//    public boolean freeSetContains(String image){
+//        return freeImageSet.contains(image);
+//    }
 
 
 }
