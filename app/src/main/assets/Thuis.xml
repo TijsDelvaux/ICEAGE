@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="20150416_161551" size="400.000000 300.000000" />
+    <ImageTarget name="20150416_161540" size="100.000000 86.414047" />
+    <ImageTarget name="20150416_161533" size="90.000000 65.895523" />
+    <ImageTarget name="20150416_161506" size="40.000000 16.133892" />
+    <ImageTarget name="20150416_161449" size="150.000000 69.464722" />
+    <ImageTarget name="20150416_161437" size="65.000000 48.750000" />
+    <ImageTarget name="20150416_161423" size="40.000000 30.000000" />
+    <ImageTarget name="20150416_161405" size="35.000000 26.250000" />
+    <ImageTarget name="20150416_161341" size="40.000000 8.829114" />
+    <ImageTarget name="20150416_161331" size="25.000000 11.612576" />
+    <ImageTarget name="20150416_161322" size="100.000000 75.000000" />
+    <ImageTarget name="20150416_160508" size="250.000000 187.500000" />
+    <ImageTarget name="20150416_160452" size="50.000000 23.940678" />
+    <ImageTarget name="20150416_160439" size="400.000000 300.000000" />
+    <ImageTarget name="20150416_160402" size="300.000000 225.000000" />
+    <ImageTarget name="20150416_160349" size="300.000000 108.549225" />
+    <ImageTarget name="20150416_160334" size="300.000000 101.694916" />
+    <ImageTarget name="20150416_160129" size="900.000000 675.000000" />
+    <ImageTarget name="20150416_160047" size="300.000000 203.819092" />
+    <ImageTarget name="20150416_160040" size="350.000000 279.562042" />
+    <ImageTarget name="20150416_160028" size="300.000000 196.205353" />
+    <ImageTarget name="20150416_160011" size="500.000000 272.611450" />
+    <ImageTarget name="20150416_155944" size="500.000000 401.337799" />
+    <ImageTarget name="20150416_155936" size="500.000000 383.644867" />
+    <ImageTarget name="20150416_160321" size="800.000000 600.000000" />
+    <ImageTarget name="20150416_160312" size="40.000000 30.566038" />
+    <ImageTarget name="20150416_160255" size="400.000000 201.265823" />
+    <ImageTarget name="20150416_160241" size="400.000000 355.816223" />
+    <ImageTarget name="20150416_160206" size="200.000000 83.753944" />
+    <ImageTarget name="20150416_160151" size="500.000000 365.400482" />
+    <ImageTarget name="20150416_160144" size="200.000000 143.554001" />
+    <ImageTarget name="20150416_155919" size="300.000000 205.400696" />
+    <ImageTarget name="20150416_155902" size="200.000000 104.682625" />
+    <ImageTarget name="20150416_155843" size="200.000000 121.672356" />
+    <ImageTarget name="20150416_155829" size="200.000000 60.904522" />
+    <ImageTarget name="20150416_155736" size="200.000000 150.000000" />
+    <ImageTarget name="20150416_155724" size="200.000000 84.372177" />
+    <ImageTarget name="20150416_155708" size="200.000000 110.000000" />
+    <ImageTarget name="20150416_154116" size="200.000000 118.115356" />
+    <ImageTarget name="20150416_154048" size="200.000000 150.000000" />
+    <ImageTarget name="20150416_154030" size="200.000000 96.125458" />
+    <ImageTarget name="20150416_153854" size="200.000000 49.687500" />
+    <ImageTarget name="20150416_153731" size="300.000000 225.000000" />
+    <ImageTarget name="20150416_153714" size="200.000000 45.972851" />
+    <ImageTarget name="20150416_153700" size="300.000000 225.000000" />
+    <ImageTarget name="20150416_153647" size="300.000000 101.597443" />
+    <ImageTarget name="20150416_153557" size="200.000000 50.270271" />
+    <ImageTarget name="20150416_153542" size="200.000000 132.527695" />
+    <ImageTarget name="20150416_153527" size="300.000000 201.545456" />
+    <ImageTarget name="20150416_153439" size="200.000000 154.853806" />
+    <ImageTarget name="20150416_153418" size="200.000000 56.406250" />
+    <ImageTarget name="20150416_153404" size="200.000000 188.675430" />
+    <ImageTarget name="20150416_153357" size="200.000000 158.176941" />
+    <ImageTarget name="20150416_153331" size="200.000000 186.770432" />
+    <ImageTarget name="20150416_153320" size="100.000000 45.082611" />
+    <ImageTarget name="20150416_153310" size="300.000000 208.707367" />
+  </Tracking>
+</QCARConfig>
