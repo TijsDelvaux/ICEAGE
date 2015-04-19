@@ -20,6 +20,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -36,6 +37,9 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.customlbs.library.model.Zone;
+import com.mycompany.myfirstindoorsapp.LocationActivity;
+import com.mycompany.myfirstindoorsapp.MapActivity;
 import com.mycompany.myfirstindoorsapp.R;
 import com.mycompany.myfirstindoorsapp.R.string;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenu;
@@ -118,8 +122,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
-        mDatasetStrings.add("StonesAndChips.xml");
-        mDatasetStrings.add("Tarmac.xml");
+//        mDatasetStrings.add("StonesAndChips.xml");
+//        mDatasetStrings.add("Tarmac.xml");
         mDatasetStrings.add("Foyer.xml");
 
         vuforiaAppSession
@@ -137,16 +141,21 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         //ICEAGE this is temporary, should only become true when an object is detected.
 //        showCollectButton = true;
 
-
+<<<<<<< Temporary merge branch 1
+=======
+        showCollectButton = false;
+>>>>>>> Temporary merge branch 2
         addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
+        new LocationActivity(this);
+
     }
 
     //BEGIN ICEAGE STUFF
 
 
     public void onClickCollectButton(View view){
-
+        mRenderer.collectCurrentPicture();
         count++;
         String toastCollectedText = getString(R.string.collect_button_toast);
         mRenderer.displayMessage(toastCollectedText,0);
@@ -236,31 +245,40 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG, "onResume");
         super.onResume();
 
+        //ICEAGE
         // Create a new handler for the renderer thread to use
         // This is necessary as only the main thread can make changes to the UI
         mRenderer.ImageTargetHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what) {
-                    case 0: //show a toast with contents of the message (# acorns  gathered)
+                    case 0: //show a toast with contents of the message (ex: # acorns  gathered)
                         Context context = getApplicationContext();
                         String text = (String) msg.obj;
                         int duration = Toast.LENGTH_SHORT;
                         Toast toast = Toast.makeText(context, text, duration);
                         toast.show();
+                        break;
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
                         showCollectButton = false;
+                        break;
 //                        Log.d("ImageTargetHandler", (String) msg.obj);
-                        addOverlayView();
+//                        addOverlayView();
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
                         showCollectButton = true;
 //                        Log.d("ImageTargetHandler", (String) msg.obj);
-                        addOverlayView();
+//                        addOverlayView();
+                        break;
+                    default:
+//                        Log.d("ImageTargetHandler", "Nothing");
+                        break;
                 }
             }
         };
+        //End ICEAGE
+
 
         // This is needed for some Droid devices to force portrait
         if (mIsDroidDevice)
@@ -394,6 +412,17 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
     //ICEAGE ADDED
+    public void enteredZones(List<Zone> zones){
+        String s = "zones: ";
+        for(Zone zone: zones){
+            Log.d("zone", zone.toString());
+            s = s + zone.getName();
+        }
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+        // doe hier iets om te bepalen welke images targets zijn
+    }
+
+
     private void addOverlayView(){
 //        Log.d("addOverlayView", "showCollectButton: " + showCollectButton);
         // Inflates the Overlay Layout to be displayed above the Camera View
@@ -559,10 +588,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             else
                 Log.e(LOGTAG, "Unable to enable continuous autofocus");
             
-            mSampleAppMenu = new SampleAppMenu(this, this, "Image Targets",
+            mSampleAppMenu = new SampleAppMenu(this, this, getString(string.app_name),
                 mGlView, mUILayout, null);
             setSampleAppMenuSettings();
-            
+
         } else
         {
             Log.e(LOGTAG, exception.getString());
@@ -767,9 +796,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mStartDatasetsIndex = CMD_DATASET_START_INDEX;
         mDatasetsNumber = mDatasetStrings.size();
         
-        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, false);
-        group.addRadioItem("Tarmac", mStartDatasetsIndex + 1, false);
-        group.addRadioItem("Test", mStartDatasetsIndex + 2, true);
+//        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, false);
+        //Ik denk dat dit puur cosmetisch is.
+        group.addRadioItem("TestImages", mStartDatasetsIndex, true);
+//        group.addRadioItem("Test", mStartDatasetsIndex + 2, true);
         
         mSampleAppMenu.attachMenu();
     }
