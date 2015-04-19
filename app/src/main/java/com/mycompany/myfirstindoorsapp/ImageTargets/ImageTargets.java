@@ -43,6 +43,7 @@ import android.widget.Toast;
 
 import com.customlbs.library.model.Zone;
 import com.mycompany.myfirstindoorsapp.LocationActivity;
+import com.mycompany.myfirstindoorsapp.MapActivity;
 import com.mycompany.myfirstindoorsapp.R;
 import com.mycompany.myfirstindoorsapp.R.string;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenu;
@@ -148,15 +149,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mTextures = new Vector<Texture>();
         loadTextures();
         Log.d(LOGTAG,"After loadTextures");
-        mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith("droid");
+        mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
+            "droid");
 
-<<<<<<< Temporary merge branch 1
-=======
         showCollectButton = false;
->>>>>>> Temporary merge branch 2
         addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
-//        new LocationActivity(this);
+        new LocationActivity(this);
 
     }
 
@@ -419,13 +418,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
     //ICEAGE ADDED
-    public void enteredZones(List<Zone> zones){
+    public void enteredZones(List<String> zones){
         String s = "zones: ";
-        for(Zone zone: zones){
-            //Log.d("zone", zone.toString());
-            s = s + zone.getName();
+        for(String zone: zones){
+            s = s + zone;
         }
-        //Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+        //TODO Toast tijdelijk uitgeschakeld
+//        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
         // doe hier iets om te bepalen welke images targets zijn
     }
 
