@@ -7,20 +7,24 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 
 package com.mycompany.myfirstindoorsapp.ImageTargets;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
-import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -39,7 +43,6 @@ import android.widget.Toast;
 
 import com.customlbs.library.model.Zone;
 import com.mycompany.myfirstindoorsapp.LocationActivity;
-import com.mycompany.myfirstindoorsapp.MapActivity;
 import com.mycompany.myfirstindoorsapp.R;
 import com.mycompany.myfirstindoorsapp.R.string;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenu;
@@ -112,6 +115,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private boolean showCollectButton;
     private View collectButton;
 
+    private String serverIP;
+    private String username;
+    private int port;
+//    private Socket client;
+//    NetworkTask networktask;
+
     // Called when the activity first starts or the user navigates back to an
     // activity.
     @Override
@@ -119,12 +128,17 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     {
         Log.d(LOGTAG, "ImageTargets: onCreate");
         super.onCreate(savedInstanceState);
+
+        Bundle b = getIntent().getExtras();
+        serverIP = b.getString("ip");
+        username = b.getString("username");
+        port = 4444;
+
+        sendMessageToServer(1, "Hello");
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
-//        mDatasetStrings.add("StonesAndChips.xml");
-//        mDatasetStrings.add("Tarmac.xml");
-        mDatasetStrings.add("Foyer.xml");
+        mDatasetStrings.add("Thuis.xml");
 
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -134,12 +148,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mTextures = new Vector<Texture>();
         loadTextures();
         Log.d(LOGTAG,"After loadTextures");
-        mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
-            "droid");
-
-
-        //ICEAGE this is temporary, should only become true when an object is detected.
-//        showCollectButton = true;
+        mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith("droid");
 
 <<<<<<< Temporary merge branch 1
 =======
@@ -147,21 +156,22 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 >>>>>>> Temporary merge branch 2
         addOverlayView();
         Log.d(LOGTAG, "Vuforia end of onCreate");
-        new LocationActivity(this);
+//        new LocationActivity(this);
 
     }
 
-    //BEGIN ICEAGE STUFF
-
-
+    //ICEAGE
     public void onClickCollectButton(View view){
-        mRenderer.collectCurrentPicture();
+        String currentImage = mRenderer.collectCurrentPicture();
         count++;
         String toastCollectedText = getString(R.string.collect_button_toast);
         mRenderer.displayMessage(toastCollectedText,0);
-
+        // 0 as code for picking up things
+        // this way the server knows it has to add the image to
+        sendMessageToServer(0, currentImage);
     }
 
+    //ICEAGE
     public void onClickStatusButton(View view) {
         String acorn_s = null;
 
@@ -183,7 +193,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
 
-    //END ICE STUFF
 
     // Process Single Tap event to trigger autofocus
     private class GestureListener extends
@@ -253,23 +262,20 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             public void handleMessage(Message msg) {
                 switch (msg.what) {
                     case 0: //show a toast with contents of the message (ex: # acorns  gathered)
-                        Context context = getApplicationContext();
-                        String text = (String) msg.obj;
-                        int duration = Toast.LENGTH_SHORT;
-                        Toast toast = Toast.makeText(context, text, duration);
-                        toast.show();
+                        showToast((String) msg.obj);
                         break;
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
                         showCollectButton = false;
+//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
                         break;
-//                        Log.d("ImageTargetHandler", (String) msg.obj);
-//                        addOverlayView();
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
                         showCollectButton = true;
-//                        Log.d("ImageTargetHandler", (String) msg.obj);
-//                        addOverlayView();
+//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
+                        break;
+                    case 3: //Check if the detected image already has been taken
+                        sendMessageToServer(3, (String) msg.obj);
                         break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
@@ -304,6 +310,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         }
         
     }
+
     
     
     // Callback for configuration changes the activity handles itself
@@ -415,10 +422,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     public void enteredZones(List<Zone> zones){
         String s = "zones: ";
         for(Zone zone: zones){
-            Log.d("zone", zone.toString());
+            //Log.d("zone", zone.toString());
             s = s + zone.getName();
         }
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
         // doe hier iets om te bepalen welke images targets zijn
     }
 
@@ -955,5 +962,132 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private void showToast(String text)
     {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+
     }
+
+    //ICEAGE
+    // :'s are used so the server can distinguish different parts of the message.
+    // 0 = Picking up an image
+    // 1 = just a plain message to the server
+    // 2 = for entering a new zone
+    // 3 = to check if the detected image is already taken
+    public void sendMessageToServer(int code, String message){
+        String userMessage = username + ":" + code + ":" + message;
+        ClientTask clientTask = new ClientTask(serverIP,port, userMessage);
+        clientTask.execute();
+    }
+
+    //ICEAGE
+    public class ClientTask extends AsyncTask<Void, Void, Void> {
+
+        String serverAddress;
+        int serverPort;
+        String response = "";
+        String msgToServer;
+
+        ClientTask(String addr, int port, String msgTo) {
+            serverAddress = addr;
+            serverPort = port;
+            msgToServer = msgTo;
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+
+            Socket socket = null;
+            DataOutputStream dataOutputStream = null;
+            DataInputStream dataInputStream = null;
+
+            try {
+                socket = new Socket(serverAddress, serverPort);
+                dataOutputStream = new DataOutputStream(
+                        socket.getOutputStream());
+                dataInputStream = new DataInputStream(socket.getInputStream());
+
+                if(msgToServer != null){
+                    dataOutputStream.writeUTF(msgToServer);
+                }
+
+                response = dataInputStream.readUTF();
+
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+                response = "UnknownHostException: " + e.toString();
+            } catch (IOException e) {
+                e.printStackTrace();
+                response = "IOException: " + e.toString();
+            } finally {
+                if (socket != null) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (dataOutputStream != null) {
+                    try {
+                        dataOutputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (dataInputStream != null) {
+                    try {
+                        dataInputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            try {
+            String[] splitResponse = response.split(":");
+            String responseCode = splitResponse[0];
+            String rsp = splitResponse[1];
+                switch (Integer.parseInt(responseCode)) {
+                    //Don't do anything
+                    case 0:
+                        break;
+                    //Show a toast
+                    case 1:
+                        showToast(rsp);
+                        break;
+                    //update the client's excludedList in ImageTargetRenderer
+                    case 2:
+                        updateExcludedList(rsp);
+                        break;
+                    //Reply from isTaken
+                    case 3:
+                        if (!rsp.equals("free")) {
+                            mRenderer.addToExcludedSet(rsp);
+//                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
+                        } else {
+                            mRenderer.addToFreeSet(splitResponse[2]);
+//                            Log.d("CLIENTTASK", "adding image " + splitResponse[2] + " to freeSet");
+                        }
+                        break;
+                    default:
+                        break;
+
+                }
+            }catch(Exception e){
+                Log.e("CLIENTTASK",e.getMessage() + "\nResponse: " + response);
+            }
+            super.onPostExecute(result);
+        }
+
+    }
+
+    public void updateExcludedList(String excludes){
+        String[] list = excludes.split(";");
+        //TODO the rest
+
+    }
+
 }
