@@ -46,10 +46,26 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
         	android:theme="@style/SampleAppsTheme"
             >
-    	</activity>    
+    	</activity>
 
-        
-        
+        <!--CLIENT-SERVER TEST ACTIVITY-->
+        <activity
+            android:name=".ServerConnectActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/SampleAppsTheme"
+            >
+        </activity>
+
+
+        <!--CLIENT-SERVER TEST ACTIVITY-->
+        <activity
+            android:name=".ClientActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/SampleAppsTheme"
+            >
+        </activity>
+
+
         <service
             android:name="com.customlbs.service.Worker"
             android:process=":remote" >
