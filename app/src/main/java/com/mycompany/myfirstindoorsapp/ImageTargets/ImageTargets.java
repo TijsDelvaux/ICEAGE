@@ -224,11 +224,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     private void loadTextures()
     {
-        mTextures.add(Texture.loadTextureFromApk("TextureTeapotBrass.png",
-            getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("TextureTeapotBlue.png",
-            getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("TextureTeapotRed.png",
+//        mTextures.add(Texture.loadTextureFromApk("TexturebruineEikel.png",
+//            getAssets()));
+//        mTextures.add(Texture.loadTextureFromApk("TextureGoudEikel.png",
+//            getAssets()));
+        mTextures.add(Texture.loadTextureFromApk("TextureColoredByHand.png",
             getAssets()));
         mTextures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg",
             getAssets()));
@@ -409,11 +409,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
     //ICEAGE ADDED
-    public void enteredZones(List<Zone> zones){
+    public void enteredZones(List<String> zones){
         String s = "zones: ";
-        for(Zone zone: zones){
+        for(String zone: zones){
             Log.d("zone", zone.toString());
-            s = s + zone.getName();
+            s = s + " " + zone;
         }
         Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
         // doe hier iets om te bepalen welke images targets zijn

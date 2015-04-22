@@ -27,7 +27,7 @@ import com.mycompany.myfirstindoorsapp.SampleApplication.utils.LoadingDialogHand
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleApplication3DModel;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleApplicationSession;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleUtils;
-import com.mycompany.myfirstindoorsapp.SampleApplication.utils.Teapot;
+//import com.mycompany.myfirstindoorsapp.SampleApplication.utils.Teapot;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.Texture;
 import com.qualcomm.vuforia.Matrix44F;
 import com.qualcomm.vuforia.Renderer;
@@ -70,7 +70,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     
     boolean mIsActive = false;
     
-    private static final float OBJECT_SCALE_FLOAT = 3.0f;
+    private static final float OBJECT_SCALE_FLOAT = 100.0f;
 
     private ArrayList<String> excludedImageList = new ArrayList<String>();
     private String currentImage;
