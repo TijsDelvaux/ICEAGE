@@ -1492,5 +1492,4 @@ public class Teapot extends MeshObject
         
         return result;
     }
-    
 }

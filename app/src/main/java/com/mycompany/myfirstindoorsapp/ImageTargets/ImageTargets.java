@@ -7,20 +7,29 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 
 package com.mycompany.myfirstindoorsapp.ImageTargets;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
-import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,6 +47,7 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import com.customlbs.library.model.Zone;
+import com.mycompany.myfirstindoorsapp.IceAge;
 import com.mycompany.myfirstindoorsapp.LocationActivity;
 import com.mycompany.myfirstindoorsapp.MapActivity;
 import com.mycompany.myfirstindoorsapp.R;
@@ -60,6 +70,7 @@ import com.qualcomm.vuforia.Trackable;
 import com.qualcomm.vuforia.Tracker;
 import com.qualcomm.vuforia.TrackerManager;
 import com.qualcomm.vuforia.Vuforia;
+
 
 public class ImageTargets extends Activity implements SampleApplicationControl,
     SampleAppMenuInterface
@@ -103,7 +114,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     boolean mIsDroidDevice = false;
 
-    //ICEAGE variable
+    //ICEAGE variables
+    private String[] listDatasetStrings;
+    private Map<String,Integer> allZones;
+    private String zonesString = "";
+    private DataSet[] listDatasets;
 
     private int count;
 
@@ -112,19 +127,64 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private boolean showCollectButton;
     private View collectButton;
 
+    @IceAge
+    private void init() {
+        listDatasetStrings = new String[] {"StonesAndChips.xml", // index 0: default
+                                           "automaten.xml",
+                                           "foyer_automaten.xml",
+                                           "foyer_wc.xml",
+                                           "midden_foyer.xml",
+                                           "foyer_leslokaal_trappen.xml",
+                                           "foyer_secr.xml",
+                                           "uitgang_secr.xml",
+                                           "gang_sols.xml",
+                                           "solZ.xml",
+                                           "solN.xml",
+                                           "printerlokaal.xml"};
+
+        allZones = new HashMap<String,Integer>();
+        allZones.put("automaten", 1); // index 0 = default
+        allZones.put("foyer_automaten", 2);
+        allZones.put("foyer_wc", 3);
+        allZones.put("midden_foyer", 4);
+        allZones.put("foyer_leslokaal_trappen", 5);
+        allZones.put("foyer_secr", 6);
+        allZones.put("uitgang_secr", 7);
+        allZones.put("gang_sols", 8);
+        allZones.put("solZ", 9);
+        allZones.put("solN", 10);
+        allZones.put("printerlokaal", 10);
+        //TODO: zones toevoegen
+
+        Log.d(LOGTAG,"after targets init");
+    }
+    private String serverIP;
+    private String username;
+    private int port;
+//    private Socket client;
+//    NetworkTask networktask;
+
     // Called when the activity first starts or the user navigates back to an
     // activity.
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-        Log.d(LOGTAG, "ImageTargets: onCreate");
+        init();
+
+        Log.d(LOGTAG, "\n\n================================================\nImageTargets: onCreate\n");
         super.onCreate(savedInstanceState);
+
+        Bundle b = getIntent().getExtras();
+        serverIP = b.getString("ip");
+        username = b.getString("username");
+        port = 4444;
+
+        sendMessageToServer(1, "Hello");
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
-//        mDatasetStrings.add("StonesAndChips.xml");
-//        mDatasetStrings.add("Tarmac.xml");
-        mDatasetStrings.add("Foyer.xml");
+
+        //mDatasetStrings.add("Thuis.xml");
 
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -132,33 +192,36 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mGestureDetector = new GestureDetector(this, new GestureListener());
         // Load any sample specific textures:
         mTextures = new Vector<Texture>();
-        loadTextures();
+        loadTextures(); // loads the teapot
         Log.d(LOGTAG,"After loadTextures");
         mIsDroidDevice = android.os.Build.MODEL.toLowerCase().startsWith(
             "droid");
 
 
-        //ICEAGE this is temporary, should only become true when an object is detected.
-//        showCollectButton = true;
+        //ICEAGE
+        setTargetsToFollow(new ArrayList<String>());
 
         showCollectButton = false;
         addOverlayView();
+
         Log.d(LOGTAG, "Vuforia end of onCreate");
         new LocationActivity(this);
 
     }
 
-    //BEGIN ICEAGE STUFF
 
-
+    @IceAge
     public void onClickCollectButton(View view){
-        mRenderer.collectCurrentPicture();
+        String currentImage = mRenderer.collectCurrentPicture();
         count++;
         String toastCollectedText = getString(R.string.collect_button_toast);
         mRenderer.displayMessage(toastCollectedText,0);
-
+        // 0 as code for picking up things
+        // this way the server knows it has to add the image to
+        sendMessageToServer(0, currentImage);
     }
 
+    @IceAge
     public void onClickStatusButton(View view) {
         String acorn_s = null;
 
@@ -179,6 +242,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mRenderer.displayMessage(toastStatusText,0);
     }
 
+    @IceAge
+    public void onClickZoneButton(View view) {
+        mRenderer.displayMessage(zonesString,0);
+    }
 
     //END ICE STUFF
 
@@ -237,6 +304,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     // Called when the activity will start interacting with the user.
     @Override
+    @IceAge
     protected void onResume()
     {
         Log.d(LOGTAG, "onResume");
@@ -250,23 +318,20 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             public void handleMessage(Message msg) {
                 switch (msg.what) {
                     case 0: //show a toast with contents of the message (ex: # acorns  gathered)
-                        Context context = getApplicationContext();
-                        String text = (String) msg.obj;
-                        int duration = Toast.LENGTH_SHORT;
-                        Toast toast = Toast.makeText(context, text, duration);
-                        toast.show();
+                        showToast((String) msg.obj);
                         break;
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
                         showCollectButton = false;
+//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
                         break;
-//                        Log.d("ImageTargetHandler", (String) msg.obj);
-//                        addOverlayView();
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
                         showCollectButton = true;
-//                        Log.d("ImageTargetHandler", (String) msg.obj);
-//                        addOverlayView();
+//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
+                        break;
+                    case 3: //Check if the detected image already has been taken
+                        sendMessageToServer(3, (String) msg.obj);
                         break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
@@ -301,6 +366,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         }
         
     }
+
     
     
     // Callback for configuration changes the activity handles itself
@@ -408,18 +474,37 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         addOverlayView();
     }
 
-    //ICEAGE ADDED
-    public void enteredZones(List<String> zones){
-        String s = "zones: ";
-        for(String zone: zones){
-            Log.d("zone", zone.toString());
-            s = s + " " + zone;
+    @IceAge
+    private void setTargetsToFollow(List<String> zones) {
+        mDatasetStrings.clear();
+
+        for (String zone : zones) {
+            int zoneIndex = allZones.get(zone);
+            mDatasetStrings.add(listDatasetStrings[zoneIndex]);
         }
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
-        // doe hier iets om te bepalen welke images targets zijn
+
+        if (mDatasetStrings.isEmpty()) {
+            mDatasetStrings.add(listDatasetStrings[0]);
+        }
+
+        vuforiaAppSession.doReloadTargets();
     }
 
+    @IceAge
+    public void enteredZones(List<String> zones){
+        setTargetsToFollow(zones); // zet de juiste targets
 
+        String s = "Zones:\n";
+        for(String zone: zones){
+            s = s + " - " + zone + "\n";
+        }
+        Log.d(LOGTAG,s);
+
+        zonesString = s;
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+    }
+
+    @IceAge
     private void addOverlayView(){
 //        Log.d("addOverlayView", "showCollectButton: " + showCollectButton);
         // Inflates the Overlay Layout to be displayed above the Camera View
@@ -476,42 +561,57 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @Override
     public boolean doLoadTrackersData()
     {
+        // Indicate if the trackers were unloaded correctly
+        boolean result = true;
+
         TrackerManager tManager = TrackerManager.getInstance();
         ObjectTracker objectTracker = (ObjectTracker) tManager
             .getTracker(ObjectTracker.getClassType());
         if (objectTracker == null)
             return false;
         
-        if (mCurrentDataset == null)
-            mCurrentDataset = objectTracker.createDataSet();
-        
-        if (mCurrentDataset == null)
-            return false;
-        
-        if (!mCurrentDataset.load(
-            mDatasetStrings.get(mCurrentDatasetSelectionIndex),
-            STORAGE_TYPE.STORAGE_APPRESOURCE))
-            return false;
-        
-        if (!objectTracker.activateDataSet(mCurrentDataset))
-            return false;
-        
-        int numTrackables = mCurrentDataset.getNumTrackables();
-        for (int count = 0; count < numTrackables; count++)
-        {
-            Trackable trackable = mCurrentDataset.getTrackable(count);
-            if(isExtendedTrackingActive())
-            {
-                trackable.startExtendedTracking();
-            }
-            
-            String name = "Current Dataset : " + trackable.getName();
-            trackable.setUserData(name);
-            Log.d(LOGTAG, "UserData:Set the following user data "
-                + (String) trackable.getUserData());
+        if (listDatasets != null) {
+            doUnloadTrackersData();
         }
-        
-        return true;
+
+        listDatasets = new DataSet[mDatasetStrings.size()];
+
+        for(int i = 0; i < mDatasetStrings.size(); i++) {
+            mCurrentDatasetSelectionIndex = i;
+            listDatasets[i] = objectTracker.createDataSet();
+
+            if (listDatasets[i] == null)
+                return false;
+
+            if (!listDatasets[i].load(
+                    mDatasetStrings.get(mCurrentDatasetSelectionIndex),
+                    STORAGE_TYPE.STORAGE_APPRESOURCE))
+                return false;
+
+            if (!objectTracker.activateDataSet(listDatasets[i]))
+                result = false;
+
+            int numTrackables = listDatasets[i].getNumTrackables();
+
+            String dataString = "";
+            for (int count = 0; count < numTrackables; count++)
+            {
+                Trackable trackable = listDatasets[i].getTrackable(count);
+                if(isExtendedTrackingActive())
+                {
+                    trackable.startExtendedTracking();
+                }
+
+                String name = "Current Dataset : " + trackable.getName();
+                trackable.setUserData(name);
+                dataString += trackable.getName() + " ";
+            }
+            Log.d(LOGTAG,"=====Current Dataset : " + dataString);
+        }
+        mCurrentDatasetSelectionIndex = 0;
+
+        Log.d(LOGTAG,objectTracker.getActiveDataSet().toString());
+        return result;
     }
     
     
@@ -527,18 +627,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         if (objectTracker == null)
             return false;
         
-        if (mCurrentDataset != null && mCurrentDataset.isActive())
+        if (listDatasets != null)
         {
-            if (objectTracker.getActiveDataSet().equals(mCurrentDataset)
-                && !objectTracker.deactivateDataSet(mCurrentDataset))
-            {
-                result = false;
-            } else if (!objectTracker.destroyDataSet(mCurrentDataset))
-            {
-                result = false;
+            // deactivate and destroy all current datasets
+            for(DataSet data: listDatasets) {
+                if(!objectTracker.deactivateDataSet(data)) result = false;
             }
-            
-            mCurrentDataset = null;
+
+            listDatasets = null;
         }
         
         return result;
@@ -792,11 +888,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             .addGroup(getString(R.string.menu_datasets), true);
         mStartDatasetsIndex = CMD_DATASET_START_INDEX;
         mDatasetsNumber = mDatasetStrings.size();
-        
-//        group.addRadioItem("Stones & Chips", mStartDatasetsIndex, false);
-        //Ik denk dat dit puur cosmetisch is.
-        group.addRadioItem("TestImages", mStartDatasetsIndex, true);
-//        group.addRadioItem("Test", mStartDatasetsIndex + 2, true);
+
+        //TODO : mag dit weg?
+        //group.addRadioItem("CW", mStartDatasetsIndex, false); // ICEAGE : addtrackables
+        //group.addRadioItem("Stones & Chips", mStartDatasetsIndex + 1, false);
+        //group.addRadioItem("Tarmac", mStartDatasetsIndex + 2, false);
+        //group.addRadioItem("Test", mStartDatasetsIndex + 3, true);
+        //group.addRadioItem("Foyer", mStartDatasetsIndex + 4, true);
+
         
         mSampleAppMenu.attachMenu();
     }
@@ -952,5 +1051,132 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private void showToast(String text)
     {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+
     }
+
+    //ICEAGE
+    // :'s are used so the server can distinguish different parts of the message.
+    // 0 = Picking up an image
+    // 1 = just a plain message to the server
+    // 2 = for entering a new zone
+    // 3 = to check if the detected image is already taken
+    public void sendMessageToServer(int code, String message){
+        String userMessage = username + ":" + code + ":" + message;
+        ClientTask clientTask = new ClientTask(serverIP,port, userMessage);
+        clientTask.execute();
+    }
+
+    //ICEAGE
+    public class ClientTask extends AsyncTask<Void, Void, Void> {
+
+        String serverAddress;
+        int serverPort;
+        String response = "";
+        String msgToServer;
+
+        ClientTask(String addr, int port, String msgTo) {
+            serverAddress = addr;
+            serverPort = port;
+            msgToServer = msgTo;
+        }
+
+        @Override
+        protected Void doInBackground(Void... arg0) {
+
+            Socket socket = null;
+            DataOutputStream dataOutputStream = null;
+            DataInputStream dataInputStream = null;
+
+            try {
+                socket = new Socket(serverAddress, serverPort);
+                dataOutputStream = new DataOutputStream(
+                        socket.getOutputStream());
+                dataInputStream = new DataInputStream(socket.getInputStream());
+
+                if(msgToServer != null){
+                    dataOutputStream.writeUTF(msgToServer);
+                }
+
+                response = dataInputStream.readUTF();
+
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+                response = "UnknownHostException: " + e.toString();
+            } catch (IOException e) {
+                e.printStackTrace();
+                response = "IOException: " + e.toString();
+            } finally {
+                if (socket != null) {
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (dataOutputStream != null) {
+                    try {
+                        dataOutputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (dataInputStream != null) {
+                    try {
+                        dataInputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            try {
+            String[] splitResponse = response.split(":");
+            String responseCode = splitResponse[0];
+            String rsp = splitResponse[1];
+                switch (Integer.parseInt(responseCode)) {
+                    //Don't do anything
+                    case 0:
+                        break;
+                    //Show a toast
+                    case 1:
+                        showToast(rsp);
+                        break;
+                    //update the client's excludedList in ImageTargetRenderer
+                    case 2:
+                        updateExcludedList(rsp);
+                        break;
+                    //Reply from isTaken
+                    case 3:
+                        if (!rsp.equals("free")) {
+                            mRenderer.addToExcludedSet(rsp);
+//                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
+                        } else {
+                            mRenderer.addToFreeSet(splitResponse[2]);
+//                            Log.d("CLIENTTASK", "adding image " + splitResponse[2] + " to freeSet");
+                        }
+                        break;
+                    default:
+                        break;
+
+                }
+            }catch(Exception e){
+                Log.e("CLIENTTASK",e.getMessage() + "\nResponse: " + response);
+            }
+            super.onPostExecute(result);
+        }
+
+    }
+
+    public void updateExcludedList(String excludes){
+        String[] list = excludes.split(";");
+        //TODO the rest
+
+    }
+
 }
