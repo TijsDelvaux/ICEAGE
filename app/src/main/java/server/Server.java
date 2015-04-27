@@ -188,10 +188,10 @@ public class Server   {
                     String reply;
 
                     // handle message from client
-                    switch (Integer.parseInt(messageCode)) {
+                    switch (MsgServer.values()[Integer.parseInt(messageCode)]) {
                         //Client picked up an acorn, add the picture-name to the excluded list
                         //TODO add zones!!
-                        case 0: // pickup achorn
+                        case ACORN_PICKUP: // pickup achorn
                             if (clientPickUpAchorn(clientName, teamName, msg)) {
                                 printMessage = "[SERVER] " + clientName + "picked up an achorn\n" +
                                         "~~~~~~ " + clientName + ": " + clientCounts.get(clientName) + ";" +
@@ -206,19 +206,19 @@ public class Server   {
                             }
                             break;
 
-                        case 1: // other messages
+                        case DEFAULT: // other messages
                             //TODO nothing happens with these messages!
                             printMessage = "[SERVER] " + clientName + ": " + msg;
                             reply = MsgClient.TOAST + ":" + "Message received";
                             break;
 
-                        case 2: // enter a new zone
+                        case ENTER_ZONE: // enter a new zone
                             //TODO entering new zone, update excluded list on client
                             printMessage = "[SERVER] " + clientName + " entered a new zone (" + msg + ")";
                             reply = MsgClient.UPDATE_EXCLUDE_LIST + ":" + msg;
                             break;
 
-                        case 3: //Check if the asked picture is in the excluded list
+                        case ACORN_REQUEST: //Check if the asked picture is in the excluded list
                             if (clientRequestAchorn(msg)) {
                                 reply = MsgClient.CONFIRM_ACHORN + ":" + msg;
                                 printMessage = "[SERVER] " + clientName + " requested achorn (" + msg + ")" +

@@ -180,7 +180,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
 
-        sendMessageToServer(1, "Hello");
+        sendMessageToServer(MsgServer.DEFAULT, "Hello");
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
@@ -217,9 +217,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         count++;
         String toastCollectedText = getString(R.string.collect_button_toast);
         mRenderer.displayMessage(toastCollectedText,0);
-        // 0 as code for picking up things
-        // this way the server knows it has to add the image to
-        sendMessageToServer(0, currentImage);
+        sendMessageToServer(MsgServer.ACORN_PICKUP, currentImage);
     }
 
     @IceAge
@@ -332,7 +330,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //                        Log.d("MESSAGEHANDLER", (String) msg.obj);
                         break;
                     case 3: //Check if the detected image already has been taken
-                        sendMessageToServer(3, (String) msg.obj);
+                        sendMessageToServer(MsgServer.ACORN_REQUEST, (String) msg.obj);
                         break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
@@ -1061,7 +1059,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     // 1 = just a plain message to the server
     // 2 = for entering a new zone
     // 3 = to check if the detected image is already taken
-    public void sendMessageToServer(int code, String message){
+    public void sendMessageToServer(MsgServer code, String message){
         String userMessage = userName + ":" + teamName + ":" + code + ":" + message;
         ClientTask clientTask = new ClientTask(serverIP,port, userMessage);
         clientTask.execute();
@@ -1171,12 +1169,15 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         mRenderer.addToExcludedSet(rsp);
 //                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
                         break;
+                    // You have successfully picked up an achorn
                     case CONFIRM_PICKUP:
                         showToast(rsp); //TODO
                         break;
+                    // Something went wrong while picking up an achorn
                     case DECLINE_PICKUP:
-                        showToast(rsp); //TODO
+                        showToast(rsp); //TODO new request for achorn (maybe someone else has taken it in the meantime)
                         break;
+                    // A team mate has picked up an achorn
                     case TEAMMATE_PICKUP:
                         showToast(rsp); //TODO
 
