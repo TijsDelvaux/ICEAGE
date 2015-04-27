@@ -21,7 +21,11 @@ public class Server   {
     private ServerSocket serverSocket;
     private int port = 4444;
 
-    private List<String> clientNames; // list all clients by their name
+    /*
+     * TEAMS:
+     *  - a client must be in exactly one team
+     *  - a team must contain at least one client
+     */
     private Map<String,String> clientTeams; // specify for each client in which team they are
     private Map<String,List<String>> teamClients; // specify a list of clients for each team
 
@@ -33,27 +37,105 @@ public class Server   {
     private int totalNbPickedUp;
     private final int totalNbAcorns = 56;
 
+    public static void main(String[] args) {
+        Server server = new Server();
+    }
 
     public Server(){
         totalNbPickedUp = 0;
-        clientNames = new ArrayList<String>();
+        clientTeams = new HashMap<String, String>();
+        teamClients = new HashMap<String, List<String>>();
         clientCounts = new HashMap<String, Integer>();
-        for(String name: clientNames) {
-            clientCounts.put(name, 0);
-        }
+        teamCounts = new HashMap<String, Integer>();
         excludedList = new HashSet<String>();
 
         Thread socketServerThread = new Thread(new SocketServerThread());
         socketServerThread.start();
     }
 
-    public static void main(String[] args) {
-        Server server = new Server();
-    }
-
-
     public void excludeFromList(String image){
         excludedList.add(image);
+    }
+
+    /*
+    * @return: true if the client was able to pickup the achorn
+    */
+    private boolean clientPickUpAchorn(String clientName, String imageName) {
+        if(clientCounts.containsKey(clientName) && !excludedList.contains(imageName)) {
+            // pickup
+            excludeFromList(imageName);
+            clientCounts.put(clientName, clientCounts.get(clientName) + 1);
+            totalNbPickedUp++;
+
+            // notify all teamplayers
+            if(clientTeams.containsKey(clientName)) {
+                // find all teamplayers
+                for(String client: teamClients.get(clientTeams.get(clientName))) {
+                    // make sure you do not notify yourself
+                    if(!client.equals(clientName)) {
+                        notifyOfPickup(clientName, client);
+                    }
+                }
+            }
+            else {
+                // this client is not in a team; this should not happen
+                return false;
+            }
+            return true;
+        }
+        else {
+            // this client is not registered; this should not happen
+            return false;
+        }
+    }
+
+    /*
+     * @return: true if the achorn is there, false if it is not
+     */
+    private boolean clientRequestAchorn(String imageName) {
+        return !excludedList.contains(imageName);
+    }
+
+    /*
+     * @return: a pretty String of the current leaderboard
+     */
+    private String getLeaderBoardString() {
+        String indent = "    ";
+        String leaderboard = "\n" + indent + "LEADERBOARD USERS\n";
+        for(String name: clientCounts.keySet()) {
+            leaderboard += indent + name + "\t\t" + clientCounts.get(name) + "\n";
+        }
+        leaderboard += "\n";
+        leaderboard += "\n" + indent + "LEADERBOARD TEAMS\n";
+        for(String name: teamCounts.keySet()) {
+            leaderboard += indent + name + "\t\t" + teamCounts.get(name) + "\n";
+        }
+        leaderboard += "\n";
+        return leaderboard;
+    }
+
+    private void notifyOfPickup(String myName, String hisName) {
+        //TODO
+    }
+
+    private void registerNewClient(String clientName, String teamName){
+        // register client
+        clientCounts.put(clientName,0);
+
+        // register team
+        clientTeams.put(clientName,teamName);
+        List<String> listOfTeamMembers;
+        if(!teamClients.containsKey(teamName)) {
+            // create a new team
+            listOfTeamMembers = new ArrayList<String>();
+            teamCounts.put(teamName,0);
+        }
+        else {
+            // add the client to an existing team
+            listOfTeamMembers = teamClients.get(teamName);
+        }
+        listOfTeamMembers.add(clientName);
+        teamClients.put(teamName, listOfTeamMembers);
     }
 
     private class SocketServerThread extends Thread {
@@ -92,7 +174,7 @@ public class Server   {
                         teamName = splitMessage[3];
                     }
 
-                    if (!clientNames.contains(clientName)) {
+                    if (!clientCounts.containsKey(clientName)) {
                         registerNewClient(clientName, teamName);
 
                         System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
@@ -219,79 +301,5 @@ public class Server   {
             return ip;
         }
     }
-    /*
- * @return: true if the client was able to pickup the achorn
- */
-    private boolean clientPickUpAchorn(String clientName, String imageName) {
-        if(clientCounts.containsKey(clientName) && !excludedList.contains(imageName)) {
-            // pickup
-            excludedList.add(imageName);
-            clientCounts.put(clientName, clientCounts.get(clientName) + 1);
-            totalNbPickedUp++;
 
-            // notify all teamplayers
-            if(clientTeams.containsKey(clientName)) {
-                // find all teamplayers
-                for(String client: teamClients.get(clientTeams.get(clientName))) {
-                    // make sure you do not notify yourself
-                    if(!client.equals(clientName)) {
-                        notifyOfPickup(clientName, client);
-                    }
-                }
-            }
-            else {
-                // this client is not in a team
-                return false;
-            }
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    /*
-     * @return: true if the achorn is there, false if it is not
-     */
-    private boolean clientRequestAchorn(String imageName) {
-        return !excludedList.contains(imageName);
-    }
-
-    /*
-     * @return: a pretty String of the current leaderboard
-     */
-    private String getLeaderBoardString() {
-        String indent = "    ";
-        String leaderboard = "\n" + indent + "LEADERBOARD\n";
-        for(String name: clientNames) {
-            leaderboard += indent + name + "\t\t" + clientCounts.get(name) + "\n";
-        }
-        leaderboard += "\n";
-        return leaderboard;
-    }
-
-    private void notifyOfPickup(String myName, String hisName) {
-        //TODO
-    }
-
-    private void registerNewClient(String clientName, String teamName){
-        // register client
-        clientNames.add(clientName);
-        clientCounts.put(clientName,0);
-
-        // register team
-        clientTeams.put(clientName,teamName);
-        List<String> listOfTeamMembers;
-        if(!teamClients.containsKey(teamName)) {
-            // create a new team
-            listOfTeamMembers = new ArrayList<String>();
-            teamCounts.put(teamName,0);
-        }
-        else {
-            // add the client to an existing team
-            listOfTeamMembers = teamClients.get(teamName);
-        }
-        listOfTeamMembers.add(clientName);
-        teamClients.put(teamName, listOfTeamMembers);
-    }
 }
