@@ -60,17 +60,17 @@ public class Server   {
     /*
     * @return: true if the client was able to pickup the achorn
     */
-    private boolean clientPickUpAchorn(String clientName, String imageName) {
+    private boolean clientPickUpAchorn(String clientName, String teamName, String imageName) {
         if(clientCounts.containsKey(clientName) && !excludedList.contains(imageName)) {
             // pickup
             excludeFromList(imageName);
             clientCounts.put(clientName, clientCounts.get(clientName) + 1);
             totalNbPickedUp++;
 
-            // notify all teamplayers
-            if(clientTeams.containsKey(clientName)) {
+            // notify all team players
+            if(clientTeams.get(clientName).equals(teamName)) {
                 // find all teamplayers
-                for(String client: teamClients.get(clientTeams.get(clientName))) {
+                for(String client: teamClients.get(teamName)) {
                     // make sure you do not notify yourself
                     if(!client.equals(clientName)) {
                         notifyOfPickup(clientName, client);
@@ -78,7 +78,7 @@ public class Server   {
                 }
             }
             else {
-                // this client is not in a team; this should not happen
+                // this client says that he is in an other team than the server thinks he is; this should not happen
                 return false;
             }
             return true;
@@ -115,7 +115,7 @@ public class Server   {
     }
 
     private void notifyOfPickup(String myName, String hisName) {
-        //TODO
+        String msg = "1: " + myName + " has found an achorn!";
     }
 
     private void registerNewClient(String clientName, String teamName){
@@ -175,7 +175,7 @@ public class Server   {
                         System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
                         dataOutputStream.writeUTF("1:" + "Welcome to the IceAge Nut Discovery game!\n" +
                                 "You have enrolled as " + clientName + " in team " + teamName + ".\n" +
-                                "Your teammembers are: " + teamClients.get(teamName).toString());
+                                "Your team members are: " + teamClients.get(teamName).toString());
                     }
 
                     String printMessage;
@@ -186,7 +186,7 @@ public class Server   {
                         //Client picked up an acorn, add the picture-name to the excluded list
                         //TODO add zones!!
                         case 0: // pickup achorn
-                            if (clientPickUpAchorn(clientName, msg)) {
+                            if (clientPickUpAchorn(clientName, teamName, msg)) {
                                 printMessage = "[SERVER] " + clientName + "picked up an achorn\n" +
                                         "~~~~~~ " + clientName + ": " + clientCounts.get(clientName) + ";" +
                                         " total count: " + totalNbPickedUp + "; total left: " + (totalNbAcorns - totalNbPickedUp) + ")"
