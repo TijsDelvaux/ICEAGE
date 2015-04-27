@@ -10,24 +10,34 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Server   {
 
     private ServerSocket serverSocket;
     private int port = 4444;
 
-    private ArrayList<String> clientNames;
-    private HashSet<String> excludedList;
-    int count;
+    private List<String> clientNames;
+    private Map<String,Integer> clientCounts;
+    private Set<String> excludedList;
+    int totalNbPickedUp;
     int total;
 
 
     public Server(){
-        count = 0;
+        totalNbPickedUp = 0;
         total = 56;
         clientNames = new ArrayList<String>();
+        clientCounts = new HashMap<String, Integer>();
+        for(String name: clientNames) {
+            clientCounts.put(name, 0);
+        }
         excludedList = new HashSet<String>();
+
         Thread socketServerThread = new Thread(new SocketServerThread());
         socketServerThread.start();
     }
@@ -75,6 +85,10 @@ public class Server   {
 
                     if(!clientNames.contains(clientName)){
                         clientNames.add(clientName);
+                        clientCounts.put(clientName,0);
+
+                        System.out.println("[SERVER] A new client has registered: " + clientName);
+                        dataOutputStream.writeUTF("1:" + "Welcome to the IceAge Nut Discovery game, " + clientName + "!");
                     }
 
                     String printMessage = "";
@@ -84,52 +98,56 @@ public class Server   {
                     switch (Integer.parseInt(messageCode)){
                         //Client picked up an acorn, add the picture-name to the excluded list
                         //TODO add zones!!
-                        case 0:
-                            excludedList.add(msg);
-                            count++;
-                            printMessage = "I picked up: " + msg;
-                            String message = clientName + ": " + printMessage;
-                            System.out.println(message);
-                            reply = "1:" + count + "/" + total + " are found";
+                        case 0: // pickup achorn
+                            if(clientPickUpAchorn(clientName, msg)) {
+                                printMessage = "[SERVER] " + clientName + "picked up an achorn\n" +
+                                        "~~~~~~ " + clientName + ": " + clientCounts.get(clientNames) + ";" +
+                                        " total count: " + totalNbPickedUp + "; total left: " + (total - totalNbPickedUp) + ")";
+                                reply = "1:" + "You have picked up an achorn! \n" +
+                                        totalNbPickedUp + " of the " + total + " achorns are found";
+                            }
+                            else {
+                                printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up achorn," +
+                                        "but this failed (client was not registered or achorn was not there).";
+                                reply = "1:" + "Oops, something went wrong, you were not able to pick up the achorn.";
+                            }
                             break;
-                        //Just a message
-                        case 1:
-                            printMessage = msg;
-                            reply = "0:0";
-                            message = clientName + ": " + printMessage;
-                            System.out.println(message);
+
+                        case 1: // other messages
+                            //TODO nothing happens with these messages!
+                            printMessage = "[SERVER] " + clientName + ": " + msg;
+                            reply = "1:" + "Message received";
                             break;
-                        case 2:
+
+                        case 2: // enter a new zone
                             //TODO entering new zone, update excluded list on client
-                            printMessage = "Shouldn't be able to get here yet...";
-                            reply = "0:0";
+                            printMessage = "[SERVER] " + clientName + " entered a new zone (" + msg + ")";
+                            reply = "2:" + msg;
                             break;
-                        //Check if the asked picture is in the excluded list
-                        case 3:
-                            boolean isTaken = excludedList.contains(msg);
-                            if(isTaken){
-                                reply = "3:" + msg;
-                                printMessage = "This picture ("+ msg +") has already been taken";
-                            }else{
+
+                        case 3: //Check if the asked picture is in the excluded list
+                            if(clientRequestAchorn(msg)){
                                 reply = "3:free:" + msg;
-                                printMessage = "This picture ("+ msg +") is free!";
+                                printMessage = "[SERVER] " + clientName + " requested achorn ("+ msg +")" +
+                                        " and it is free!";
+                            }
+                            else{
+                                reply = "3:" + msg;
+                                printMessage = "[SERVER] " + clientName + " requested achorn ("+ msg +")" +
+                                        ", but it has been taken";
                             }
 
                             break;
+
                         default:
-                            printMessage = "Something went wrong, invalid messagecode";
-                            reply = "0:0";
+                            printMessage = "[SERVER] ERROR - Something went wrong, invalid messagecode";
+                            reply = "Oops, something went wrong";
                             break;
 
                     }
 
-
-//                    String message = clientName + ": " + printMessage;
-//                    System.out.println(message);
-
-//                    System.out.println("Sending message to " + clientName + ": " + reply);
+                    System.out.println(printMessage);
                     dataOutputStream.writeUTF(reply);
-
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -197,5 +215,26 @@ public class Server   {
             return ip;
         }
 
+        /*
+         * @return: true if the client was able to pickup the achorn
+         */
+        private boolean clientPickUpAchorn(String clientName, String imageName) {
+            if(clientCounts.containsKey(clientName) && !excludedList.contains(imageName)) {
+                excludedList.add(imageName);
+                clientCounts.put(clientName, clientCounts.get(clientName) + 1);
+                totalNbPickedUp++;
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        /*
+         * @return: true if the achorn is there, false if it is not
+         */
+        private boolean clientRequestAchorn(String imageName) {
+            return !excludedList.contains(imageName);
+        }
     }
 }
