@@ -14,3 +14,5 @@ build
 gradle
 .idea
 .gradle
+*.gradle
+*.iml
