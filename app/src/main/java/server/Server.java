@@ -21,16 +21,21 @@ public class Server   {
     private ServerSocket serverSocket;
     private int port = 4444;
 
-    private List<String> clientNames;
-    private Map<String,Integer> clientCounts;
+    private List<String> clientNames; // list all clients by their name
+    private Map<String,String> clientTeams; // specify for each client in which team they are
+    private Map<String,List<String>> teamClients; // specify a list of clients for each team
+
+    private Map<String,Integer> clientCounts; // specify for each client how many acorns they have picked up
+    private Map<String,Integer> teamCounts; // specify for each team how many acorns they have picked up
+
     private Set<String> excludedList;
-    int totalNbPickedUp;
-    int total;
+
+    private int totalNbPickedUp;
+    private final int totalNbAcorns = 56;
 
 
     public Server(){
         totalNbPickedUp = 0;
-        total = 56;
         clientNames = new ArrayList<String>();
         clientCounts = new HashMap<String, Integer>();
         for(String name: clientNames) {
@@ -82,32 +87,36 @@ public class Server   {
                     String clientName = splitMessage[0];
                     String messageCode = splitMessage[1];
                     String msg = splitMessage[2];
+                    String teamName = "noTeam";
+                    if (splitMessage.length == 4) {
+                        teamName = splitMessage[3];
+                    }
 
-                    if(!clientNames.contains(clientName)){
-                        clientNames.add(clientName);
-                        clientCounts.put(clientName,0);
+                    if (!clientNames.contains(clientName)) {
+                        registerNewClient(clientName, teamName);
 
-                        System.out.println("[SERVER] A new client has registered: " + clientName);
-                        dataOutputStream.writeUTF("1:" + "Welcome to the IceAge Nut Discovery game, " + clientName + "!");
+                        System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
+                        dataOutputStream.writeUTF("1:" + "Welcome to the IceAge Nut Discovery game!\n" +
+                                "You have enrolled as " + clientName + " in team " + teamName + ".\n" +
+                                "Your teammembers are: " + teamClients.get(teamName).toString());
                     }
 
                     String printMessage = "";
                     String reply = "";
 
 
-                    switch (Integer.parseInt(messageCode)){
+                    switch (Integer.parseInt(messageCode)) {
                         //Client picked up an acorn, add the picture-name to the excluded list
                         //TODO add zones!!
                         case 0: // pickup achorn
-                            if(clientPickUpAchorn(clientName, msg)) {
+                            if (clientPickUpAchorn(clientName, msg)) {
                                 printMessage = "[SERVER] " + clientName + "picked up an achorn\n" +
-                                        "~~~~~~ " + clientName + ": " + clientCounts.get(clientNames) + ";" +
-                                        " total count: " + totalNbPickedUp + "; total left: " + (total - totalNbPickedUp) + ")"
+                                        "~~~~~~ " + clientName + ": " + clientCounts.get(clientName) + ";" +
+                                        " total count: " + totalNbPickedUp + "; total left: " + (totalNbAcorns - totalNbPickedUp) + ")"
                                         + getLeaderBoardString();
                                 reply = "1:" + "You have picked up an achorn! \n" +
-                                        totalNbPickedUp + " of the " + total + " achorns are found";
-                            }
-                            else {
+                                        totalNbPickedUp + " of the " + totalNbAcorns + " achorns are found";
+                            } else {
                                 printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up achorn," +
                                         "but this failed (client was not registered or achorn was not there).";
                                 reply = "1:" + "Oops, something went wrong, you were not able to pick up the achorn.";
@@ -127,14 +136,13 @@ public class Server   {
                             break;
 
                         case 3: //Check if the asked picture is in the excluded list
-                            if(clientRequestAchorn(msg)){
+                            if (clientRequestAchorn(msg)) {
                                 reply = "3:free:" + msg;
-                                printMessage = "[SERVER] " + clientName + " requested achorn ("+ msg +")" +
+                                printMessage = "[SERVER] " + clientName + " requested achorn (" + msg + ")" +
                                         " and it is free!";
-                            }
-                            else{
+                            } else {
                                 reply = "3:" + msg;
-                                printMessage = "[SERVER] " + clientName + " requested achorn ("+ msg +")" +
+                                printMessage = "[SERVER] " + clientName + " requested achorn (" + msg + ")" +
                                         ", but it has been taken";
                             }
 
@@ -184,22 +192,18 @@ public class Server   {
 
         public String getIpAddress() {
             String ip = "";
-            try
-            {
+            try {
                 Enumeration<NetworkInterface> enumNetworkInterfaces = NetworkInterface
                         .getNetworkInterfaces();
-                while (enumNetworkInterfaces.hasMoreElements())
-                {
+                while (enumNetworkInterfaces.hasMoreElements()) {
                     NetworkInterface networkInterface = enumNetworkInterfaces
                             .nextElement();
                     Enumeration<InetAddress> enumInetAddress = networkInterface
                             .getInetAddresses();
-                    while (enumInetAddress.hasMoreElements())
-                    {
+                    while (enumInetAddress.hasMoreElements()) {
                         InetAddress inetAddress = enumInetAddress.nextElement();
 
-                        if (inetAddress.isSiteLocalAddress())
-                        {
+                        if (inetAddress.isSiteLocalAddress()) {
                             ip += "SiteLocalAddress: "
                                     + inetAddress.getHostAddress() + "\n";
                         }
@@ -208,44 +212,86 @@ public class Server   {
 
                 }
 
-            } catch (SocketException e)
-            {
+            } catch (SocketException e) {
                 e.printStackTrace();
                 ip += "Something Wrong! " + e.toString() + "\n";
             }
             return ip;
         }
+    }
+    /*
+ * @return: true if the client was able to pickup the achorn
+ */
+    private boolean clientPickUpAchorn(String clientName, String imageName) {
+        if(clientCounts.containsKey(clientName) && !excludedList.contains(imageName)) {
+            // pickup
+            excludedList.add(imageName);
+            clientCounts.put(clientName, clientCounts.get(clientName) + 1);
+            totalNbPickedUp++;
 
-        /*
-         * @return: true if the client was able to pickup the achorn
-         */
-        private boolean clientPickUpAchorn(String clientName, String imageName) {
-            if(clientCounts.containsKey(clientName) && !excludedList.contains(imageName)) {
-                excludedList.add(imageName);
-                clientCounts.put(clientName, clientCounts.get(clientName) + 1);
-                totalNbPickedUp++;
-                return true;
+            // notify all teamplayers
+            if(clientTeams.containsKey(clientName)) {
+                // find all teamplayers
+                for(String client: teamClients.get(clientTeams.get(clientName))) {
+                    // make sure you do not notify yourself
+                    if(!client.equals(clientName)) {
+                        notifyOfPickup(clientName, client);
+                    }
+                }
             }
             else {
+                // this client is not in a team
                 return false;
             }
+            return true;
         }
+        else {
+            return false;
+        }
+    }
 
-        /*
-         * @return: true if the achorn is there, false if it is not
-         */
-        private boolean clientRequestAchorn(String imageName) {
-            return !excludedList.contains(imageName);
-        }
+    /*
+     * @return: true if the achorn is there, false if it is not
+     */
+    private boolean clientRequestAchorn(String imageName) {
+        return !excludedList.contains(imageName);
+    }
 
-        private String getLeaderBoardString() {
-            String indent = "    ";
-            String leaderboard = indent + "LEADERBOARD\n";
-            for(String name: clientNames) {
-                leaderboard += indent + name + "\t\t" + clientCounts.get(name) + "\n";
-            }
-            leaderboard += "\n";
-            return leaderboard;
+    /*
+     * @return: a pretty String of the current leaderboard
+     */
+    private String getLeaderBoardString() {
+        String indent = "    ";
+        String leaderboard = "\n" + indent + "LEADERBOARD\n";
+        for(String name: clientNames) {
+            leaderboard += indent + name + "\t\t" + clientCounts.get(name) + "\n";
         }
+        leaderboard += "\n";
+        return leaderboard;
+    }
+
+    private void notifyOfPickup(String myName, String hisName) {
+        //TODO
+    }
+
+    private void registerNewClient(String clientName, String teamName){
+        // register client
+        clientNames.add(clientName);
+        clientCounts.put(clientName,0);
+
+        // register team
+        clientTeams.put(clientName,teamName);
+        List<String> listOfTeamMembers;
+        if(!teamClients.containsKey(teamName)) {
+            // create a new team
+            listOfTeamMembers = new ArrayList<String>();
+            teamCounts.put(teamName,0);
+        }
+        else {
+            // add the client to an existing team
+            listOfTeamMembers = teamClients.get(teamName);
+        }
+        listOfTeamMembers.add(clientName);
+        teamClients.put(teamName, listOfTeamMembers);
     }
 }
