@@ -102,7 +102,8 @@ public class Server   {
                             if(clientPickUpAchorn(clientName, msg)) {
                                 printMessage = "[SERVER] " + clientName + "picked up an achorn\n" +
                                         "~~~~~~ " + clientName + ": " + clientCounts.get(clientNames) + ";" +
-                                        " total count: " + totalNbPickedUp + "; total left: " + (total - totalNbPickedUp) + ")";
+                                        " total count: " + totalNbPickedUp + "; total left: " + (total - totalNbPickedUp) + ")"
+                                        + getLeaderBoardString();
                                 reply = "1:" + "You have picked up an achorn! \n" +
                                         totalNbPickedUp + " of the " + total + " achorns are found";
                             }
@@ -235,6 +236,16 @@ public class Server   {
          */
         private boolean clientRequestAchorn(String imageName) {
             return !excludedList.contains(imageName);
+        }
+
+        private String getLeaderBoardString() {
+            String indent = "    ";
+            String leaderboard = indent + "LEADERBOARD\n";
+            for(String name: clientNames) {
+                leaderboard += indent + name + "\t\t" + clientCounts.get(name) + "\n";
+            }
+            leaderboard += "\n";
+            return leaderboard;
         }
     }
 }
