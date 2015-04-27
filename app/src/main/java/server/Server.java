@@ -115,10 +115,14 @@ public class Server   {
     }
 
     private void notifyOfPickup(String myName, String hisName) {
-        String msg = "1: " + myName + " has found an achorn!";
+        //TODO MsgClient.TEAMMATE_PICKUP
     }
 
-    private void registerNewClient(String clientName, String teamName){
+    /*
+     * @return: true if the registration succeeded
+     */
+    private boolean registerNewClient(String clientName, String teamName){
+        //TODO if you start a new game with the same name, your current acorns will be lost!
         // register client
         clientCounts.put(clientName,0);
 
@@ -136,6 +140,8 @@ public class Server   {
         }
         listOfTeamMembers.add(clientName);
         teamClients.put(teamName, listOfTeamMembers);
+
+        return true;
     }
 
     private class SocketServerThread extends Thread {
@@ -173,7 +179,7 @@ public class Server   {
                         registerNewClient(clientName, teamName);
 
                         System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
-                        dataOutputStream.writeUTF("1:" + "Welcome to the IceAge Nut Discovery game!\n" +
+                        dataOutputStream.writeUTF(MsgClient.CONFIRM_REGISTRATION + ":" + "Welcome to the IceAge Nut Discovery game!\n" +
                                 "You have enrolled as " + clientName + " in team " + teamName + ".\n" +
                                 "Your team members are: " + teamClients.get(teamName).toString());
                     }
@@ -191,34 +197,34 @@ public class Server   {
                                         "~~~~~~ " + clientName + ": " + clientCounts.get(clientName) + ";" +
                                         " total count: " + totalNbPickedUp + "; total left: " + (totalNbAcorns - totalNbPickedUp) + ")"
                                         + getLeaderBoardString();
-                                reply = "1:" + "You have picked up an achorn! \n" +
+                                reply = MsgClient.CONFIRM_PICKUP + ":" + "You have picked up an achorn! \n" +
                                         totalNbPickedUp + " of the " + totalNbAcorns + " achorns are found";
                             } else {
                                 printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up achorn," +
                                         "but this failed (client was not registered or achorn was not there).";
-                                reply = "1:" + "Oops, something went wrong, you were not able to pick up the achorn.";
+                                reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the achorn.";
                             }
                             break;
 
                         case 1: // other messages
                             //TODO nothing happens with these messages!
                             printMessage = "[SERVER] " + clientName + ": " + msg;
-                            reply = "1:" + "Message received";
+                            reply = MsgClient.TOAST + ":" + "Message received";
                             break;
 
                         case 2: // enter a new zone
                             //TODO entering new zone, update excluded list on client
                             printMessage = "[SERVER] " + clientName + " entered a new zone (" + msg + ")";
-                            reply = "2:" + msg;
+                            reply = MsgClient.UPDATE_EXCLUDE_LIST + ":" + msg;
                             break;
 
                         case 3: //Check if the asked picture is in the excluded list
                             if (clientRequestAchorn(msg)) {
-                                reply = "3:free:" + msg;
+                                reply = MsgClient.CONFIRM_ACHORN + ":" + msg;
                                 printMessage = "[SERVER] " + clientName + " requested achorn (" + msg + ")" +
                                         " and it is free!";
                             } else {
-                                reply = "3:" + msg;
+                                reply = MsgClient.DECLINE_ACHORN + ":" + msg;
                                 printMessage = "[SERVER] " + clientName + " requested achorn (" + msg + ")" +
                                         ", but it has been taken";
                             }

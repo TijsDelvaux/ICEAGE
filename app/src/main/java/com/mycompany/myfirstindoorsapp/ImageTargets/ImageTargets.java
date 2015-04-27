@@ -7,6 +7,9 @@ and other countries. Trademarks of QUALCOMM Incorporated are used with permissio
 
 package com.mycompany.myfirstindoorsapp.ImageTargets;
 
+import server.MsgClient;
+import server.MsgServer;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -1134,31 +1137,49 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         @Override
         protected void onPostExecute(Void result) {
             try {
-            String[] splitResponse = response.split(":");
-            String responseCode = splitResponse[0];
-            String rsp = splitResponse[1];
-                switch (Integer.parseInt(responseCode)) {
+                String[] splitResponse = response.split(":");
+                String responseCode = splitResponse[0];
+                String rsp = splitResponse[1];
+
+                switch (MsgClient.values()[Integer.parseInt(responseCode)]) {
                     //Don't do anything
-                    case 0:
+                    case DEFAULT:
                         break;
                     //Show a toast
-                    case 1:
+                    case TOAST:
                         showToast(rsp);
                         break;
-                    //update the client's excludedList in ImageTargetRenderer
-                    case 2:
+                    //Registration went well
+                    case CONFIRM_REGISTRATION:
+                        showToast(rsp); //TODO
+                        break;
+                    // Registration did not went well
+                    case DECLINE_REGISTRATION:
+                        showToast(rsp); //TODO
+                        break;
+                    // Update the list of excluded images
+                    case UPDATE_EXCLUDE_LIST:
                         updateExcludedList(rsp);
                         break;
-                    //Reply from isTaken
-                    case 3:
-                        if (!rsp.equals("free")) {
-                            mRenderer.addToExcludedSet(rsp);
-//                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
-                        } else {
-                            mRenderer.addToFreeSet(splitResponse[2]);
+                    // Reply from isTaken: there is an achorn here
+                    case CONFIRM_ACHORN:
+                        mRenderer.addToFreeSet(rsp);
 //                            Log.d("CLIENTTASK", "adding image " + splitResponse[2] + " to freeSet");
-                        }
                         break;
+                    // Reply from isTaken: there is NO achorn here
+                    case DECLINE_ACHORN:
+                        mRenderer.addToExcludedSet(rsp);
+//                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
+                        break;
+                    case CONFIRM_PICKUP:
+                        showToast(rsp); //TODO
+                        break;
+                    case DECLINE_PICKUP:
+                        showToast(rsp); //TODO
+                        break;
+                    case TEAMMATE_PICKUP:
+                        showToast(rsp); //TODO
+
                     default:
                         break;
 
