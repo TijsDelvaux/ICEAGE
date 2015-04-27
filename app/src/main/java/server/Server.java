@@ -38,7 +38,7 @@ public class Server   {
     private final int totalNbAcorns = 56;
 
     public static void main(String[] args) {
-        Server server = new Server();
+        new Server();
     }
 
     public Server(){
@@ -158,22 +158,17 @@ public class Server   {
                     dataInputStream = new DataInputStream(socket.getInputStream());
                     dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-                    String messageFromClient = "";
-
                     //If no message sent from client, this code will block the program
-                    messageFromClient = dataInputStream.readUTF();
+                    String messageFromClient = dataInputStream.readUTF();
 
-//                    System.out.println(messageFromClient);
-
+                    // parse message
                     String[] splitMessage = messageFromClient.split(":");
                     String clientName = splitMessage[0];
-                    String messageCode = splitMessage[1];
-                    String msg = splitMessage[2];
-                    String teamName = "noTeam";
-                    if (splitMessage.length == 4) {
-                        teamName = splitMessage[3];
-                    }
+                    String teamName = splitMessage[1];
+                    String messageCode = splitMessage[2];
+                    String msg = splitMessage[3];
 
+                    // register client if needed
                     if (!clientCounts.containsKey(clientName)) {
                         registerNewClient(clientName, teamName);
 
@@ -183,10 +178,10 @@ public class Server   {
                                 "Your teammembers are: " + teamClients.get(teamName).toString());
                     }
 
-                    String printMessage = "";
-                    String reply = "";
+                    String printMessage;
+                    String reply;
 
-
+                    // handle message from client
                     switch (Integer.parseInt(messageCode)) {
                         //Client picked up an acorn, add the picture-name to the excluded list
                         //TODO add zones!!

@@ -2,16 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    android:weightSum="1">
 
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Username"
-        android:layout_gravity="center_horizontal"
-        android:textSize="20sp"
-        android:textColor="@color/light_gray"/>
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="User name"
+    android:layout_gravity="center_horizontal"
+    android:textSize="20sp"
+    android:textColor="@color/light_gray"/>
 
     <EditText
         android:layout_width="wrap_content"
@@ -21,6 +22,30 @@
         android:textSize="20sp"
         android:inputType="textCapWords" />
     <requestFocus/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Team name"
+        android:layout_gravity="center_horizontal"
+        android:textSize="20sp"
+        android:textColor="@color/light_gray"/>
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/teamname"
+        android:layout_marginBottom="20dp"
+        android:textSize="20sp"
+        android:inputType="textCapWords" />
+    <requestFocus/>
+
+    <TextView
+        android:layout_width="257dp"
+        android:layout_height="31dp"
+        android:text="Note: make sure your team mate fills in the same team name as you!"
+        android:id="@+id/textView"
+        android:layout_weight="0.10" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -46,4 +71,5 @@
         android:id="@+id/button_server_connect"
         android:text="Start playing!"
         android:onClick="connectToServer"/>
+
 </LinearLayout>

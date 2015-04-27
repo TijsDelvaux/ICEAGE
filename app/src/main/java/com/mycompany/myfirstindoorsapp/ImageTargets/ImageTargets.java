@@ -13,9 +13,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,10 +44,8 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import com.customlbs.library.model.Zone;
 import com.mycompany.myfirstindoorsapp.IceAge;
 import com.mycompany.myfirstindoorsapp.LocationActivity;
-import com.mycompany.myfirstindoorsapp.MapActivity;
 import com.mycompany.myfirstindoorsapp.R;
 import com.mycompany.myfirstindoorsapp.R.string;
 import com.mycompany.myfirstindoorsapp.SampleAppMenu.SampleAppMenu;
@@ -159,7 +155,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG,"after targets init");
     }
     private String serverIP;
-    private String username;
+    private String userName;
+    private String teamName;
     private int port;
 //    private Socket client;
 //    NetworkTask networktask;
@@ -176,7 +173,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         Bundle b = getIntent().getExtras();
         serverIP = b.getString("ip");
-        username = b.getString("username");
+        userName = b.getString("username");
+        teamName = b.getString("teamname");
         port = 4444;
 
         sendMessageToServer(1, "Hello");
@@ -1061,7 +1059,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     // 2 = for entering a new zone
     // 3 = to check if the detected image is already taken
     public void sendMessageToServer(int code, String message){
-        String userMessage = username + ":" + code + ":" + message;
+        String userMessage = userName + ":" + teamName + ":" + code + ":" + message;
         ClientTask clientTask = new ClientTask(serverIP,port, userMessage);
         clientTask.execute();
     }
