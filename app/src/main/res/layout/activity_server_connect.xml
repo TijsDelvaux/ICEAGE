@@ -18,7 +18,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/username"
         android:layout_marginBottom="20dp"
-        android:textSize="20sp"/>
+        android:textSize="20sp"
+        android:inputType="textCapWords" />
     <requestFocus/>
 
     <TextView
@@ -35,7 +36,8 @@
         android:id="@+id/server_ip"
         android:text="10.43.90.240"
         android:layout_marginBottom="20dp"
-        android:textSize="20sp"/>
+        android:textSize="20sp"
+        android:inputType="phone" />
     <requestFocus/>
 
     <Button
