@@ -45,6 +45,7 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.CheckBox;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mycompany.myfirstindoorsapp.IceAge;
@@ -101,6 +102,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private boolean mExtendedTracking = false;
     
     private View mFlashOptionView;
+    private TextView mPlayerCollectedAcornsView;
+    private TextView mTeamCollectedAcornsView;
+    private TextView mCurrentZonesView;
     
     private RelativeLayout mUILayout;
     
@@ -119,13 +123,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private String zonesString = "";
     private DataSet[] listDatasets;
 
-    private int count;
-
     private RelativeLayout countLayout;
 
     private boolean showCollectButton;
-    private View collectButton;
 
+    private View collectButton;
     @IceAge
     private void init() {
         listDatasetStrings = new String[] {"StonesAndChips.xml", // index 0: default
@@ -157,10 +159,17 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         Log.d(LOGTAG,"after targets init");
     }
+
+    private int playerCollectedAcorns;
+    private int teamCollectedAcorns;
     private String serverIP;
     private String userName;
     private String teamName;
     private int port;
+    private int playerColor;
+    private int teamColor;
+
+
 //    private Socket client;
 //    NetworkTask networktask;
 
@@ -180,12 +189,16 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
 
+        playerColor = getResources().getColor(R.color.blue);
+        teamColor = getResources().getColor(R.color.red);
+
+
         sendMessageToServer(MsgServer.DEFAULT, "Hello");
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
 
-//        mDatasetStrings.add("Thuis.xml");
+        mDatasetStrings.add("Thuis.xml");
 
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -205,6 +218,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         showCollectButton = false;
         addOverlayView();
 
+        showToast("Swipe from left edge to the right to show menu " +
+                "\n------->",Toast.LENGTH_LONG);
+
         Log.d(LOGTAG, "Vuforia end of onCreate");
         new LocationActivity(this);
 
@@ -214,36 +230,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @IceAge
     public void onClickCollectButton(View view){
         String currentImage = mRenderer.collectCurrentPicture();
-        count++;
-        String toastCollectedText = getString(R.string.collect_button_toast);
-        mRenderer.displayMessage(toastCollectedText,0);
+        playerCollectedAcorns++;
+        teamCollectedAcorns++;
+        menuProcess(CMD_UPDATE_COUNT);
+        showToast(getString(R.string.collect_button_toast));
+//        String toastCollectedText = getString(R.string.collect_button_toast);
+//        mRenderer.displayMessage(toastCollectedText,0);
         sendMessageToServer(MsgServer.ACORN_PICKUP, currentImage);
-    }
-
-    @IceAge
-    public void onClickStatusButton(View view) {
-        String acorn_s = null;
-
-        //Just a difference between "1 acorn" and "x acorns".
-        if(count == 1){
-            acorn_s =  getString(string.status2_one_button_toast);
-        }else{
-            acorn_s =  getString(string.status2_button_toast);
-        }
-
-        String toastStatusText =  getString(string.status1_button_toast)
-                                + count
-                                + acorn_s;
-        if(count == 0){
-            toastStatusText += " :(";
-        }
-
-        mRenderer.displayMessage(toastStatusText,0);
-    }
-
-    @IceAge
-    public void onClickZoneButton(View view) {
-        mRenderer.displayMessage(zonesString,0);
     }
 
     //END ICE STUFF
@@ -475,16 +468,16 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     @IceAge
     private void setTargetsToFollow(List<String> zones) {
-        mDatasetStrings.clear();
-
-        for (String zone : zones) {
-            int zoneIndex = allZones.get(zone);
-            mDatasetStrings.add(listDatasetStrings[zoneIndex]);
-        }
-
-        if (mDatasetStrings.isEmpty()) {
-            mDatasetStrings.add(listDatasetStrings[0]);
-        }
+//        mDatasetStrings.clear();
+//
+//        for (String zone : zones) {
+//            int zoneIndex = allZones.get(zone);
+//            mDatasetStrings.add(listDatasetStrings[zoneIndex]);
+//        }
+//
+//        if (mDatasetStrings.isEmpty()) {
+//            mDatasetStrings.add(listDatasetStrings[0]);
+//        }
 
         vuforiaAppSession.doReloadTargets();
     }
@@ -500,7 +493,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG,s);
 
         zonesString = s;
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+        menuProcess(CMD_CURRENT_ZONES);
     }
 
     @IceAge
@@ -517,8 +510,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 LayoutParams.MATCH_PARENT));
 
         collectButton = countLayout.findViewById(R.id.collect_button);
-        View statusButton = countLayout.findViewById(R.id.status_button);
-        statusButton.setVisibility(View.VISIBLE);
+//        View statusButton = countLayout.findViewById(R.id.status_button);
+//        statusButton.setVisibility(View.VISIBLE);
         if(showCollectButton){
             collectButton.setVisibility(View.VISIBLE);
         }else {
@@ -837,23 +830,37 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
     
     final public static int CMD_BACK = -1;
-    final public static int CMD_EXTENDED_TRACKING = 1;
-    final public static int CMD_AUTOFOCUS = 2;
-    final public static int CMD_FLASH = 3;
-    final public static int CMD_CAMERA_FRONT = 4;
-    final public static int CMD_CAMERA_REAR = 5;
-    final public static int CMD_DATASET_START_INDEX = 6;
+    final public static int CMD_AUTOFOCUS = 1;
+    final public static int CMD_FLASH = 2;
+    final public static int CMD_CAMERA_FRONT = 3;
+    final public static int CMD_CAMERA_REAR = 4;
+    final public static int CMD_UPDATE_COUNT = 5;
+    final public static int CMD_CURRENT_ZONES = 6;
+    final public static int CMD_NOTHING = 7;
     
     
     // This method sets the menu's settings
     private void setSampleAppMenuSettings()
     {
         SampleAppMenuGroup group;
-        
+
         group = mSampleAppMenu.addGroup("", false);
-        group.addTextItem(getString(R.string.menu_back), -1);
-        
+        TextView userNameView =(TextView) group.addTextItem("UserName: " + userName, CMD_NOTHING);
+        userNameView.setTextColor(playerColor);
+        TextView teamNameView =(TextView) group.addTextItem("Team: " + teamName, CMD_NOTHING);
+        teamNameView.setTextColor(teamColor);
+
         group = mSampleAppMenu.addGroup("", true);
+
+        //Shows the amount of collected acorns
+        group.addTextItem("Number of collected acorns: ", CMD_NOTHING);
+        mPlayerCollectedAcornsView = (TextView) group.addTextItem("You: " + playerCollectedAcorns, CMD_UPDATE_COUNT);
+        mPlayerCollectedAcornsView.setTextColor(playerColor);
+        mTeamCollectedAcornsView = (TextView) group.addTextItem("Your team: " + teamCollectedAcorns, CMD_UPDATE_COUNT);
+        mTeamCollectedAcornsView.setTextColor(teamColor);
+
+        //Show the list of zones you're currently in
+        mCurrentZonesView = (TextView) group.addTextItem(zonesString, CMD_CURRENT_ZONES);
 //        group.addSelectionItem(getString(R.string.menu_extended_tracking),
 //            CMD_EXTENDED_TRACKING, false);
         group.addSelectionItem(getString(R.string.menu_contAutofocus),
@@ -882,20 +889,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             group.addRadioItem(getString(R.string.menu_camera_back),
                 CMD_CAMERA_REAR, true);
         }
-        
-        group = mSampleAppMenu
-            .addGroup(getString(R.string.menu_datasets), true);
-        mStartDatasetsIndex = CMD_DATASET_START_INDEX;
-        mDatasetsNumber = mDatasetStrings.size();
 
-        //TODO : mag dit weg?
-        //group.addRadioItem("CW", mStartDatasetsIndex, false); // ICEAGE : addtrackables
-        //group.addRadioItem("Stones & Chips", mStartDatasetsIndex + 1, false);
-        //group.addRadioItem("Tarmac", mStartDatasetsIndex + 2, false);
-        //group.addRadioItem("Test", mStartDatasetsIndex + 3, true);
-        //group.addRadioItem("Foyer", mStartDatasetsIndex + 4, true);
+        group = mSampleAppMenu.addGroup("", false);
+        group.addTextItem(getString(R.string.menu_back), -1);
 
-        
+
         mSampleAppMenu.attachMenu();
     }
     
@@ -994,44 +992,22 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 }
                 doStartTrackers();
                 break;
-            
-            case CMD_EXTENDED_TRACKING:
-                for (int tIdx = 0; tIdx < mCurrentDataset.getNumTrackables(); tIdx++)
-                {
-                    Trackable trackable = mCurrentDataset.getTrackable(tIdx);
-                    
-                    if (!mExtendedTracking)
-                    {
-                        if (!trackable.startExtendedTracking())
-                        {
-                            Log.e(LOGTAG,
-                                "Failed to start extended tracking target");
-                            result = false;
-                        } else
-                        {
-                            Log.d(LOGTAG,
-                                "Successfully started extended tracking target");
-                        }
-                    } else
-                    {
-                        if (!trackable.stopExtendedTracking())
-                        {
-                            Log.e(LOGTAG,
-                                "Failed to stop extended tracking target");
-                            result = false;
-                        } else
-                        {
-                            Log.d(LOGTAG,
-                                "Successfully started extended tracking target");
-                        }
-                    }
-                }
-                
-                if (result)
-                    mExtendedTracking = !mExtendedTracking;
-                
+
+            case CMD_UPDATE_COUNT:
+                mPlayerCollectedAcornsView.setText("You: " + playerCollectedAcorns);
+                mTeamCollectedAcornsView.setText("Your team: " + teamCollectedAcorns);
                 break;
-            
+
+
+            case CMD_CURRENT_ZONES:
+                String zones = zonesString;
+                if(zonesString.equals("")){
+                    zones = "You're not in an acknowledged zone";
+                }
+                mCurrentZonesView.setText(zones);
+                break;
+            case CMD_NOTHING:
+                break;
             default:
                 if (command >= mStartDatasetsIndex
                     && command < mStartDatasetsIndex + mDatasetsNumber)
@@ -1046,19 +1022,20 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         return result;
     }
     
-    
+    //Shows a standard toast with a shoret length
     private void showToast(String text)
     {
-        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+        showToast(text, Toast.LENGTH_SHORT);
 
     }
 
+    //Shows a toast with variable length
+    private void showToast(String text, int duration) {
+        Toast.makeText(this, text, duration).show();
+    }
+
+
     //ICEAGE
-    // :'s are used so the server can distinguish different parts of the message.
-    // 0 = Picking up an image
-    // 1 = just a plain message to the server
-    // 2 = for entering a new zone
-    // 3 = to check if the detected image is already taken
     public void sendMessageToServer(MsgServer code, String message){
         String userMessage = userName + ":" + teamName + ":" + code + ":" + message;
         ClientTask clientTask = new ClientTask(serverIP,port, userMessage);
