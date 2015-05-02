@@ -24,6 +24,8 @@ import android.util.Log;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.Acorn;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.CubeShaders;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.LoadingDialogHandler;
+import com.mycompany.myfirstindoorsapp.SampleApplication.utils.MeshObject;
+import com.mycompany.myfirstindoorsapp.SampleApplication.utils.QuadMesh;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleApplication3DModel;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleApplicationSession;
 import com.mycompany.myfirstindoorsapp.SampleApplication.utils.SampleUtils;
@@ -62,7 +64,10 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private int texSampler2DHandle;
     
     private Acorn acorn;
-    
+    private QuadMesh picture;
+    private MeshObject objectToShow;
+    private boolean acornTaken = false;
+
     private float kBuildingScale = 12.0f;
     private SampleApplication3DModel mBuildingsModel;
     
@@ -129,6 +134,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private void initRendering()
     {
         acorn = new Acorn();
+        picture = new QuadMesh(1.5,1);
         
         mRenderer = Renderer.getInstance();
         
@@ -199,9 +205,9 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         else
             GLES20.glFrontFace(GLES20.GL_CCW); // Back camera
 
-        if(state.getNumTrackableResults() == 0){
-            displayMessage("Nothing here!", 1);
-        }
+//        if(state.getNumTrackableResults() == 0){
+//            displayMessage("Nothing here!", 1);
+//        }
 
         // did we find any trackables this frame?
         for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)
@@ -212,29 +218,18 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             currentImage = trackable.getName();
             if(excludedImageSet.contains(currentImage)){
                 disableCollectButton();
-                continue;
+                renderAcornTaken();
+            }else{
+                renderAcorn();
+                enableCollectButton();
             }
 
             isTaken(currentImage);
-            //ICEAGE
-            //Enabling collect button
-//            if(freeImageSet.contains(currentImage)){
-                enableCollectButton();
-//            }else{
-//                disableCollectButton();
-//            }
 
 //            printUserData(trackable);
             Matrix44F modelViewMatrix_Vuforia = Tool
                 .convertPose2GLMatrix(result.getPose());
             float[] modelViewMatrix = modelViewMatrix_Vuforia.getData();
-
-//            int textureIndex = trackable.getName().equalsIgnoreCase("stones") ? 0
-//                : 1;
-//            textureIndex = trackable.getName().equalsIgnoreCase("tarmac") ? 2
-//                : textureIndex;
-            int textureIndex = trackable.getName().equalsIgnoreCase(imageSet) ? 0:1;
-
             
             // deal with the modelview and projection matrices
             float[] modelViewProjection = new float[16];
@@ -257,66 +252,41 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             
             // activate the shader program and bind the vertex/normal/tex coords
             GLES20.glUseProgram(shaderProgramID);
-            
-            if (!mActivity.isExtendedTrackingActive())
-            {
-                GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, acorn.getVertices());
-                GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, acorn.getNormals());
-                GLES20.glVertexAttribPointer(textureCoordHandle, 2,
-                    GLES20.GL_FLOAT, false, 0, acorn.getTexCoords());
-                
-                GLES20.glEnableVertexAttribArray(vertexHandle);
-                GLES20.glEnableVertexAttribArray(normalHandle);
-                GLES20.glEnableVertexAttribArray(textureCoordHandle);
-                
-                // activate texture 0, bind it, and pass to shader
-                GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,
-                    mTextures.get(textureIndex).mTextureID[0]);
-                GLES20.glUniform1i(texSampler2DHandle, 0);
-                
-                // pass the model view matrix to the shader
-                GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false,
-                    modelViewProjection, 0);
-                
-                // finally draw the teapot
-                // https://developer.vuforia.com/forum/android/convert-obj-my-own-java-meshobject
-//                GLES20.glDrawElements(GLES20.GL_TRIANGLES,
-//                    mTeapot.getNumObjectIndex(), GLES20.GL_UNSIGNED_SHORT,
-//                    mTeapot.getIndices());
-                GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, acorn.getNumObjectVertex());
-                
-                // disable the enabled arrays
-                GLES20.glDisableVertexAttribArray(vertexHandle);
-                GLES20.glDisableVertexAttribArray(normalHandle);
-                GLES20.glDisableVertexAttribArray(textureCoordHandle);
-            } else
-            {
-                GLES20.glDisable(GLES20.GL_CULL_FACE);
-                GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, mBuildingsModel.getVertices());
-                GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT,
-                    false, 0, mBuildingsModel.getNormals());
-                GLES20.glVertexAttribPointer(textureCoordHandle, 2,
-                    GLES20.GL_FLOAT, false, 0, mBuildingsModel.getTexCoords());
-                
-                GLES20.glEnableVertexAttribArray(vertexHandle);
-                GLES20.glEnableVertexAttribArray(normalHandle);
-                GLES20.glEnableVertexAttribArray(textureCoordHandle);
-                
-                GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,
-                    mTextures.get(3).mTextureID[0]);
-                GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false,
-                    modelViewProjection, 0);
-                GLES20.glUniform1i(texSampler2DHandle, 0);
-                GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0,
-                    mBuildingsModel.getNumObjectVertex());
-                
-                SampleUtils.checkGLError("Renderer DrawBuildings");
+            int textureIndex = 0;
+            if(acornTaken){
+                objectToShow = picture;
+                textureIndex = 1;
+            }else{
+                objectToShow = acorn;
             }
+            GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT,
+                false, 0, objectToShow.getVertices());
+            GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT,
+                false, 0, objectToShow.getNormals());
+            GLES20.glVertexAttribPointer(textureCoordHandle, 2,
+                GLES20.GL_FLOAT, false, 0, objectToShow.getTexCoords());
+
+            GLES20.glEnableVertexAttribArray(vertexHandle);
+            GLES20.glEnableVertexAttribArray(normalHandle);
+            GLES20.glEnableVertexAttribArray(textureCoordHandle);
+
+            // activate texture 0, bind it, and pass to shader
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,
+                mTextures.get(textureIndex).mTextureID[0]);
+            GLES20.glUniform1i(texSampler2DHandle, 0);
+
+            // pass the model view matrix to the shader
+            GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false,
+                modelViewProjection, 0);
+
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, objectToShow.getNumObjectVertex());
+
+            // disable the enabled arrays
+            GLES20.glDisableVertexAttribArray(vertexHandle);
+            GLES20.glDisableVertexAttribArray(normalHandle);
+            GLES20.glDisableVertexAttribArray(textureCoordHandle);
+
             
             SampleUtils.checkGLError("Render Frame");
             
@@ -328,20 +298,11 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     }
     
     
-//    private void printUserData(Trackable trackable)
-//    {
-//        String userData = (String) trackable.getUserData();
-//        Log.d(LOGTAG, "UserData:Retreived User Data	\"" + userData + "\"");
-//    }
-    
-    
     public void setTextures(Vector<Texture> textures)
     {
         mTextures = textures;
         
     }
-
-
 
     //ADDED ICEAGE STUFF
 
@@ -391,9 +352,14 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         }
     }
 
-//    public boolean freeSetContains(String image){
-//        return freeImageSet.contains(image);
-//    }
+    public void renderAcornTaken(){
+        acornTaken = true;
+    }
+
+    public void renderAcorn(){
+        acornTaken = false;
+    }
+
 
 
 }

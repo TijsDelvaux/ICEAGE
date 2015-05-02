@@ -218,9 +218,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         showCollectButton = false;
         addOverlayView();
 
-        showToast("Swipe from left edge to the right to show menu " +
-                "\n------->",Toast.LENGTH_LONG);
-
         Log.d(LOGTAG, "Vuforia end of onCreate");
         new LocationActivity(this);
 
@@ -234,8 +231,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamCollectedAcorns++;
         menuProcess(CMD_UPDATE_COUNT);
         showToast(getString(R.string.collect_button_toast));
-//        String toastCollectedText = getString(R.string.collect_button_toast);
-//        mRenderer.displayMessage(toastCollectedText,0);
         sendMessageToServer(MsgServer.ACORN_PICKUP, currentImage);
     }
 
@@ -283,14 +278,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     
     private void loadTextures()
     {
-//        mTextures.add(Texture.loadTextureFromApk("TexturebruineEikel.png",
-//            getAssets()));
-//        mTextures.add(Texture.loadTextureFromApk("TextureGoudEikel.png",
-//            getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("TextureColoredByHand.png",
-            getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("ImageTargets/Buildings.jpeg",
-            getAssets()));
+        mTextures.add(Texture.loadTextureFromApk("TexturebruineEikel.png",
+                getAssets()));
+        mTextures.add(Texture.loadTextureFromApk("sad_scrat_text.png",
+                getAssets()));
     }
     
     
@@ -1116,7 +1107,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 String responseCode = splitResponse[0];
                 String rsp = splitResponse[1];
 
-                switch (MsgClient.values()[Integer.parseInt(responseCode)]) {
+                switch (MsgClient.valueOf(responseCode)) {
                     //Don't do anything
                     case DEFAULT:
                         break;
@@ -1126,7 +1117,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     //Registration went well
                     case CONFIRM_REGISTRATION:
-                        showToast(rsp); //TODO
+                        showToast(rsp,Toast.LENGTH_LONG); //TODO
+                        showToast("Swipe from left edge to the right to show menu " +
+                                "\n------->",Toast.LENGTH_LONG);
+
                         break;
                     // Registration did not went well
                     case DECLINE_REGISTRATION:
@@ -1136,25 +1130,25 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     case UPDATE_EXCLUDE_LIST:
                         updateExcludedList(rsp);
                         break;
-                    // Reply from isTaken: there is an achorn here
-                    case CONFIRM_ACHORN:
+                    // Reply from isTaken: there is an acorn here
+                    case CONFIRM_ACORN:
                         mRenderer.addToFreeSet(rsp);
 //                            Log.d("CLIENTTASK", "adding image " + splitResponse[2] + " to freeSet");
                         break;
-                    // Reply from isTaken: there is NO achorn here
-                    case DECLINE_ACHORN:
+                    // Reply from isTaken: there is NO acorn here
+                    case DECLINE_ACORN:
                         mRenderer.addToExcludedSet(rsp);
 //                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
                         break;
-                    // You have successfully picked up an achorn
+                    // You have successfully picked up an acorn
                     case CONFIRM_PICKUP:
                         showToast(rsp); //TODO
                         break;
-                    // Something went wrong while picking up an achorn
+                    // Something went wrong while picking up an acorn
                     case DECLINE_PICKUP:
-                        showToast(rsp); //TODO new request for achorn (maybe someone else has taken it in the meantime)
+                        showToast(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
                         break;
-                    // A team mate has picked up an achorn
+                    // A team mate has picked up an acorn
                     case TEAMMATE_PICKUP:
                         showToast(rsp); //TODO
 

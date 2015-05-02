@@ -58,13 +58,14 @@ public class Server   {
     }
 
     /*
-    * @return: true if the client was able to pickup the achorn
+    * @return: true if the client was able to pickup the acorn
     */
-    private boolean clientPickUpAchorn(String clientName, String teamName, String imageName) {
+    private boolean clientPickUpAcorn(String clientName, String teamName, String imageName) {
         if(clientCounts.containsKey(clientName) && !excludedList.contains(imageName)) {
             // pickup
             excludeFromList(imageName);
             clientCounts.put(clientName, clientCounts.get(clientName) + 1);
+            updateTeamCount(teamName);
             totalNbPickedUp++;
 
             // notify all team players
@@ -89,10 +90,18 @@ public class Server   {
         }
     }
 
+    public void updateTeamCount(String teamName){
+        int teamTotal = 0;
+        for(String player: teamClients.get(teamName)){
+            teamTotal += clientCounts.get(player);
+        }
+        teamCounts.put(teamName, teamTotal);
+    }
+
     /*
-     * @return: true if the achorn is there, false if it is not
+     * @return: true if the acorn is there, false if it is not
      */
-    private boolean clientRequestAchorn(String imageName) {
+    private boolean clientRequestAcorn(String imageName) {
         return !excludedList.contains(imageName);
     }
 
@@ -108,7 +117,7 @@ public class Server   {
         leaderboard += "\n";
         leaderboard += "\n" + indent + "LEADERBOARD TEAMS\n";
         for(String name: teamCounts.keySet()) {
-            leaderboard += indent + name + "\t\t" + teamCounts.get(name) + "\n";
+            leaderboard += indent + name + "\t\t\t" + teamCounts.get(name) + "\n";
         }
         leaderboard += "\n";
         return leaderboard;
@@ -184,25 +193,25 @@ public class Server   {
                                 "Your team members are: " + teamClients.get(teamName).toString());
                     }
 
-                    String printMessage;
+                    String printMessage = "";
                     String reply;
 
                     // handle message from client
                     switch (MsgServer.valueOf(messageCode)) {
                         //Client picked up an acorn, add the picture-name to the excluded list
                         //TODO add zones!!
-                        case ACORN_PICKUP: // pickup achorn
-                            if (clientPickUpAchorn(clientName, teamName, msg)) {
-                                printMessage = "[SERVER] " + clientName + "picked up an achorn\n" +
+                        case ACORN_PICKUP: // pickup acorn
+                            if (clientPickUpAcorn(clientName, teamName, msg)) {
+                                printMessage = "[SERVER] " + clientName + " picked up an acorn\n" +
                                         "~~~~~~ " + clientName + ": " + clientCounts.get(clientName) + ";" +
                                         " total count: " + totalNbPickedUp + "; total left: " + (totalNbAcorns - totalNbPickedUp) + ")"
                                         + getLeaderBoardString();
-                                reply = MsgClient.CONFIRM_PICKUP + ":" + "You have picked up an achorn! \n" +
-                                        totalNbPickedUp + " of the " + totalNbAcorns + " achorns are found";
+                                reply = MsgClient.CONFIRM_PICKUP + ":" + "You have picked up an acorn! \n" +
+                                        totalNbPickedUp + " of the " + totalNbAcorns + " acorns are found";
                             } else {
-                                printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up achorn," +
-                                        "but this failed (client was not registered or achorn was not there).";
-                                reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the achorn.";
+                                printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
+                                        "but this failed (client was not registered or acorn was not there).";
+                                reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn.";
                             }
                             break;
 
@@ -219,14 +228,14 @@ public class Server   {
                             break;
 
                         case ACORN_REQUEST: //Check if the asked picture is in the excluded list
-                            if (clientRequestAchorn(msg)) {
-                                reply = MsgClient.CONFIRM_ACHORN + ":" + msg;
-                                printMessage = "[SERVER] " + clientName + " requested achorn (" + msg + ")" +
-                                        " and it is free!";
+                            if (clientRequestAcorn(msg)) {
+                                reply = MsgClient.CONFIRM_ACORN + ":" + msg;
+//                                printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
+//                                        " and it is free!";
                             } else {
-                                reply = MsgClient.DECLINE_ACHORN + ":" + msg;
-                                printMessage = "[SERVER] " + clientName + " requested achorn (" + msg + ")" +
-                                        ", but it has been taken";
+                                reply = MsgClient.DECLINE_ACORN + ":" + msg;
+//                                printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
+//                                        ", but it has been taken";
                             }
 
                             break;
@@ -237,8 +246,9 @@ public class Server   {
                             break;
 
                     }
-
-                    System.out.println(printMessage);
+                    if(!printMessage.equals("")) {
+                        System.out.println(printMessage);
+                    }
                     dataOutputStream.writeUTF(reply);
                 }
             } catch (IOException e) {
