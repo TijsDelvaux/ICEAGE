@@ -185,7 +185,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
 
-        //mDatasetStrings.add("Thuis.xml");
+//        mDatasetStrings.add("Thuis.xml");
 
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -854,8 +854,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         group.addTextItem(getString(R.string.menu_back), -1);
         
         group = mSampleAppMenu.addGroup("", true);
-        group.addSelectionItem(getString(R.string.menu_extended_tracking),
-            CMD_EXTENDED_TRACKING, false);
+//        group.addSelectionItem(getString(R.string.menu_extended_tracking),
+//            CMD_EXTENDED_TRACKING, false);
         group.addSelectionItem(getString(R.string.menu_contAutofocus),
             CMD_AUTOFOCUS, mContAutofocus);
         mFlashOptionView = group.addSelectionItem(

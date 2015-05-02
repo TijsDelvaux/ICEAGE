@@ -188,7 +188,7 @@ public class Server   {
                     String reply;
 
                     // handle message from client
-                    switch (MsgServer.values()[Integer.parseInt(messageCode)]) {
+                    switch (MsgServer.valueOf(messageCode)) {
                         //Client picked up an acorn, add the picture-name to the excluded list
                         //TODO add zones!!
                         case ACORN_PICKUP: // pickup achorn

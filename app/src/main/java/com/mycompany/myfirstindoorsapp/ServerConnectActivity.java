@@ -30,11 +30,14 @@ public class ServerConnectActivity extends Activity {
         String serverIP = serverIPText.getText().toString();
         EditText userNameText = (EditText) findViewById(R.id.username);
         String username = userNameText.getText().toString();
+        EditText teamNameText = (EditText) findViewById(R.id.teamname);
+        String teamname = teamNameText.getText().toString();
         Intent i = new Intent(this, ImageTargets.class);
 
 //        Intent i = new Intent(this, ClientActivity.class);
         i.putExtra("ip", serverIP);
         i.putExtra("username", username);
+        i.putExtra("teamname", teamname);
         startActivity(i);
 
     }
