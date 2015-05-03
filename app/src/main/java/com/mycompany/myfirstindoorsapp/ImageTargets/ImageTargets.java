@@ -227,10 +227,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @IceAge
     public void onClickCollectButton(View view){
         String currentImage = mRenderer.collectCurrentPicture();
-        playerCollectedAcorns++;
-        teamCollectedAcorns++;
-        menuProcess(CMD_UPDATE_COUNT);
-        showToast(getString(R.string.collect_button_toast));
+//        playerCollectedAcorns++;
+//        teamCollectedAcorns++;
         sendMessageToServer(MsgServer.ACORN_PICKUP, currentImage);
     }
 
@@ -280,7 +278,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     {
         mTextures.add(Texture.loadTextureFromApk("TexturebruineEikel.png",
                 getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("sad_scrat_text.png",
+        mTextures.add(Texture.loadTextureFromApk("scrat_excited.png",
+                getAssets()));
+        mTextures.add(Texture.loadTextureFromApk("scrat_happy.jpg",
+                getAssets()));
+        mTextures.add(Texture.loadTextureFromApk("scrat_sad_text.png",
                 getAssets()));
     }
     
@@ -771,7 +773,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             ObjectTracker.getClassType());
         if (objectTracker != null)
             objectTracker.start();
-        
+
         return result;
     }
     
@@ -1142,11 +1144,16 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     // You have successfully picked up an acorn
                     case CONFIRM_PICKUP:
-                        showToast(rsp); //TODO
+                        showToast(rsp);
+                        mRenderer.addToMyPickedUpSet(splitResponse[2]);
+                        playerCollectedAcorns++;
+                        menuProcess(CMD_UPDATE_COUNT);
+//                        showToast(getString(R.string.collect_button_toast));
                         break;
                     // Something went wrong while picking up an acorn
                     case DECLINE_PICKUP:
                         showToast(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
+                        mRenderer.removeFromMyPickedUpSet(splitResponse[2]);
                         break;
                     // A team mate has picked up an acorn
                     case TEAMMATE_PICKUP:

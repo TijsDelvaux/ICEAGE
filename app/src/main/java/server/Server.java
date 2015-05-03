@@ -117,7 +117,7 @@ public class Server   {
         leaderboard += "\n";
         leaderboard += "\n" + indent + "LEADERBOARD TEAMS\n";
         for(String name: teamCounts.keySet()) {
-            leaderboard += indent + name + "\t\t\t" + teamCounts.get(name) + "\n";
+            leaderboard += indent + name + "\t\t" + teamCounts.get(name) + "\n";
         }
         leaderboard += "\n";
         return leaderboard;
@@ -153,6 +153,8 @@ public class Server   {
         return true;
     }
 
+
+
     private class SocketServerThread extends Thread {
 
         private int SocketServerPORT = port;
@@ -176,6 +178,7 @@ public class Server   {
                     //If no message sent from client, this code will block the program
                     String messageFromClient = dataInputStream.readUTF();
 
+
                     // parse message
                     String[] splitMessage = messageFromClient.split(":");
                     String clientName = splitMessage[0];
@@ -190,7 +193,7 @@ public class Server   {
                         System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
                         dataOutputStream.writeUTF(MsgClient.CONFIRM_REGISTRATION + ":" + "Welcome to the IceAge Nut Discovery game!\n" +
                                 "You have enrolled as " + clientName + " in team " + teamName + ".\n" +
-                                "Your team members are: " + teamClients.get(teamName).toString());
+                                "Your team members are " + teamClients.get(teamName).toString());
                     }
 
                     String printMessage = "";
@@ -207,11 +210,14 @@ public class Server   {
                                         " total count: " + totalNbPickedUp + "; total left: " + (totalNbAcorns - totalNbPickedUp) + ")"
                                         + getLeaderBoardString();
                                 reply = MsgClient.CONFIRM_PICKUP + ":" + "You have picked up an acorn! \n" +
-                                        totalNbPickedUp + " of the " + totalNbAcorns + " acorns are found";
+                                        totalNbPickedUp + " of the " + totalNbAcorns + " acorns are found"
+                                        + ":" + msg;
+
                             } else {
                                 printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
                                         "but this failed (client was not registered or acorn was not there).";
-                                reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn.";
+                                reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
+                                        + ":" + msg;
                             }
                             break;
 
@@ -230,12 +236,12 @@ public class Server   {
                         case ACORN_REQUEST: //Check if the asked picture is in the excluded list
                             if (clientRequestAcorn(msg)) {
                                 reply = MsgClient.CONFIRM_ACORN + ":" + msg;
-//                                printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
-//                                        " and it is free!";
+                                printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
+                                        " and it is free!";
                             } else {
                                 reply = MsgClient.DECLINE_ACORN + ":" + msg;
-//                                printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
-//                                        ", but it has been taken";
+                                printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
+                                        ", but it has been taken";
                             }
 
                             break;
@@ -250,7 +256,10 @@ public class Server   {
                         System.out.println(printMessage);
                     }
                     dataOutputStream.writeUTF(reply);
+
                 }
+
+
             } catch (IOException e) {
                 e.printStackTrace();
                 final String errMsg = e.toString();

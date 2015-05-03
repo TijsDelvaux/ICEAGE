@@ -79,12 +79,20 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 
     private HashSet<String> excludedImageSet = new HashSet<String>();
     private HashSet<String> freeImageSet = new HashSet<String>();
+    private HashSet<String> myPickedUpSet = new HashSet<String>();
     private String currentImage;
+    private int askCount = 0;
+    private int askCountLimit = 10;
+
+    private static int IMG_ACORN_BROWN = 0;
+    private static int IMG_SCRAT_EXCITED = 1;
+    private static int IMG_SCRAT_HAPPY = 2;
+    private static int IMG_SCRAT_SAD = 3;
 
 
     //ICEAGE
     //Dit is de imageset die gebruikt wordt.
-    String imageSet = "foyer";
+//    String imageSet = "foyer";
     
     public ImageTargetRenderer(ImageTargets activity,
         SampleApplicationSession session)
@@ -140,7 +148,6 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, Vuforia.requiresAlpha() ? 0.0f
             : 1.0f);
-        
         for (Texture t : mTextures)
         {
             GLES20.glGenTextures(1, t.mTextureID, 0);
@@ -216,15 +223,41 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             TrackableResult result = state.getTrackableResult(tIdx);
             Trackable trackable = result.getTrackable();
             currentImage = trackable.getName();
-            if(excludedImageSet.contains(currentImage)){
+            int textureIndex;
+
+            if(myPickedUpSet.contains(currentImage)){ //YOU PICKED UP THIS ACORN
                 disableCollectButton();
-                renderAcornTaken();
-            }else{
-                renderAcorn();
+                objectToShow = picture;
+                textureIndex = IMG_SCRAT_HAPPY;
+            }else if(excludedImageSet.contains(currentImage)){ //SOMEONE ELSE PICKED UP THIS ACORN
+                disableCollectButton();
+                objectToShow = picture;
+                textureIndex = IMG_SCRAT_SAD;
+            }else if(!freeImageSet.contains(currentImage)) { //YOU'RE NOT SURE IF THIS ACORN HAS BEEN PICKED UP YET
+                disableCollectButton();
+                objectToShow = acorn;
+                textureIndex = IMG_ACORN_BROWN;
+                askCount ++;
+                if(askCount >= askCountLimit) {
+                    isTaken(currentImage);
+                    askCount = 0;
+                }
+            }else{//THE ACORN HASN'T BEEN PICKED UP YET
                 enableCollectButton();
+                objectToShow = acorn;
+                textureIndex = IMG_ACORN_BROWN;
+                askCount ++;
+                if(askCount >= askCountLimit) {
+                    isTaken(currentImage);
+                    askCount = 0;
+                }
             }
 
-            isTaken(currentImage);
+
+
+
+
+
 
 //            printUserData(trackable);
             Matrix44F modelViewMatrix_Vuforia = Tool
@@ -252,13 +285,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             
             // activate the shader program and bind the vertex/normal/tex coords
             GLES20.glUseProgram(shaderProgramID);
-            int textureIndex = 0;
-            if(acornTaken){
-                objectToShow = picture;
-                textureIndex = 1;
-            }else{
-                objectToShow = acorn;
-            }
+
             GLES20.glVertexAttribPointer(vertexHandle, 3, GLES20.GL_FLOAT,
                 false, 0, objectToShow.getVertices());
             GLES20.glVertexAttribPointer(normalHandle, 3, GLES20.GL_FLOAT,
@@ -337,7 +364,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     //This method should be called when pressing the "collect" button when an acorn is visible.
     //The picture then should be removed from the trackable list
     public String collectCurrentPicture(){
-        excludedImageSet.add(currentImage);
+        myPickedUpSet.add(currentImage);
         return currentImage;
     }
 
@@ -352,14 +379,13 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         }
     }
 
-    public void renderAcornTaken(){
-        acornTaken = true;
+    public void addToMyPickedUpSet(String image){
+        myPickedUpSet.add(image);
     }
 
-    public void renderAcorn(){
-        acornTaken = false;
+    public void removeFromMyPickedUpSet(String image){
+        myPickedUpSet.remove(image);
     }
-
 
 
 }
