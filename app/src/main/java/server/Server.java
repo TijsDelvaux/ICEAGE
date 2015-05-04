@@ -1,7 +1,10 @@
 package server;
 
+import android.util.Log;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -15,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 public class Server   {
 
@@ -31,6 +35,7 @@ public class Server   {
 
     private Map<String,Integer> clientCounts; // specify for each client how many acorns they have picked up
     private Map<String,Integer> teamCounts; // specify for each team how many acorns they have picked up
+    private Map<String, Stack<String>> msgsToClients;
 
     private Set<String> excludedList;
 
@@ -48,6 +53,7 @@ public class Server   {
         clientCounts = new HashMap<String, Integer>();
         teamCounts = new HashMap<String, Integer>();
         excludedList = new HashSet<String>();
+        msgsToClients = new HashMap<String, Stack<String>>();
 
         Thread socketServerThread = new Thread(new SocketServerThread());
         socketServerThread.start();
@@ -153,7 +159,12 @@ public class Server   {
         return true;
     }
 
+    public void sendMessageToClient(String client, MsgClient code, String message){
+        String userMessage =  code + ":" + message;
+        msgsToClients.get(client).push(userMessage);
+        System.out.println("[SERVER] mesage toevoegen bij " + client + ": " + userMessage);
 
+    }
 
     private class SocketServerThread extends Thread {
 
@@ -161,23 +172,76 @@ public class Server   {
 
         @Override
         public void run() {
-            Socket socket = null;
-            DataInputStream dataInputStream = null;
-            DataOutputStream dataOutputStream = null;
-
+            // listens to new client connections
             try {
                 serverSocket = new ServerSocket(SocketServerPORT);
                 System.out.println("I'm waiting here: " + serverSocket.getLocalPort());
                 System.out.println("IP: " + getIpAddress());
+            while (true) {
+                Socket socket = serverSocket.accept();
+                (new ClientConnection(socket)).start();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                final String errMsg = e.toString();
+                System.out.println(errMsg);
+            }
+        }
 
+        public String getIpAddress() {
+            String ip = "";
+            try {
+                Enumeration<NetworkInterface> enumNetworkInterfaces = NetworkInterface
+                        .getNetworkInterfaces();
+                while (enumNetworkInterfaces.hasMoreElements()) {
+                    NetworkInterface networkInterface = enumNetworkInterfaces
+                            .nextElement();
+                    Enumeration<InetAddress> enumInetAddress = networkInterface
+                            .getInetAddresses();
+                    while (enumInetAddress.hasMoreElements()) {
+                        InetAddress inetAddress = enumInetAddress.nextElement();
+
+                        if (inetAddress.isSiteLocalAddress()) {
+                            ip += "SiteLocalAddress: "
+                                    + inetAddress.getHostAddress() + "\n";
+                        }
+
+                    }
+
+                }
+
+            } catch (SocketException e) {
+                e.printStackTrace();
+                ip += "Something Wrong! " + e.toString() + "\n";
+            }
+            return ip;
+        }
+    }
+
+    private class ClientConnection extends Thread{
+        private Socket clientSocket;
+        private String clientName;
+
+        protected ClientConnection(Socket clientSocket){
+            this.clientSocket = clientSocket;
+        }
+
+        public void run(){
+            Socket socket = null;
+            DataInputStream dataInputStream = null;
+            DataOutputStream dataOutputStream = null;
+            try {
+                dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
+                dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
                 while (true) {
-                    socket = serverSocket.accept();
-                    dataInputStream = new DataInputStream(socket.getInputStream());
-                    dataOutputStream = new DataOutputStream(socket.getOutputStream());
-
                     //If no message sent from client, this code will block the program
-                    String messageFromClient = dataInputStream.readUTF();
-
+                    String messageFromClient = "";
+                    try {
+                        messageFromClient = dataInputStream.readUTF();
+                    } catch (EOFException e) {
+                        System.out.println(e.toString());
+                        continue;
+                    }
 
                     // parse message
                     String[] splitMessage = messageFromClient.split(":");
@@ -185,8 +249,11 @@ public class Server   {
                     String teamName = splitMessage[1];
                     String messageCode = splitMessage[2];
                     String msg = splitMessage[3];
+                    String printMessage = "";
+                    String reply;
 
-                    // register client if needed
+                    // register client if needed, beter met een register message?
+                    this.clientName = clientName;
                     if (!clientCounts.containsKey(clientName)) {
                         registerNewClient(clientName, teamName);
 
@@ -194,10 +261,14 @@ public class Server   {
                         dataOutputStream.writeUTF(MsgClient.CONFIRM_REGISTRATION + ":" + "Welcome to the IceAge Nut Discovery game!\n" +
                                 "You have enrolled as " + clientName + " in team " + teamName + ".\n" +
                                 "Your team members are " + teamClients.get(teamName).toString());
+                        msgsToClients.put(this.clientName, new Stack<String>());
+//                        dit was om te testen
+//                        sendMessageToClient(this.clientName, MsgClient.TEAMMATE_PICKUP, "joepie");
                     }
 
-                    String printMessage = "";
-                    String reply;
+                    while(!msgsToClients.get(this.clientName).empty()){
+                        dataOutputStream.writeUTF(msgsToClients.get(this.clientName).pop());
+                    }
 
                     // handle message from client
                     switch (MsgServer.valueOf(messageCode)) {
@@ -252,73 +323,42 @@ public class Server   {
                             break;
 
                     }
-                    if(!printMessage.equals("")) {
+                    if (!printMessage.equals("")) {
                         System.out.println(printMessage);
                     }
                     dataOutputStream.writeUTF(reply);
 
                 }
-
-
             } catch (IOException e) {
-                e.printStackTrace();
-                final String errMsg = e.toString();
-                System.out.println(errMsg);
+            e.printStackTrace();
+            final String errMsg = e.toString();
+            System.out.println(errMsg);
 
-            } finally {
-                if (socket != null) {
-                    try {
-                        socket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+            }
 
-                if (dataInputStream != null) {
-                    try {
-                        dataInputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+            if (dataInputStream != null) {
+                try {
+                    dataInputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+            }
 
-                if (dataOutputStream != null) {
-                    try {
-                        dataOutputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+            if (dataOutputStream != null) {
+                try {
+                    dataOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         }
-
-        public String getIpAddress() {
-            String ip = "";
-            try {
-                Enumeration<NetworkInterface> enumNetworkInterfaces = NetworkInterface
-                        .getNetworkInterfaces();
-                while (enumNetworkInterfaces.hasMoreElements()) {
-                    NetworkInterface networkInterface = enumNetworkInterfaces
-                            .nextElement();
-                    Enumeration<InetAddress> enumInetAddress = networkInterface
-                            .getInetAddresses();
-                    while (enumInetAddress.hasMoreElements()) {
-                        InetAddress inetAddress = enumInetAddress.nextElement();
-
-                        if (inetAddress.isSiteLocalAddress()) {
-                            ip += "SiteLocalAddress: "
-                                    + inetAddress.getHostAddress() + "\n";
-                        }
-
-                    }
-
-                }
-
-            } catch (SocketException e) {
-                e.printStackTrace();
-                ip += "Something Wrong! " + e.toString() + "\n";
-            }
-            return ip;
         }
     }
 
