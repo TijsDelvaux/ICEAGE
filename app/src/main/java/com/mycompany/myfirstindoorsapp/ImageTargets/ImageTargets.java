@@ -192,7 +192,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
         msgsToServer = new Stack<String>();
-        clientask = new ClientTask(serverIP, port);
+        clientask = new ClientTask(serverIP, port, this);
         clientask.start();
 
         playerColor = getResources().getColor(R.color.blue);
