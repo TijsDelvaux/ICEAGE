@@ -12,6 +12,7 @@ import server.MsgServer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -194,7 +195,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
         msgsToServer = new Stack<String>();
-        clientask = new ClientTask(serverIP, port);
+        clientask = new ClientTask(serverIP, port, this);
         clientask.start();
 
         playerColor = getResources().getColor(R.color.blue);
@@ -525,6 +526,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //        statusButton.setVisibility(View.VISIBLE);
         if(showCollectButton){
             collectButton.setVisibility(View.VISIBLE);
+            collectButton.bringToFront();
         }else {
             collectButton.setVisibility(View.INVISIBLE);
         }
@@ -1036,7 +1038,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     //Shows a standard toast with a shoret length
     private void showToastImageTargets(String text)
     {
-        Log.d("WAT IS THIS", this.toString());
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
 //        showToastImageTargets(text, Toast.LENGTH_SHORT);
 
@@ -1063,10 +1064,32 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         String serverAddress;
         int serverPort;
+        ImageTargets imageTargets;
 
-        ClientTask(String addr, int port) {
+        ClientTask(String addr, int port, ImageTargets imgTargets) {
             serverAddress = addr;
             serverPort = port;
+            this.imageTargets = imgTargets;
+
+        }
+
+        private void showText(final String text, final int duration){
+            new Thread()
+            {
+                public void run()
+                {
+                    ImageTargets.this.runOnUiThread(new Runnable()
+                    {
+                        public void run()
+                        {
+                            Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }.start();
+        }
+        private void showText(String text){
+            showText(text, Toast.LENGTH_SHORT);
         }
 
         /*
@@ -1078,24 +1101,23 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             String response = "";
             Socket socket = null;
             DataOutputStream dataOutputStream = null;
-            DataInputStream dataInputStream = null;
+            Stack<String> responses = new Stack<String>();
 
             try {
                 socket = new Socket(serverAddress, serverPort);
-                dataOutputStream = new DataOutputStream(
-                        socket.getOutputStream());
-                dataInputStream = new DataInputStream(socket.getInputStream());
+                (new ResponseGetter(socket, responses)).start();
 //                Log.d(LOGTAG, "socket " + userName + " gemaakt");
                 while(true){
-//                    Log.d(LOGTAG, "voor messagetest" + msgsToServer);
+                    dataOutputStream = new DataOutputStream(
+                            socket.getOutputStream());
                     // wait until you have a message to send
                     while(!msgsToServer.empty()){
                         dataOutputStream.writeUTF(msgsToServer.pop());
                     }
-
                     // wait for a response
-                    response = dataInputStream.readUTF();
-                    handleResponse(response);
+                    while(!responses.empty()){
+                        handleResponse(responses.pop());
+                    }
                 }
             } catch (UnknownHostException e) {
                 e.printStackTrace();
@@ -1119,14 +1141,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         e.printStackTrace();
                     }
                 }
-
-                if (dataInputStream != null) {
-                    try {
-                        dataInputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
             }
         }
 
@@ -1135,6 +1149,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
          */
         @IceAge
         protected void handleResponse(String response) {
+            Log.d("ClientComm", response);
             try {
                 String[] splitResponse = response.split(":");
                 String responseCode = splitResponse[0];
@@ -1151,13 +1166,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
                     //Registration went well
                     case CONFIRM_REGISTRATION:
-                        showToastImageTargets(rsp, Toast.LENGTH_LONG); //TODO
-                        showToastImageTargets("Swipe from left edge to the right to show menu " +
+                        showText(rsp, Toast.LENGTH_LONG); //TODO
+                        showText("Swipe from left edge to the right to show menu " +
                                 "\n------->", Toast.LENGTH_LONG);
                         break;
                     // Registration did not went well
                     case DECLINE_REGISTRATION:
-                        showToastImageTargets(rsp); //TODO
+                        showText(rsp); //TODO
                         break;
 
                     // Update the list of excluded images
@@ -1176,7 +1191,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
                     // You have successfully picked up an acorn
                     case CONFIRM_PICKUP:
-                        showToastImageTargets(rsp);
+                        showText(rsp);
                         mRenderer.addToMyPickedUpSet(splitResponse[2]);
                         playerCollectedAcorns++;
                         teamCollectedAcorns++;
@@ -1184,7 +1199,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     // Something went wrong while picking up an acorn
                     case DECLINE_PICKUP:
-                        showToastImageTargets(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
+                        showText(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
                         mRenderer.removeFromMyPickedUpSet(splitResponse[2]);
                         break;
                     // A team mate has picked up an acorn
@@ -1237,4 +1252,29 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     }
 
+    public class ResponseGetter extends Thread{
+        Socket socket;
+        Stack<String> responses;
+
+        public ResponseGetter(Socket socket, Stack<String> responses){
+            this.socket = socket;
+            this.responses = responses;
+        }
+
+        @Override
+        public void run() {
+            DataInputStream dataInputStream = null;
+            while(true) {
+                try {
+                    dataInputStream = new DataInputStream(this.socket.getInputStream());
+                    String response = dataInputStream.readUTF();
+                    Log.d("ClientComm", "response: " + response);
+                    this.responses.push(response);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
 }

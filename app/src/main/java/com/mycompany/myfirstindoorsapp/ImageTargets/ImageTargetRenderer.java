@@ -212,9 +212,10 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         else
             GLES20.glFrontFace(GLES20.GL_CCW); // Back camera
 
-//        if(state.getNumTrackableResults() == 0){
+        if(state.getNumTrackableResults() == 0){
 //            displayMessage("Nothing here!", 1);
-//        }
+            disableCollectButton();
+        }
 
         // did we find any trackables this frame?
         for (int tIdx = 0; tIdx < state.getNumTrackableResults(); tIdx++)

@@ -307,15 +307,21 @@ public class Server   {
             DataInputStream dataInputStream = null;
             DataOutputStream dataOutputStream = null;
             try {
-                dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
-                dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
+
                 while (true) {
+                    dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
+                    dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
+                    if(msgsToClients.get(this.clientName) != null) {
+                        while (!msgsToClients.get(this.clientName).empty()) {
+                            dataOutputStream.writeUTF(msgsToClients.get(this.clientName).pop());
+                        }
+                    }
+
                     //If no message sent from client, this code will block the program
                     String messageFromClient = "";
                     try {
                         messageFromClient = dataInputStream.readUTF();
                     } catch (EOFException e) {
-                        System.out.println(e.toString());
                         continue;
                     }
 
@@ -342,9 +348,7 @@ public class Server   {
 //                        sendMessageToClient(this.clientName, MsgClient.TEAMMATE_PICKUP, "joepie");
                     }
 
-                    while(!msgsToClients.get(this.clientName).empty()){
-                        dataOutputStream.writeUTF(msgsToClients.get(this.clientName).pop());
-                    }
+
 
                     // handle message from client
                     switch (MsgServer.valueOf(messageCode)) {
