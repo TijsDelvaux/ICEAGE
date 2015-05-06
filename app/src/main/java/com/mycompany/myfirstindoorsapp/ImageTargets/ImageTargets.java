@@ -192,7 +192,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
         msgsToServer = new Stack<String>();
-        clientask = new ClientTask(serverIP, port);
+        clientask = new ClientTask(serverIP, port,this);
         clientask.start();
 
         playerColor = getResources().getColor(R.color.blue);
@@ -1009,10 +1009,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
             case CMD_CURRENT_ZONES:
                 String zones = zonesString;
-                if(zonesString.equals("")){
+                if(zonesString.equals("") || zonesString == null){
                     zones = "You're not in an acknowledged zone";
                 }
-                mCurrentZonesView.setText(zones);
+                if(!(mCurrentZonesView == null)){
+                    mCurrentZonesView.setText(zones);
+                }
                 break;
             case CMD_NOTHING:
                 break;
@@ -1192,7 +1194,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         setClientCollectedAcorns(Integer.parseInt(clientCount));
                         String teamCount = splitResponse[4];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
-                        menuProcess(CMD_UPDATE_COUNT                        break;
+                        menuProcess(CMD_UPDATE_COUNT);
+                        break;
                     //The player already owns this acorn
                     case YOU_OWN_THIS_ACORN:
                         mRenderer.addToMyPickedUpSet(rsp);
@@ -1247,7 +1250,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     String response = dataInputStream.readUTF();
                     this.responses.push(response);
                 } catch (IOException e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 }
             }
         }

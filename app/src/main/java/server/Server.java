@@ -59,7 +59,7 @@ public class Server   {
     }
 
     public void excludeImage(String image, String clientName){
-        excludedMap.put(image,clientName);
+        excludedMap.put(image, clientName);
     }
 
     private static final int CLIENT_CAN_PICK_UP_ACORN = 0;
@@ -360,10 +360,19 @@ public class Server   {
                                 reply = MsgClient.CONFIRM_ACORN + ":" + msg;
                                 printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
                                         " and it is free!";
+
                             } else {
-                                reply = MsgClient.DECLINE_ACORN + ":" + msg;
-                                printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
-                                        ", but it has been taken";
+                                if(excludedMap.get(msg).equals(clientName)){
+                                    printMessage = "[SERVER] " + clientName + " this acorn is already yours";
+                                    reply = MsgClient.YOU_OWN_THIS_ACORN //0
+                                            + ":" + msg //1
+                                            + ":" + clientCounts.get(clientName) //2
+                                            + ":" + teamCounts.get(teamName);    //3
+                                }else {
+                                    reply = MsgClient.DECLINE_ACORN + ":" + msg;
+                                    printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
+                                            ", but it has been taken";
+                                }
                             }
 
                             break;
