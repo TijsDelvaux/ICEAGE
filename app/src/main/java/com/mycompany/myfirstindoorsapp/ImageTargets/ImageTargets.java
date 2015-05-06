@@ -1240,34 +1240,36 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     // A team mate has picked up an acorn
                     case TEAMMATE_PICKUP:
                         Log.d("CLIENTTASK", "ontvangen: " + rsp);
-                        showToastImageTargets(rsp); //TODO
+                        showText(rsp); //TODO
                         teamCollectedAcorns++;
 
                     // Reply from isTaken: there is a trap here and you walked right into it!
                     case TRAP_LOSS:
                         playerCollectedAcorns =- Integer.parseInt(rsp);
                         teamCollectedAcorns =- Integer.parseInt(rsp);
-                        showToastImageTargets(splitResponse[2]);
+                        showText(splitResponse[2]);
                         break;
                     // A teammate of yours had walked into a trap
                     case TEAMMATE_TRAP_LOSS:
                         teamCollectedAcorns =- Integer.parseInt(rsp);
-                        showToastImageTargets(splitResponse[2]);
+                        showText(splitResponse[2]);
                         break;
                     // Someone walked into your trap!
                     case TRAP_REWARD:
                         playerCollectedAcorns =+ Integer.valueOf(rsp);
                         teamCollectedAcorns =+ Integer.valueOf(rsp);
-                        showToastImageTargets(splitResponse[2]);
+                        showText(splitResponse[2]);
                         break;
                     // A teammate of yours had walked into a trap
                     case TEAMMATE_TRAP_REWARD:
                         teamCollectedAcorns =+ Integer.parseInt(rsp);
-                        showToastImageTargets(splitResponse[2]);
+                        showText(splitResponse[2]);
                         break;
                     case CONFIRM_PLACEMENT_TRAP:
+                        showText(rsp);
                         break;
                     case DECLINE_PLACEMENT_TRAP:
+                        showText(rsp);
                         break;
 
                     default:

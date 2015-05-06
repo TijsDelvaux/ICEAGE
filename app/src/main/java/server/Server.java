@@ -137,7 +137,7 @@ public class Server   {
     */
     private String clientRunInTrap(String clientName, String imageName) {
         String trapOwner = trapMap.get(imageName);
-        int nbAcornsToTransfer = Math.max(clientCounts.get(clientName),costOfRunningInTrap);
+        int nbAcornsToTransfer = Math.min(clientCounts.get(clientName), costOfRunningInTrap);
 
         // change local counts
         clientCounts.put(clientName,clientCounts.get(clientName) - nbAcornsToTransfer);
