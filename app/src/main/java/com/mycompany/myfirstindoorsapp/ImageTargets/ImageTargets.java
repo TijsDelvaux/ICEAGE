@@ -518,6 +518,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //        statusButton.setVisibility(View.VISIBLE);
         if(showCollectButton){
             collectButton.setVisibility(View.VISIBLE);
+            collectButton.bringToFront();
         }else {
             collectButton.setVisibility(View.INVISIBLE);
         }
