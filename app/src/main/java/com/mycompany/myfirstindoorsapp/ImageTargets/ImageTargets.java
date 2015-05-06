@@ -1084,7 +1084,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     {
                         public void run()
                         {
-                            Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), text, duration).show();
                         }
                     });
                 }
