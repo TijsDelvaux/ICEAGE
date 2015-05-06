@@ -17,6 +17,8 @@ public enum MsgClient {
     CONFIRM_ACORN,          //:msg
     TRAP_LOSS,              //:cost:msg
     TRAP_REWARD,            //:reward:msg
+    TEAMMATE_TRAP_LOSS,     //:cost:msg
+    TEAMMATE_TRAP_REWARD,   //:reward:msg
     CONFIRM_PLACEMENT_TRAP, //:cost:msg
     DECLINE_PLACEMENT_TRAP, //:msg
     UPDATE_EXCLUDE_LIST     //TODO

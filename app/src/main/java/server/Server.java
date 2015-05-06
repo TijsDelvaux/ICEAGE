@@ -82,7 +82,7 @@ public class Server   {
                 for(String client: teamClients.get(teamName)) {
                     // make sure you do not notify yourself
                     if(!client.equals(clientName)) {
-                        notifyOfPickup(clientName, client);
+                        notifyOfPickup(clientName);
                     }
                 }
             }
@@ -138,6 +138,20 @@ public class Server   {
         sendMessageToClient(trapOwner,MsgClient.TRAP_REWARD,
                 nbAcornsToTransfer + ":Someone walked into your trap!\nYou receive " + nbAcornsToTransfer + " acorns...\nThe trap is now deleted");
 
+        // notify all team players (both from the client as from the trapOwner)
+        for(String client: teamClients.get(clientName)) {
+            // make sure you do not notify yourself
+            if(!client.equals(clientName)) {
+                notifyOfTrapLoss(clientName, nbAcornsToTransfer);
+            }
+        }
+        for(String client: teamClients.get(trapOwner)) {
+            // make sure you do not notify yourself
+            if(!client.equals(trapOwner)) {
+                notifyOfTrapReward(trapOwner, nbAcornsToTransfer);
+            }
+        }
+
         // remove the trap after it is used
         trapMap.remove(imageName);
 
@@ -184,8 +198,16 @@ public class Server   {
         return leaderboard;
     }
 
-    private void notifyOfPickup(String myName, String hisName) {
-        //TODO MsgClient.TEAMMATE_PICKUP
+    private void notifyOfPickup(String clientName) {
+        sendMessageToClient(clientName, MsgClient.TEAMMATE_PICKUP, ":A teammate picked up an achorn!");
+    }
+
+    private void notifyOfTrapLoss(String clientName, int nbAcornsToTransfer) {
+        sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD, ":" + nbAcornsToTransfer + ":A teammate walked into a trap!");
+    }
+
+    private void notifyOfTrapReward(String clientName, int nbAcornsToTransfer) {
+        sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD, ":" + nbAcornsToTransfer + ":Someone walked into a trap of your teammate!");
     }
 
     /*

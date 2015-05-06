@@ -1166,6 +1166,32 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         mRenderer.addToExcludedSet(rsp);
 //                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
                         break;
+                    // Reply from isTaken: there is a trap here and you walked right into it!
+                    case TRAP_LOSS:
+                        playerCollectedAcorns =- Integer.parseInt(rsp);
+                        teamCollectedAcorns =- Integer.parseInt(rsp);
+                        showToastImageTargets(splitResponse[2]);
+                        break;
+                    // A teammate of yours had walked into a trap
+                    case TEAMMATE_TRAP_LOSS:
+                        teamCollectedAcorns =- Integer.parseInt(rsp);
+                        showToastImageTargets(splitResponse[2]);
+                        break;
+                    // Someone walked into your trap!
+                    case TRAP_REWARD:
+                        playerCollectedAcorns =+ Integer.valueOf(rsp);
+                        teamCollectedAcorns =+ Integer.valueOf(rsp);
+                        showToastImageTargets(splitResponse[2]);
+                        break;
+                    // A teammate of yours had walked into a trap
+                    case TEAMMATE_TRAP_REWARD:
+                        teamCollectedAcorns =+ Integer.parseInt(rsp);
+                        showToastImageTargets(splitResponse[2]);
+                        break;
+                    case CONFIRM_PLACEMENT_TRAP:
+                        break;
+                    case DECLINE_PLACEMENT_TRAP:
+                        break;
                     // You have successfully picked up an acorn
                     case CONFIRM_PICKUP:
                         showToastImageTargets(rsp);
@@ -1183,6 +1209,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     case TEAMMATE_PICKUP:
                         Log.d("CLIENTTASK", "ontvangen: " + rsp);
                         showToastImageTargets(rsp); //TODO
+                        teamCollectedAcorns++;
 
                     default:
                         break;
