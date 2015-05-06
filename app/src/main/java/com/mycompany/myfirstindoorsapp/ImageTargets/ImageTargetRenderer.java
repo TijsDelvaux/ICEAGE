@@ -215,6 +215,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         if(state.getNumTrackableResults() == 0){
 //            displayMessage("Nothing here!", 1);
             disableCollectButton();
+            disableSetTrapButton();
         }
 
         // did we find any trackables this frame?
@@ -228,14 +229,17 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 
             if(myPickedUpSet.contains(currentImage)){ //YOU PICKED UP THIS ACORN
                 disableCollectButton();
+                enableSetTrapButton();
                 objectToShow = picture;
                 textureIndex = IMG_SCRAT_HAPPY;
             }else if(excludedImageSet.contains(currentImage)){ //SOMEONE ELSE PICKED UP THIS ACORN
                 disableCollectButton();
+                enableSetTrapButton();
                 objectToShow = picture;
                 textureIndex = IMG_SCRAT_SAD;
             }else if(!freeImageSet.contains(currentImage)) { //YOU'RE NOT SURE IF THIS ACORN HAS BEEN PICKED UP YET
                 disableCollectButton();
+                disableSetTrapButton();
                 objectToShow = acorn;
                 textureIndex = IMG_ACORN_BROWN;
                 askCount ++;
@@ -245,6 +249,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 }
             }else{//THE ACORN HASN'T BEEN PICKED UP YET
                 enableCollectButton();
+                disableSetTrapButton();
                 objectToShow = acorn;
                 textureIndex = IMG_ACORN_BROWN;
                 askCount ++;
@@ -354,6 +359,14 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 
     public void enableCollectButton(){
         displayMessage("Enabling collect button", 2);
+    }
+
+    public void disableSetTrapButton(){
+        displayMessage("Disabling set trap button", 4);
+    }
+
+    public void enableSetTrapButton(){
+        displayMessage("Enabling set trap button", 5);
     }
 
     public void isTaken(String image){

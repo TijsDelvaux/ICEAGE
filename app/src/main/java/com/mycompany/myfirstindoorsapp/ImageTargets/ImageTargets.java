@@ -329,17 +329,19 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
-                        showCollectButton = false;
-//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
+                        showCollectButton = false; //TODO is deze boolean nodig?
                         break;
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
                         showCollectButton = true;
-//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
                         break;
                     case 3: //Check if the detected image already has been taken
                         sendMessageToServer(MsgServer.ACORN_REQUEST, (String) msg.obj);
                         break;
+                    case 4:
+                        setTrapButton.setVisibility(View.INVISIBLE);
+                    case 5:
+                        setTrapButton.setVisibility(View.VISIBLE);
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
                         break;
