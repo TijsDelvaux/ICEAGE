@@ -1104,7 +1104,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 while(true){
                     dataOutputStream = new DataOutputStream(
                             socket.getOutputStream());
-//                    Log.d(LOGTAG, "voor messagetest" + msgsToServer);
                     // wait until you have a message to send
                     while(!msgsToServer.empty()){
                         dataOutputStream.writeUTF(msgsToServer.pop());
@@ -1233,6 +1232,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 try {
                     dataInputStream = new DataInputStream(this.socket.getInputStream());
                     String response = dataInputStream.readUTF();
+                    Log.d("ClientComm", "response: " + response);
                     this.responses.push(response);
                 } catch (IOException e) {
                     e.printStackTrace();
