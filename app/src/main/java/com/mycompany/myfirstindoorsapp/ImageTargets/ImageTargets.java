@@ -192,7 +192,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
         msgsToServer = new Stack<String>();
-        clientask = new ClientTask(serverIP, port, this);
+        clientask = new ClientTask(serverIP, port);
         clientask.start();
 
         playerColor = getResources().getColor(R.color.blue);
@@ -1035,14 +1035,17 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
 
-    //ICEAGE
+    /*
+     * Send a message to the server
+     */
+    @IceAge
     public void sendMessageToServer(MsgServer code, String message){
         String userMessage = userName + ":" + teamName + ":" + code + ":" + message;
         Log.d(LOGTAG, "message toegevoegd: " + userMessage);
         msgsToServer.push(userMessage);
     }
 
-    //ICEAGE
+    @IceAge
     public class ClientTask extends Thread {
 
         String serverAddress;
@@ -1075,6 +1078,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             showText(text, Toast.LENGTH_SHORT);
         }
 
+        /*
+         * Running thread
+         */
         @Override
         public void run() {
             Log.d(LOGTAG, "in run " );
@@ -1091,9 +1097,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     dataOutputStream = new DataOutputStream(
                             socket.getOutputStream());
 //                    Log.d(LOGTAG, "voor messagetest" + msgsToServer);
+                    // wait until you have a message to send
                     while(!msgsToServer.empty()){
                         dataOutputStream.writeUTF(msgsToServer.pop());
                     }
+                    // wait for a response
                     while(!responses.empty()){
                         handleResponse(responses.pop());
                     }
@@ -1123,6 +1131,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             }
         }
 
+        /*
+         * Handle a message from the server
+         */
+        @IceAge
         protected void handleResponse(String response) {
             Log.d("ClientComm", response);
             try {
@@ -1143,7 +1155,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         showText(rsp, Toast.LENGTH_LONG); //TODO
                         showText("Swipe from left edge to the right to show menu " +
                                 "\n------->", Toast.LENGTH_LONG);
-
                         break;
                     // Registration did not went well
                     case DECLINE_REGISTRATION:

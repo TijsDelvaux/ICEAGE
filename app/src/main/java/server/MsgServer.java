@@ -1,7 +1,9 @@
 package server;
 
 /**
- * Created by Nele on 27-Apr-15.
+ * A client sends messages to the server in this format:
+ *      userName + ":" + teamName + ":" + code + ":" + message
+ * where the code is one of the following:
  */
 public enum MsgServer {
     DEFAULT,

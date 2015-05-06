@@ -1,5 +1,10 @@
 package server;
 
+/**
+ * A server sends messages to the client in this format:
+ *      code + ":" + message
+ * where the code is one of the following:
+ */
 public enum MsgClient {
     DEFAULT,
     TOAST,
