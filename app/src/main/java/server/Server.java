@@ -356,9 +356,9 @@ public class Server   {
 
                         System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
                         dataOutputStream.writeUTF(MsgClient.CONFIRM_REGISTRATION + ":" + "Welcome to the IceAge Nut Discovery game!\n" +
-                                "Name: " + clientName + "\n" +
-                                "Team:  " + teamName + "\n" +
-                                "Team members: " + teamClients.get(teamName).toString());
+                                "Name - " + clientName + "\n" +
+                                "Team -  " + teamName + "\n" +
+                                "Team members - " + teamClients.get(teamName).toString());
                         msgsToClients.put(this.clientName, new Stack<String>());
 //                        dit was om te testen
 //                        sendMessageToClient(this.clientName, MsgClient.TEAMMATE_PICKUP, "joepie");
