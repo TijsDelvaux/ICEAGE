@@ -237,6 +237,15 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         sendMessageToServer(MsgServer.ACORN_PICKUP, currentImage);
     }
 
+    public void setClientCollectedAcorns(int count){
+        playerCollectedAcorns  = count;
+    }
+
+    public void setTeamCollectedAcorns(int count){
+        teamCollectedAcorns = count;
+    }
+
+
     //END ICE STUFF
 
     // Process Single Tap event to trigger autofocus
@@ -1151,10 +1160,22 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     // You have successfully picked up an acorn
                     case CONFIRM_PICKUP:
                         showToastImageTargets(rsp);
-                        mRenderer.addToMyPickedUpSet(splitResponse[2]);
-                        playerCollectedAcorns++;
+                        String imageToPickUp = splitResponse[2];
+                        mRenderer.addToMyPickedUpSet(imageToPickUp);
+                        String clientCount = splitResponse[3];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        String teamCount = splitResponse[4];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
-//                        showToastImageTargets(getString(R.string.collect_button_toast));
+                        break;
+                    //The player already owns this acorn
+                    case YOU_OWN_THIS_ACORN:
+                        mRenderer.addToMyPickedUpSet(rsp);
+                        clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
                         break;
                     // Something went wrong while picking up an acorn
                     case DECLINE_PICKUP:
