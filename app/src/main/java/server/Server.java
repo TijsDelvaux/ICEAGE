@@ -1,7 +1,5 @@
 package server;
 
-import android.util.Log;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -17,7 +15,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Stack;
 
 public class Server   {
@@ -37,7 +34,9 @@ public class Server   {
     private Map<String,Integer> teamCounts; // specify for each team how many acorns they have picked up
     private Map<String, Stack<String>> msgsToClients;
 
-    private Set<String> excludedList;
+
+    //<ImageName,ClientThatPickedUpThisImage>
+    private Map<String,String> excludedMap;
 
     private int totalNbPickedUp;
     private final int totalNbAcorns = 56;
@@ -52,47 +51,59 @@ public class Server   {
         teamClients = new HashMap<String, List<String>>();
         clientCounts = new HashMap<String, Integer>();
         teamCounts = new HashMap<String, Integer>();
-        excludedList = new HashSet<String>();
+        excludedMap = new HashMap<String,String>();
         msgsToClients = new HashMap<String, Stack<String>>();
 
         Thread socketServerThread = new Thread(new SocketServerThread());
         socketServerThread.start();
     }
 
-    public void excludeFromList(String image){
-        excludedList.add(image);
+    public void excludeImage(String image, String clientName){
+        excludedMap.put(image, clientName);
     }
+
+    private static final int CLIENT_CAN_PICK_UP_ACORN = 0;
+    private static final int CLIENT_OWNS_THIS_ACORN = 1;
+    private static final int ACORN_OWNED_BY_SOMEONE_ELSE = 2;
+    private static final int CLIENT_IN_WRONG_TEAM = 3;
+    private static final int CLIENT_NOT_REGISTERED = 4;
 
     /*
     * @return: true if the client was able to pickup the acorn
     */
-    private boolean clientPickUpAcorn(String clientName, String teamName, String imageName) {
-        if(clientCounts.containsKey(clientName) && !excludedList.contains(imageName)) {
-            // pickup
-            excludeFromList(imageName);
-            clientCounts.put(clientName, clientCounts.get(clientName) + 1);
-            updateTeamCount(teamName);
-            totalNbPickedUp++;
+    private int clientPickUpAcorn(String clientName, String teamName, String imageName) {
+        if(clientCounts.containsKey(clientName)) {
+            //Acorn not yet picked up
+            if (!excludedMap.containsKey(imageName)) {
+                // pickup
+                excludeImage(imageName,clientName);
+                clientCounts.put(clientName, clientCounts.get(clientName) + 1);
+                updateTeamCount(teamName);
+                totalNbPickedUp++;
 
-            // notify all team players
-            if(clientTeams.get(clientName).equals(teamName)) {
-                // find all teamplayers
-                for(String client: teamClients.get(teamName)) {
-                    // make sure you do not notify yourself
-                    if(!client.equals(clientName)) {
-                        notifyOfPickup(clientName, client);
+                // notify all team players
+                if (clientTeams.get(clientName).equals(teamName)) {
+                    // find all teamplayers
+                    for (String client : teamClients.get(teamName)) {
+                        // make sure you do not notify yourself
+                        if (!client.equals(clientName)) {
+                            notifyOfPickup(clientName, client);
+                        }
                     }
+                } else {
+                    // this client says that he is in an other team than the server thinks he is; this should not happen
+                    return CLIENT_IN_WRONG_TEAM;
                 }
+                return CLIENT_CAN_PICK_UP_ACORN;
+            } else if(excludedMap.get(imageName).equals(clientName)){
+                return CLIENT_OWNS_THIS_ACORN;
+            } else{
+                return ACORN_OWNED_BY_SOMEONE_ELSE;
             }
-            else {
-                // this client says that he is in an other team than the server thinks he is; this should not happen
-                return false;
-            }
-            return true;
-        }
-        else {
+
+        }else{
             // this client is not registered; this should not happen
-            return false;
+            return CLIENT_NOT_REGISTERED;
         }
     }
 
@@ -108,7 +119,7 @@ public class Server   {
      * @return: true if the acorn is there, false if it is not
      */
     private boolean clientRequestAcorn(String imageName) {
-        return !excludedList.contains(imageName);
+        return !excludedMap.containsKey(imageName);
     }
 
     /*
@@ -166,6 +177,8 @@ public class Server   {
 
     }
 
+
+
     private class SocketServerThread extends Thread {
 
         private int SocketServerPORT = port;
@@ -217,6 +230,8 @@ public class Server   {
             return ip;
         }
     }
+
+
 
     private class ClientConnection extends Thread{
         private Socket clientSocket;
@@ -275,21 +290,57 @@ public class Server   {
                         //Client picked up an acorn, add the picture-name to the excluded list
                         //TODO add zones!!
                         case ACORN_PICKUP: // pickup acorn
-                            if (clientPickUpAcorn(clientName, teamName, msg)) {
-                                printMessage = "[SERVER] " + clientName + " picked up an acorn\n" +
-                                        "~~~~~~ " + clientName + ": " + clientCounts.get(clientName) + ";" +
-                                        " total count: " + totalNbPickedUp + "; total left: " + (totalNbAcorns - totalNbPickedUp) + ")"
-                                        + getLeaderBoardString();
-                                reply = MsgClient.CONFIRM_PICKUP + ":" + "You have picked up an acorn! \n" +
-                                        totalNbPickedUp + " of the " + totalNbAcorns + " acorns are found"
-                                        + ":" + msg;
 
-                            } else {
-                                printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
-                                        "but this failed (client was not registered or acorn was not there).";
-                                reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
-                                        + ":" + msg;
+                            switch (clientPickUpAcorn(clientName, teamName, msg)){
+                                case CLIENT_CAN_PICK_UP_ACORN:
+                                    printMessage = "[SERVER] " + clientName + " picked up an acorn\n" +
+                                            "~~~~~~ " + clientName + ": " + clientCounts.get(clientName) + ";" +
+                                            " total count: " + totalNbPickedUp + "; total left: " + (totalNbAcorns - totalNbPickedUp) + ")"
+                                            + getLeaderBoardString();
+                                    reply = MsgClient.CONFIRM_PICKUP //0
+                                            + ":" + "You have picked up an acorn! \n" +
+                                            totalNbPickedUp + " of the " + totalNbAcorns + " acorns are found" //1
+                                            + ":" + msg //2
+                                            + ":" + clientCounts.get(clientName) //3
+                                            + ":" + teamCounts.get(teamName);    //4
+                                    break;
+                                case CLIENT_OWNS_THIS_ACORN:
+                                    printMessage = "[SERVER] " + clientName + " this acorn is already yours";
+                                    reply = MsgClient.YOU_OWN_THIS_ACORN //0
+                                            + ":" + msg //1
+                                            + ":" + clientCounts.get(clientName) //2
+                                            + ":" + teamCounts.get(teamName);    //3
+                                    break;
+                                case ACORN_OWNED_BY_SOMEONE_ELSE:
+                                    printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
+                                            "but this failed (acorn was not there).";
+                                    reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
+                                            + ":" + msg;
+                                    System.out.println("PICKING UP ACORN - Client not registered");
+                                    break;
+                                case CLIENT_IN_WRONG_TEAM:
+                                    printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
+                                            "but this failed (client in the wrong team).";
+                                    reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
+                                            + ":" + msg;
+                                    break;
+                                case CLIENT_NOT_REGISTERED:
+                                    printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
+                                            "but this failed (client was not registered).";
+                                    reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
+                                            + ":" + msg;
+                                    break;
+                                default:
+                                    printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
+                                            "but this failed (no idea what happend).";
+                                    reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
+                                            + ":" + msg;
+                                    break;
                             }
+
+
+
+
                             break;
 
                         case DEFAULT: // other messages
@@ -309,10 +360,19 @@ public class Server   {
                                 reply = MsgClient.CONFIRM_ACORN + ":" + msg;
                                 printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
                                         " and it is free!";
+
                             } else {
-                                reply = MsgClient.DECLINE_ACORN + ":" + msg;
-                                printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
-                                        ", but it has been taken";
+                                if(excludedMap.get(msg).equals(clientName)){
+                                    printMessage = "[SERVER] " + clientName + " this acorn is already yours";
+                                    reply = MsgClient.YOU_OWN_THIS_ACORN //0
+                                            + ":" + msg //1
+                                            + ":" + clientCounts.get(clientName) //2
+                                            + ":" + teamCounts.get(teamName);    //3
+                                }else {
+                                    reply = MsgClient.DECLINE_ACORN + ":" + msg;
+                                    printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
+                                            ", but it has been taken";
+                                }
                             }
 
                             break;
