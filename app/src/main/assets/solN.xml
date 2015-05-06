@@ -1,7 +1,9 @@
-<?xml version="1.0"?>
-<QCARConfig xsi:noNamespaceSchemaLocation="qcar_config.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <Tracking>
-        <ImageTarget name="stones" size="247 173"/>
-        <ImageTarget name="chips" size="247 173"/>
-    </Tracking>
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
+  <Tracking>
+    <ImageTarget name="solZ4" size="300.000000 174.587463" />
+    <ImageTarget name="solZ3" size="300.000000 284.562622" />
+    <ImageTarget name="solZ2" size="300.000000 400.000000" />
+    <ImageTarget name="solZ1" size="300.000000 266.929138" />
+  </Tracking>
 </QCARConfig>

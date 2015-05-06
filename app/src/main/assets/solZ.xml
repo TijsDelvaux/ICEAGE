@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
   <Tracking>
+    <ImageTarget name="solZ8" size="300.000000 400.000000" />
+    <ImageTarget name="solZ7" size="300.000000 400.000000" />
+    <ImageTarget name="solZ6" size="300.000000 400.000000" />
+    <ImageTarget name="solZ5" size="300.000000 225.000000" />
+    <ImageTarget name="solZ4" size="300.000000 269.747894" />
+    <ImageTarget name="solZ3" size="300.000000 225.000000" />
+    <ImageTarget name="solZ2" size="300.000000 225.000000" />
     <ImageTarget name="solZ1" size="300.000000 225.044510" />
   </Tracking>
 </QCARConfig>
