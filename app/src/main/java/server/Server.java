@@ -397,7 +397,7 @@ public class Server   {
 
                             break;
 
-                        case PLACE_TRAP: //Place a new trap
+                        case SET_TRAP: //Place a new trap
                             if (clientSetTrap(clientName,msg)) {
                                 reply = MsgClient.CONFIRM_PLACEMENT_TRAP + ":" + costOfSettingTrap + ":You have successfully placed a trap!\nYou will be notified when someone walks into your trap.";
                                 printMessage = "[SERVER] " + clientName + " has placed a trap";

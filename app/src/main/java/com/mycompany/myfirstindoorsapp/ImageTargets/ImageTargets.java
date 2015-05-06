@@ -126,6 +126,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private RelativeLayout countLayout;
     private RelativeLayout snowLayout;
     private View collectButton;
+    private View setTrapButton;
 
     private boolean showCollectButton;
 
@@ -199,7 +200,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         playerColor = getResources().getColor(R.color.blue);
         teamColor = getResources().getColor(R.color.red);
 
-
         sendMessageToServer(MsgServer.DEFAULT, "Hello");
         
         vuforiaAppSession = new SampleApplicationSession(this);
@@ -237,6 +237,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //        playerCollectedAcorns++;
 //        teamCollectedAcorns++;
         sendMessageToServer(MsgServer.ACORN_PICKUP, currentImage);
+    }
+
+    @IceAge
+    public void onClickSetTrapButton(View view){
+        String currentImage = mRenderer.collectCurrentPicture();
+        sendMessageToServer(MsgServer.SET_TRAP, currentImage);
     }
 
     //END ICE STUFF
@@ -514,6 +520,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 LayoutParams.MATCH_PARENT));
 
         collectButton = countLayout.findViewById(R.id.collect_overlay);
+        setTrapButton = countLayout.findViewById(R.id.settrap_overlay);
 //        View statusButton = countLayout.findViewById(R.id.status_button);
 //        statusButton.setVisibility(View.VISIBLE);
         if(showCollectButton){
@@ -1142,6 +1149,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     case TOAST:
                         showToastImageTargets(rsp);
                         break;
+
                     //Registration went well
                     case CONFIRM_REGISTRATION:
                         showToastImageTargets(rsp, Toast.LENGTH_LONG); //TODO
@@ -1152,20 +1160,40 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     case DECLINE_REGISTRATION:
                         showToastImageTargets(rsp); //TODO
                         break;
+
                     // Update the list of excluded images
                     case UPDATE_EXCLUDE_LIST:
                         updateExcludedList(rsp);
                         break;
+
                     // Reply from isTaken: there is an acorn here
                     case CONFIRM_ACORN:
                         mRenderer.addToFreeSet(rsp);
-//                            Log.d("CLIENTTASK", "adding image " + splitResponse[2] + " to freeSet");
                         break;
                     // Reply from isTaken: there is NO acorn here
                     case DECLINE_ACORN:
                         mRenderer.addToExcludedSet(rsp);
-//                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
                         break;
+
+                    // You have successfully picked up an acorn
+                    case CONFIRM_PICKUP:
+                        showToastImageTargets(rsp);
+                        mRenderer.addToMyPickedUpSet(splitResponse[2]);
+                        playerCollectedAcorns++;
+                        teamCollectedAcorns++;
+                        menuProcess(CMD_UPDATE_COUNT);
+                        break;
+                    // Something went wrong while picking up an acorn
+                    case DECLINE_PICKUP:
+                        showToastImageTargets(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
+                        mRenderer.removeFromMyPickedUpSet(splitResponse[2]);
+                        break;
+                    // A team mate has picked up an acorn
+                    case TEAMMATE_PICKUP:
+                        Log.d("CLIENTTASK", "ontvangen: " + rsp);
+                        showToastImageTargets(rsp); //TODO
+                        teamCollectedAcorns++;
+
                     // Reply from isTaken: there is a trap here and you walked right into it!
                     case TRAP_LOSS:
                         playerCollectedAcorns =- Integer.parseInt(rsp);
@@ -1192,24 +1220,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     case DECLINE_PLACEMENT_TRAP:
                         break;
-                    // You have successfully picked up an acorn
-                    case CONFIRM_PICKUP:
-                        showToastImageTargets(rsp);
-                        mRenderer.addToMyPickedUpSet(splitResponse[2]);
-                        playerCollectedAcorns++;
-                        menuProcess(CMD_UPDATE_COUNT);
-//                        showToastImageTargets(getString(R.string.collect_button_toast));
-                        break;
-                    // Something went wrong while picking up an acorn
-                    case DECLINE_PICKUP:
-                        showToastImageTargets(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
-                        mRenderer.removeFromMyPickedUpSet(splitResponse[2]);
-                        break;
-                    // A team mate has picked up an acorn
-                    case TEAMMATE_PICKUP:
-                        Log.d("CLIENTTASK", "ontvangen: " + rsp);
-                        showToastImageTargets(rsp); //TODO
-                        teamCollectedAcorns++;
 
                     default:
                         break;

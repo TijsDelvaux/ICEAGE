@@ -86,6 +86,7 @@
 
     <string name="your_location">Your current location</string>
     <string name="collect">Collect</string>
+    <string name="settrap">Set a trap</string>
     <string name="collected">Collected:</string>
     <string name="zero">0</string>
     <string name="collect_button_toast">You\'ve picked up an acorn!</string>
