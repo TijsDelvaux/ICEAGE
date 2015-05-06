@@ -231,16 +231,16 @@ public class Server   {
             DataInputStream dataInputStream = null;
             DataOutputStream dataOutputStream = null;
             try {
-                dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
-                dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
+
                 while (true) {
+                    dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
+                    dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
                     //If no message sent from client, this code will block the program
                     String messageFromClient = "";
                     try {
                         messageFromClient = dataInputStream.readUTF();
                     } catch (EOFException e) {
-                        System.out.println(e.toString());
-                        continue;
+
                     }
 
                     // parse message
