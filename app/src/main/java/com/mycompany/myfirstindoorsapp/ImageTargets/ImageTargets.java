@@ -1011,7 +1011,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 mTeamCollectedAcornsView.setText("Your team: " + teamCollectedAcorns);
                 break;
 
-
             case CMD_CURRENT_ZONES:
                 String zones = zonesString;
                 if(zonesString.equals("")){
