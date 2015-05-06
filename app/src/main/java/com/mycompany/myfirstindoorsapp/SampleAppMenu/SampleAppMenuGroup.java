@@ -73,6 +73,7 @@ public class SampleAppMenuGroup
             R.layout.sample_app_menu_group, null, false);
         mLayout.setLayoutParams(new LinearLayout.LayoutParams(width,
             LinearLayout.LayoutParams.WRAP_CONTENT));
+        mLayout.bringToFront();
         
         mEntriesTextSize = mActivity.getResources().getDimension(
             R.dimen.menu_entries_text);

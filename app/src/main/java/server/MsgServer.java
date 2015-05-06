@@ -9,5 +9,6 @@ public enum MsgServer {
     DEFAULT,
     ACORN_REQUEST,
     ACORN_PICKUP,
-    ENTER_ZONE
+    ENTER_ZONE,
+    PLACE_TRAP
 }
