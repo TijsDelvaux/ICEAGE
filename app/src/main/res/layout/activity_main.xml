@@ -1,23 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
     android:weightSum="1">
 
-
-    <Button
-        android:id="@+id/client_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="client-server test"
-        android:onClick="startServerConnect"/>
-
-  <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
 
     <Button
         android:id="@+id/play_button"
@@ -26,16 +13,6 @@
         android:text="@string/camera_button"
         android:onClick="startPlay"/>
 
-    <Button
-        android:id="@+id/map_button"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:text="@string/map_button"
-        android:onClick="startMap"/>
-
-
-    </LinearLayout>
-
     <ImageView
         android:id="@+id/scrat"
         android:layout_width="881dp"
@@ -43,6 +20,8 @@
         android:layout_marginTop="50dp"
         android:contentDescription="@string/content_scrat"
         android:src="@drawable/ic_scrat"
-        android:layout_weight="0.23" />
+        android:layout_weight="0.23"
+        android:background="@color/transparent"
+        android:scaleType="center" />
 
 </LinearLayout>
