@@ -126,6 +126,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     private RelativeLayout countLayout;
     private RelativeLayout snowLayout;
+    private RelativeLayout settrapLayout;
     private View collectButton;
     private View setTrapButton;
 
@@ -339,10 +340,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         sendMessageToServer(MsgServer.ACORN_REQUEST, (String) msg.obj);
                         break;
                     case 4:
-                        setTrapButton.setVisibility(View.INVISIBLE);
+                        if(!(setTrapButton == null)) {
+                            setTrapButton.setVisibility(View.INVISIBLE);
+                        }
                         break;
                     case 5:
-                        setTrapButton.setVisibility(View.VISIBLE);
+                        if(!(setTrapButton == null)) {
+                            setTrapButton.setVisibility(View.VISIBLE);
+                        }
                         break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
@@ -522,14 +527,18 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         LayoutInflater inflater = LayoutInflater.from(this);
         countLayout = (RelativeLayout) inflater.inflate(R.layout.collect_overlay, null, false);
         snowLayout = (RelativeLayout) inflater.inflate(R.layout.snow_overlay, null, false);
+        settrapLayout =(RelativeLayout) inflater.inflate(R.layout.settrap_overlay, null, false);
 
-        countLayout.setVisibility(View.VISIBLE);
         snowLayout.setVisibility(View.VISIBLE);
+        countLayout.setVisibility(View.VISIBLE);
+        settrapLayout.setVisibility(View.VISIBLE);
 
         // Adds the inflated layout to the view
+        addContentView(snowLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
         addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
-        addContentView(snowLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+        addContentView(settrapLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
 
         collectButton = countLayout.findViewById(R.id.collect_overlay);
