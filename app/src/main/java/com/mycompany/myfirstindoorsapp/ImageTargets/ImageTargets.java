@@ -1035,14 +1035,17 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
 
-    //ICEAGE
+    /*
+     * Send a message to the server
+     */
+    @IceAge
     public void sendMessageToServer(MsgServer code, String message){
         String userMessage = userName + ":" + teamName + ":" + code + ":" + message;
         Log.d(LOGTAG, "message toegevoegd: " + userMessage);
         msgsToServer.push(userMessage);
     }
 
-    //ICEAGE
+    @IceAge
     public class ClientTask extends Thread {
 
         String serverAddress;
@@ -1053,6 +1056,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             serverPort = port;
         }
 
+        /*
+         * Running thread
+         */
         @Override
         public void run() {
             Log.d(LOGTAG, "in run " );
@@ -1069,10 +1075,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //                Log.d(LOGTAG, "socket " + userName + " gemaakt");
                 while(true){
 //                    Log.d(LOGTAG, "voor messagetest" + msgsToServer);
+                    // wait until you have a message to send
                     while(!msgsToServer.empty()){
                         dataOutputStream.writeUTF(msgsToServer.pop());
                     }
 
+                    // wait for a response
                     response = dataInputStream.readUTF();
                     handleResponse(response);
                 }
@@ -1109,6 +1117,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             }
         }
 
+        /*
+         * Handle a message from the server
+         */
+        @IceAge
         protected void handleResponse(String response) {
             try {
                 String[] splitResponse = response.split(":");
@@ -1128,7 +1140,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         showToastImageTargets(rsp, Toast.LENGTH_LONG); //TODO
                         showToastImageTargets("Swipe from left edge to the right to show menu " +
                                 "\n------->", Toast.LENGTH_LONG);
-
                         break;
                     // Registration did not went well
                     case DECLINE_REGISTRATION:
