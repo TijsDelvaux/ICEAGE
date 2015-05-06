@@ -514,8 +514,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         countLayout = (RelativeLayout) inflater.inflate(R.layout.collect_overlay, null, false);
         snowLayout = (RelativeLayout) inflater.inflate(R.layout.snow_overlay, null, false);
 
-        snowLayout.setVisibility(View.VISIBLE);
         countLayout.setVisibility(View.VISIBLE);
+        snowLayout.setVisibility(View.VISIBLE);
 
         // Adds the inflated layout to the view
         addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
@@ -528,7 +528,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //        statusButton.setVisibility(View.VISIBLE);
         if(showCollectButton){
             collectButton.setVisibility(View.VISIBLE);
-            collectButton.bringToFront();
         }else {
             collectButton.setVisibility(View.INVISIBLE);
         }
@@ -831,12 +830,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        snowLayout.setVisibility(View.INVISIBLE);
         // Process the Gestures
         if (mSampleAppMenu != null && mSampleAppMenu.processEvent(event))
             return true;
 
-        snowLayout.setVisibility(View.VISIBLE);
 
         return mGestureDetector.onTouchEvent(event);
     }
