@@ -545,12 +545,15 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         setTrapButton = countLayout.findViewById(R.id.settrap_overlay);
 //        View statusButton = countLayout.findViewById(R.id.status_button);
 //        statusButton.setVisibility(View.VISIBLE);
-        if(showCollectButton){
-            collectButton.setVisibility(View.VISIBLE);
-        }else {
-            collectButton.setVisibility(View.INVISIBLE);
-        }
-        countLayout.bringToFront();
+
+        collectButton.setVisibility(View.INVISIBLE);
+        setTrapButton.setVisibility(View.INVISIBLE);
+//        if(showCollectButton){
+//
+//        }else {
+//            collectButton.setVisibility(View.INVISIBLE);
+//        }
+//        countLayout.bringToFront();
 
 
     }
