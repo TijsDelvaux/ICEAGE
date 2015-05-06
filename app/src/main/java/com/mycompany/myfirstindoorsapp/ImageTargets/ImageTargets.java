@@ -340,8 +340,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     case 4:
                         setTrapButton.setVisibility(View.INVISIBLE);
+                        break;
                     case 5:
                         setTrapButton.setVisibility(View.VISIBLE);
+                        break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
                         break;
@@ -1176,7 +1178,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     //Registration went well
                     case CONFIRM_REGISTRATION:
                         showText(rsp, Toast.LENGTH_LONG); //TODO
-                        showText("Swipe from left edge to the right to show menu " +
+                        showText("Swipe from left to right to show menu " +
                                 "\n------->", Toast.LENGTH_LONG);
                         break;
                     // Registration did not went well
