@@ -195,7 +195,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
         msgsToServer = new Stack<String>();
-        clientask = new ClientTask(serverIP, port, this);
+        clientask = new ClientTask(serverIP, port,this);
         clientask.start();
 
         playerColor = getResources().getColor(R.color.blue);
@@ -244,6 +244,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     public void onClickSetTrapButton(View view){
         String currentImage = mRenderer.collectCurrentPicture();
         sendMessageToServer(MsgServer.SET_TRAP, currentImage);
+    }
+
+    public void setClientCollectedAcorns(int count){
+        playerCollectedAcorns = count;
+    }
+
+    public void setTeamCollectedAcorns(int count){
+        teamCollectedAcorns = count;
     }
 
     //END ICE STUFF
@@ -511,8 +519,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         countLayout = (RelativeLayout) inflater.inflate(R.layout.collect_overlay, null, false);
         snowLayout = (RelativeLayout) inflater.inflate(R.layout.snow_overlay, null, false);
 
-        snowLayout.setVisibility(View.VISIBLE);
         countLayout.setVisibility(View.VISIBLE);
+        snowLayout.setVisibility(View.VISIBLE);
 
         // Adds the inflated layout to the view
         addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
@@ -526,7 +534,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //        statusButton.setVisibility(View.VISIBLE);
         if(showCollectButton){
             collectButton.setVisibility(View.VISIBLE);
-            collectButton.bringToFront();
         }else {
             collectButton.setVisibility(View.INVISIBLE);
         }
@@ -829,12 +836,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        snowLayout.setVisibility(View.INVISIBLE);
         // Process the Gestures
         if (mSampleAppMenu != null && mSampleAppMenu.processEvent(event))
             return true;
 
-        snowLayout.setVisibility(View.VISIBLE);
 
         return mGestureDetector.onTouchEvent(event);
     }
@@ -1015,10 +1020,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
             case CMD_CURRENT_ZONES:
                 String zones = zonesString;
-                if(zonesString.equals("")){
+                if(zonesString.equals("") || zonesString == null){
                     zones = "You're not in an acknowledged zone";
                 }
-                mCurrentZonesView.setText(zones);
+                if(!(mCurrentZonesView == null)){
+                    mCurrentZonesView.setText(zones);
+                }
                 break;
             case CMD_NOTHING:
                 break;
@@ -1192,9 +1199,21 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     // You have successfully picked up an acorn
                     case CONFIRM_PICKUP:
                         showText(rsp);
-                        mRenderer.addToMyPickedUpSet(splitResponse[2]);
-                        playerCollectedAcorns++;
-                        teamCollectedAcorns++;
+                        String imageToPickUp = splitResponse[2];
+                        mRenderer.addToMyPickedUpSet(imageToPickUp);
+                        String clientCount = splitResponse[3];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        String teamCount = splitResponse[4];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
+                        break;
+                    //The player already owns this acorn
+                    case YOU_OWN_THIS_ACORN:
+                        mRenderer.addToMyPickedUpSet(rsp);
+                        clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
                         break;
                     // Something went wrong while picking up an acorn
@@ -1271,7 +1290,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     Log.d("ClientComm", "response: " + response);
                     this.responses.push(response);
                 } catch (IOException e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 }
             }
         }
