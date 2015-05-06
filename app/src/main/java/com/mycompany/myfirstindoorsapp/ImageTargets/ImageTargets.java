@@ -125,10 +125,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private DataSet[] listDatasets;
 
     private RelativeLayout countLayout;
+    private RelativeLayout snowLayout;
+    private View collectButton;
 
     private boolean showCollectButton;
 
-    private View collectButton;
+
     @IceAge
     private void init() {
         listDatasetStrings = new String[] {"StonesAndChips.xml", // index 0: default
@@ -500,19 +502,24 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //        Log.d("addOverlayView", "showCollectButton: " + showCollectButton);
         // Inflates the Overlay Layout to be displayed above the Camera View
         LayoutInflater inflater = LayoutInflater.from(this);
-        countLayout = (RelativeLayout) inflater.inflate(R.layout.count_overlay, null, false);
+        countLayout = (RelativeLayout) inflater.inflate(R.layout.collect_overlay, null, false);
+        snowLayout = (RelativeLayout) inflater.inflate(R.layout.snow_overlay, null, false);
 
+        snowLayout.setVisibility(View.VISIBLE);
         countLayout.setVisibility(View.VISIBLE);
 
         // Adds the inflated layout to the view
         addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
+        addContentView(snowLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
 
-        collectButton = countLayout.findViewById(R.id.collect_button);
+        collectButton = countLayout.findViewById(R.id.collect_overlay);
 //        View statusButton = countLayout.findViewById(R.id.status_button);
 //        statusButton.setVisibility(View.VISIBLE);
         if(showCollectButton){
             collectButton.setVisibility(View.VISIBLE);
+            collectButton.bringToFront();
         }else {
             collectButton.setVisibility(View.INVISIBLE);
         }
@@ -527,7 +534,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         LayoutInflater inflater = LayoutInflater.from(this);
         mUILayout = (RelativeLayout) inflater.inflate(R.layout.camera_overlay,
             null, false);
-        
+
         mUILayout.setVisibility(View.VISIBLE);
         mUILayout.setBackgroundColor(Color.BLACK);
 
@@ -815,10 +822,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
+        snowLayout.setVisibility(View.INVISIBLE);
         // Process the Gestures
         if (mSampleAppMenu != null && mSampleAppMenu.processEvent(event))
             return true;
-        
+
+        snowLayout.setVisibility(View.VISIBLE);
+
         return mGestureDetector.onTouchEvent(event);
     }
     
@@ -900,7 +910,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     @Override
     public boolean menuProcess(int command)
     {
-        
         boolean result = true;
         
         switch (command)
@@ -1017,7 +1026,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 }
                 break;
         }
-        
         return result;
     }
     
