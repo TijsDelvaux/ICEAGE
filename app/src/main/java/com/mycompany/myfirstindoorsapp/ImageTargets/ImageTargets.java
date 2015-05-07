@@ -12,7 +12,6 @@ import server.MsgServer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -131,6 +130,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private View setTrapButton;
 
     private boolean showCollectButton;
+    private boolean showSetTrapButton;
 
 
     @IceAge
@@ -225,6 +225,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         setTargetsToFollow(new ArrayList<String>());
 
         showCollectButton = false;
+        showSetTrapButton = false;
         addOverlayView();
 
         Log.d(LOGTAG, "Vuforia end of onCreate");
@@ -343,11 +344,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         if(!(setTrapButton == null)) {
                             setTrapButton.setVisibility(View.INVISIBLE);
                         }
+                        showSetTrapButton = false;
                         break;
                     case 5:
                         if(!(setTrapButton == null)) {
                             setTrapButton.setVisibility(View.VISIBLE);
                         }
+                        showSetTrapButton = true;
                         break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
@@ -527,7 +530,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         LayoutInflater inflater = LayoutInflater.from(this);
         countLayout = (RelativeLayout) inflater.inflate(R.layout.collect_overlay, null, false);
         snowLayout = (RelativeLayout) inflater.inflate(R.layout.snow_overlay, null, false);
-        settrapLayout =(RelativeLayout) inflater.inflate(R.layout.settrap_overlay, null, false);
+        settrapLayout =(RelativeLayout) inflater.inflate(R.layout.set_trap_overlay, null, false);
 
         snowLayout.setVisibility(View.VISIBLE);
         countLayout.setVisibility(View.VISIBLE);
@@ -542,17 +545,23 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 LayoutParams.MATCH_PARENT));
 
         collectButton = countLayout.findViewById(R.id.collect_overlay);
-        setTrapButton = countLayout.findViewById(R.id.settrap_overlay);
+        setTrapButton = settrapLayout.findViewById(R.id.set_trap_button);
 //        View statusButton = countLayout.findViewById(R.id.status_button);
 //        statusButton.setVisibility(View.VISIBLE);
 
-        collectButton.setVisibility(View.INVISIBLE);
-        setTrapButton.setVisibility(View.INVISIBLE);
-//        if(showCollectButton){
-//
-//        }else {
-//            collectButton.setVisibility(View.INVISIBLE);
-//        }
+//        collectButton.setVisibility(View.INVISIBLE);
+//        setTrapButton.setVisibility(View.INVISIBLE);
+        if(showCollectButton){
+            collectButton.setVisibility(View.VISIBLE);
+        }else {
+            collectButton.setVisibility(View.INVISIBLE);
+        }
+
+        if(showSetTrapButton){
+            setTrapButton.setVisibility(View.VISIBLE);
+        }else {
+            setTrapButton.setVisibility(View.INVISIBLE);
+        }
 //        countLayout.bringToFront();
 
 
@@ -1189,7 +1198,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
                     //Registration went well
                     case CONFIRM_REGISTRATION:
-                        showText(rsp, Toast.LENGTH_LONG); //TODO
+                        showText(rsp, 5000);
+                        String clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        String teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
                         showText("Swipe from left to right to show menu " +
                                 "\n------->", Toast.LENGTH_LONG);
                         break;
@@ -1217,9 +1231,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         showText(rsp);
                         String imageToPickUp = splitResponse[2];
                         mRenderer.addToMyPickedUpSet(imageToPickUp);
-                        String clientCount = splitResponse[3];
+                        clientCount = splitResponse[3];
                         setClientCollectedAcorns(Integer.parseInt(clientCount));
-                        String teamCount = splitResponse[4];
+                        teamCount = splitResponse[4];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
                         break;
@@ -1241,32 +1255,49 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     case TEAMMATE_PICKUP:
                         Log.d("CLIENTTASK", "ontvangen: " + rsp);
                         showText(rsp); //TODO
-                        teamCollectedAcorns++;
+                        teamCount = splitResponse[2];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
 
                     // Reply from isTaken: there is a trap here and you walked right into it!
                     case TRAP_LOSS:
-                        playerCollectedAcorns =- Integer.parseInt(rsp);
-                        teamCollectedAcorns =- Integer.parseInt(rsp);
-                        showText(splitResponse[2]);
+                        showText(rsp);
+                        clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
                         break;
                     // A teammate of yours had walked into a trap
                     case TEAMMATE_TRAP_LOSS:
-                        teamCollectedAcorns =- Integer.parseInt(rsp);
-                        showText(splitResponse[2]);
+                        showText(rsp);
+                        teamCount = splitResponse[2];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
                         break;
                     // Someone walked into your trap!
                     case TRAP_REWARD:
-                        playerCollectedAcorns =+ Integer.valueOf(rsp);
-                        teamCollectedAcorns =+ Integer.valueOf(rsp);
-                        showText(splitResponse[2]);
+                        showText(rsp);
+                        clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
                         break;
                     // A teammate of yours had walked into a trap
                     case TEAMMATE_TRAP_REWARD:
-                        teamCollectedAcorns =+ Integer.parseInt(rsp);
-                        showText(splitResponse[2]);
+                        showText(rsp);
+                        teamCount = splitResponse[2];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
                         break;
                     case CONFIRM_PLACEMENT_TRAP:
                         showText(rsp);
+                        clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
                         break;
                     case DECLINE_PLACEMENT_TRAP:
                         showText(rsp);

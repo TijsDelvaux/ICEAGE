@@ -234,7 +234,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 textureIndex = IMG_SCRAT_HAPPY;
             }else if(excludedImageSet.contains(currentImage)){ //SOMEONE ELSE PICKED UP THIS ACORN
                 disableCollectButton();
-                enableSetTrapButton();
+                disableSetTrapButton();
                 objectToShow = picture;
                 textureIndex = IMG_SCRAT_SAD;
             }else if(!freeImageSet.contains(currentImage)) { //YOU'RE NOT SURE IF THIS ACORN HAS BEEN PICKED UP YET
