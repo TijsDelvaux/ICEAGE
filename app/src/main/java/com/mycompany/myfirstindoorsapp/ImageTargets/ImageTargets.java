@@ -1117,12 +1117,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         }
 
         private void showToast(final String text, final int duration){
-            lastReceivedMessage = text;
-            menuProcess(CMD_UPDATE_LAST_TEXT);
-//            new Thread()
-//            {
-//                public void run()
-//                {
+//            lastReceivedMessage = text;
+//            menuProcess(CMD_UPDATE_LAST_TEXT);
+            new Thread()
+            {
+                public void run()
+                {
                     ImageTargets.this.runOnUiThread(new Runnable()
                     {
                         public void run()
@@ -1131,10 +1131,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
                         }
                     });
-//                }
-//            }.start();
+                }
+            }.start();
         }
-        private void showToast(String text){
+        private void showToast(final String text){
             showToast(text, Toast.LENGTH_SHORT);
         }
 
@@ -1171,22 +1171,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             } catch (IOException e) {
                 e.printStackTrace();
                 response = "IOException: " + e.toString();
-            } finally {
-                if (socket != null) {
-                    try {
-                        socket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                if (dataOutputStream != null) {
-                    try {
-                        dataOutputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
             }
         }
 
@@ -1207,19 +1191,19 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     //Show a toast
                     case TOAST:
-                        showToastImageTargets(rsp);
+                        showToast(rsp);
                         break;
 
                     //Registration went well
                     case CONFIRM_REGISTRATION:
-                        showToast(rsp, 7000);
+                        showToast(rsp, Toast.LENGTH_LONG);
                         String clientCount = splitResponse[2];
                         setClientCollectedAcorns(Integer.parseInt(clientCount));
                         String teamCount = splitResponse[3];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
                         showToast("Swipe from left to right to show menu " +
-                                "\n------->", 5000);
+                                "\n------->", Toast.LENGTH_LONG);
                         break;
                     // Registration did not went well
                     case DECLINE_REGISTRATION:
