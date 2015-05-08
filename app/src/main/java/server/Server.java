@@ -89,7 +89,7 @@ public class Server   {
                     for (String client : teamClients.get(teamName)) {
                         // make sure you do not notify yourself
                         if (!client.equals(clientName)) {
-                            notifyOfPickup(clientName);
+                            notifyOfPickup(client, clientName);
                         }
                     }
                 } else {
@@ -140,28 +140,29 @@ public class Server   {
         int nbAcornsToTransfer = Math.min(clientCounts.get(clientName), costOfRunningInTrap);
 
         // change local counts
-        clientCounts.put(clientName,clientCounts.get(clientName) - nbAcornsToTransfer);
-        clientCounts.put(trapOwner,clientCounts.get(trapOwner) + nbAcornsToTransfer);
+        clientCounts.put(clientName, clientCounts.get(clientName) - nbAcornsToTransfer);
+        clientCounts.put(trapOwner, clientCounts.get(trapOwner) + nbAcornsToTransfer);
         updateTeamCount(clientTeams.get(clientName));
         updateTeamCount(clientTeams.get(trapOwner));
 
         // notify trapOwner
-        sendMessageToClient(trapOwner,MsgClient.TRAP_REWARD,
+        System.out.println(clientName + " walked into the trap of " + trapOwner);
+        sendMessageToClient(trapOwner, MsgClient.TRAP_REWARD,
                 "Someone walked into your trap!\nYou receive " + nbAcornsToTransfer + " acorns\nThe trap has been dismantled"
-                + ":" + clientCounts.get(trapOwner)
-                + ":" + teamCounts.get(clientTeams.get(trapOwner)));
+                        + ":" + clientCounts.get(trapOwner)
+                        + ":" + teamCounts.get(clientTeams.get(trapOwner)));
 
         // notify all team players (both from the client as from the trapOwner)
         for(String client: teamClients.get(clientTeams.get(clientName))) {
             // make sure you do not notify yourself
             if(!client.equals(clientName)) {
-                notifyOfTrapLoss(clientName, nbAcornsToTransfer);
+                notifyOfTrapLoss(client,clientName, nbAcornsToTransfer);
             }
         }
-        for(String client: teamClients.get(trapOwner)) {
+        for(String client: teamClients.get(clientTeams.get(trapOwner))) {
             // make sure you do not notify yourself
             if(!client.equals(trapOwner)) {
-                notifyOfTrapReward(trapOwner, nbAcornsToTransfer);
+                notifyOfTrapReward(client, trapOwner, nbAcornsToTransfer);
             }
         }
 
@@ -207,29 +208,31 @@ public class Server   {
         }
         leaderboard += "\n";
         leaderboard += "\n" + indent + "LEADERBOARD TEAMS\n";
-        for(String name: teamCounts.keySet()) {
+        for(String name : teamCounts.keySet()) {
             leaderboard += indent + name + "\t\t" + teamCounts.get(name) + "\n";
         }
         leaderboard += "\n";
         return leaderboard;
     }
 
-    public void notifyOfPickup(String clientName) {
+    public void notifyOfPickup(String clientName, String teamMate) {
         sendMessageToClient(clientName, MsgClient.TEAMMATE_PICKUP,
-                                                    "A teammate picked up an acorn!"
+                                                    "Your teammate "+ teamMate + " picked up an acorn!"
                                                     + ":" + teamCounts.get(clientTeams.get(clientName)));
 
     }
 
-    public void notifyOfTrapLoss(String clientName, int nbAcornsToTransfer) {
+    public void notifyOfTrapLoss(String clientName, String teamMate, int nbAcornsToTransfer) {
         sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD,
-                                                "A teammate walked into a trap!"
+                                                "Your teammate "+ teamMate + " walked into a trap!\n"
+                                                        + "Your team lost " + nbAcornsToTransfer + " acorns."
                                                 + ":" + teamCounts.get(clientTeams.get(clientName)));
     }
 
-    public void notifyOfTrapReward(String clientName, int nbAcornsToTransfer) {
+    public void notifyOfTrapReward(String clientName, String teamMate, int nbAcornsToTransfer) {
         sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD,
-                                                "Someone walked into a trap of your teammate!"
+                                                "Someone walked into a trap of your teammate" + teamMate + "!\n"
+                                                        + "Your team gained " + nbAcornsToTransfer + " acorns."
                                                 + ":" + teamCounts.get(clientTeams.get(clientName)));
     }
 
@@ -263,6 +266,14 @@ public class Server   {
         String userMessage =  code + ":" + message;
         msgsToClients.get(client).push(userMessage);
         System.out.println("[SERVER] mesage toevoegen bij " + client + ": " + userMessage);
+    }
+
+    public ArrayList<String> getAllClients(){
+        ArrayList<String> clients = new ArrayList<String>();
+        for(List<String> clientsInTeam : teamClients.values()){
+            clients.addAll(clientsInTeam);
+        }
+        return clients;
     }
 
 
@@ -338,6 +349,14 @@ public class Server   {
                 while (true) {
                     dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
                     dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
+//                    for(String client : getAllClients()) {
+//                        if (msgsToClients.get(client) != null) {
+//                            while (!msgsToClients.get(client).empty()) {
+//                                System.out.println("[MESSAGE TO CLIENT] - " + client + ": " + msgsToClients.get(client).peek());
+//                                dataOutputStream.writeUTF(msgsToClients.get(client).pop());
+//                            }
+//                        }
+//                    }
                     if(msgsToClients.get(this.clientName) != null) {
                         while (!msgsToClients.get(this.clientName).empty()) {
                             dataOutputStream.writeUTF(msgsToClients.get(this.clientName).pop());

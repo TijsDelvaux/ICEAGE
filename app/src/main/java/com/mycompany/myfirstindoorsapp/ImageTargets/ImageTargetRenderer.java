@@ -80,6 +80,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private HashSet<String> excludedImageSet = new HashSet<String>();
     private HashSet<String> freeImageSet = new HashSet<String>();
     private HashSet<String> myPickedUpSet = new HashSet<String>();
+    private HashSet<String> placedTrap = new HashSet<String>();
     private String currentImage;
     private int askCount = 0;
     private int askCountLimit = 10;
@@ -88,6 +89,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private static int IMG_SCRAT_EXCITED = 1;
     private static int IMG_SCRAT_HAPPY = 2;
     private static int IMG_SCRAT_SAD = 3;
+    private static int IMG_SCRAP_TRAP = 4;
 
 
     //ICEAGE
@@ -147,7 +149,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         mRenderer = Renderer.getInstance();
         
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, Vuforia.requiresAlpha() ? 0.0f
-            : 1.0f);
+                : 1.0f);
         for (Texture t : mTextures)
         {
             GLES20.glGenTextures(1, t.mTextureID, 0);
@@ -228,10 +230,17 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             int textureIndex;
 
             if(myPickedUpSet.contains(currentImage)){ //YOU PICKED UP THIS ACORN
+                if(placedTrap.contains(currentImage)){
+                    disableSetTrapButton();
+                    objectToShow = picture;
+                    textureIndex = IMG_SCRAP_TRAP;
+                }else{
+                    enableSetTrapButton();
+                    objectToShow = picture;
+                    textureIndex = IMG_SCRAT_HAPPY;
+                }
                 disableCollectButton();
-                enableSetTrapButton();
                 objectToShow = picture;
-                textureIndex = IMG_SCRAT_HAPPY;
             }else if(excludedImageSet.contains(currentImage)){ //SOMEONE ELSE PICKED UP THIS ACORN
                 disableCollectButton();
                 disableSetTrapButton();
@@ -401,5 +410,9 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         myPickedUpSet.remove(image);
     }
 
+
+    public void addToTraps(){
+        placedTrap.add(currentImage);
+    }
 
 }

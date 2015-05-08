@@ -105,6 +105,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private TextView mPlayerCollectedAcornsView;
     private TextView mTeamCollectedAcornsView;
     private TextView mCurrentZonesView;
+    private TextView mLastReceivedMessage;
+
+    private String lastReceivedMessage = "";
     
     private RelativeLayout mUILayout;
     
@@ -246,6 +249,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     public void onClickSetTrapButton(View view){
         String currentImage = mRenderer.collectCurrentPicture();
         sendMessageToServer(MsgServer.SET_TRAP, currentImage);
+
     }
 
     public void setClientCollectedAcorns(int count){
@@ -304,9 +308,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 getAssets()));
         mTextures.add(Texture.loadTextureFromApk("scrat_excited.png",
                 getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("scrat_happy.jpg",
+        mTextures.add(Texture.loadTextureFromApk("scrat_happy_text.png",
                 getAssets()));
         mTextures.add(Texture.loadTextureFromApk("scrat_sad_text.png",
+                getAssets()));
+        mTextures.add(Texture.loadTextureFromApk("scrat_trap_text.png",
                 getAssets()));
     }
     
@@ -883,6 +889,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     final public static int CMD_UPDATE_COUNT = 5;
     final public static int CMD_CURRENT_ZONES = 6;
     final public static int CMD_NOTHING = 7;
+    final public static int CMD_UPDATE_LAST_TEXT = 8;
     
     
     // This method sets the menu's settings
@@ -896,7 +903,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         TextView teamNameView =(TextView) group.addTextItem("Team: " + teamName, CMD_NOTHING);
         teamNameView.setTextColor(teamColor);
 
-        group = mSampleAppMenu.addGroup("", true);
+//        group = mSampleAppMenu.addGroup("", true);
 
         //Shows the amount of collected acorns
         group.addTextItem("Number of collected acorns: ", CMD_NOTHING);
@@ -905,6 +912,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mTeamCollectedAcornsView = (TextView) group.addTextItem("Your team: " + teamCollectedAcorns, CMD_UPDATE_COUNT);
         mTeamCollectedAcornsView.setTextColor(teamColor);
 
+        mLastReceivedMessage = (TextView) group.addTextItem(lastReceivedMessage, CMD_UPDATE_LAST_TEXT);
         //Show the list of zones you're currently in
         mCurrentZonesView = (TextView) group.addTextItem(zonesString, CMD_CURRENT_ZONES);
 //        group.addSelectionItem(getString(R.string.menu_extended_tracking),
@@ -1054,6 +1062,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 break;
             case CMD_NOTHING:
                 break;
+            case CMD_UPDATE_LAST_TEXT:
+                mLastReceivedMessage.setText(lastReceivedMessage);
+                break;
             default:
                 if (command >= mStartDatasetsIndex
                     && command < mStartDatasetsIndex + mDatasetsNumber)
@@ -1105,23 +1116,26 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         }
 
-        private void showText(final String text, final int duration){
-            new Thread()
-            {
-                public void run()
-                {
+        private void showToast(final String text, final int duration){
+            lastReceivedMessage = text;
+            menuProcess(CMD_UPDATE_LAST_TEXT);
+//            new Thread()
+//            {
+//                public void run()
+//                {
                     ImageTargets.this.runOnUiThread(new Runnable()
                     {
                         public void run()
                         {
-                            Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), text, duration).show();
+
                         }
                     });
-                }
-            }.start();
+//                }
+//            }.start();
         }
-        private void showText(String text){
-            showText(text, Toast.LENGTH_SHORT);
+        private void showToast(String text){
+            showToast(text, Toast.LENGTH_SHORT);
         }
 
         /*
@@ -1198,18 +1212,18 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
                     //Registration went well
                     case CONFIRM_REGISTRATION:
-                        showText(rsp, 5000);
+                        showToast(rsp, 7000);
                         String clientCount = splitResponse[2];
                         setClientCollectedAcorns(Integer.parseInt(clientCount));
                         String teamCount = splitResponse[3];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
-                        showText("Swipe from left to right to show menu " +
-                                "\n------->", Toast.LENGTH_LONG);
+                        showToast("Swipe from left to right to show menu " +
+                                "\n------->", 5000);
                         break;
                     // Registration did not went well
                     case DECLINE_REGISTRATION:
-                        showText(rsp); //TODO
+                        showToast(rsp); //TODO
                         break;
 
                     // Update the list of excluded images
@@ -1228,7 +1242,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
                     // You have successfully picked up an acorn
                     case CONFIRM_PICKUP:
-                        showText(rsp);
+                        showToast(rsp);
                         String imageToPickUp = splitResponse[2];
                         mRenderer.addToMyPickedUpSet(imageToPickUp);
                         clientCount = splitResponse[3];
@@ -1248,20 +1262,20 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     // Something went wrong while picking up an acorn
                     case DECLINE_PICKUP:
-                        showText(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
+                        showToast(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
                         mRenderer.removeFromMyPickedUpSet(splitResponse[2]);
                         break;
                     // A team mate has picked up an acorn
                     case TEAMMATE_PICKUP:
                         Log.d("CLIENTTASK", "ontvangen: " + rsp);
-                        showText(rsp); //TODO
+                        showToast(rsp); //TODO
                         teamCount = splitResponse[2];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
 
                     // Reply from isTaken: there is a trap here and you walked right into it!
                     case TRAP_LOSS:
-                        showText(rsp);
+                        showToast(rsp);
                         clientCount = splitResponse[2];
                         setClientCollectedAcorns(Integer.parseInt(clientCount));
                         teamCount = splitResponse[3];
@@ -1270,14 +1284,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     // A teammate of yours had walked into a trap
                     case TEAMMATE_TRAP_LOSS:
-                        showText(rsp);
+                        showToast(rsp);
                         teamCount = splitResponse[2];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
                         break;
                     // Someone walked into your trap!
                     case TRAP_REWARD:
-                        showText(rsp);
+                        showToast(rsp);
                         clientCount = splitResponse[2];
                         setClientCollectedAcorns(Integer.parseInt(clientCount));
                         teamCount = splitResponse[3];
@@ -1286,13 +1300,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     // A teammate of yours had walked into a trap
                     case TEAMMATE_TRAP_REWARD:
-                        showText(rsp);
+                        showToast(rsp);
                         teamCount = splitResponse[2];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
                         break;
                     case CONFIRM_PLACEMENT_TRAP:
-                        showText(rsp);
+                        mRenderer.addToTraps();
+                        showToast(rsp);
                         clientCount = splitResponse[2];
                         setClientCollectedAcorns(Integer.parseInt(clientCount));
                         teamCount = splitResponse[3];
@@ -1300,7 +1315,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         menuProcess(CMD_UPDATE_COUNT);
                         break;
                     case DECLINE_PLACEMENT_TRAP:
-                        showText(rsp);
+                        showToast(rsp);
                         break;
 
                     default:
