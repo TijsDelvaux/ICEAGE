@@ -205,7 +205,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         playerColor = getResources().getColor(R.color.blue);
         teamColor = getResources().getColor(R.color.red);
 
-        sendMessageToServer(MsgServer.DEFAULT, "Hello");
+        sendMessageToServer(MsgServer.REGISTER, "Hello");
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();

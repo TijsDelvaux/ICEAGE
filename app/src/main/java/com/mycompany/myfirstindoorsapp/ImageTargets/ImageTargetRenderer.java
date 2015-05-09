@@ -83,7 +83,9 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private HashSet<String> placedTrap = new HashSet<String>();
     private String currentImage;
     private int askCount = 0;
-    private int askCountLimit = 10;
+    private int askCountLimit = 20;
+    private long askTime = 0;
+    private long askTimeLimit = 3000; //Waits at least 3 seconds before asking the server
 
     private static int IMG_ACORN_BROWN = 0;
     private static int IMG_SCRAT_EXCITED = 1;
@@ -251,20 +253,21 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 disableSetTrapButton();
                 objectToShow = acorn;
                 textureIndex = IMG_ACORN_BROWN;
-                askCount ++;
-                if(askCount >= askCountLimit) {
+//                askCount ++;
+                long timeElapsed = System.currentTimeMillis() - askTime;
+                if(Math.abs(timeElapsed) >= askTimeLimit) {
                     isTaken(currentImage);
-                    askCount = 0;
+                    askTime = System.currentTimeMillis();
                 }
             }else{//THE ACORN HASN'T BEEN PICKED UP YET
                 enableCollectButton();
                 disableSetTrapButton();
                 objectToShow = acorn;
                 textureIndex = IMG_ACORN_BROWN;
-                askCount ++;
-                if(askCount >= askCountLimit) {
+                long timeElapsed = System.currentTimeMillis() - askTime;
+                if(Math.abs(timeElapsed) >= askTimeLimit) {
                     isTaken(currentImage);
-                    askCount = 0;
+                    askTime = System.currentTimeMillis();
                 }
             }
 

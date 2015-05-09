@@ -135,7 +135,7 @@ public class Server   {
     * @return: the message for the client who walked in the trap
     * @pre: there must be a trap here!
     */
-    public void clientRunInTrap(String clientName, String imageName) {
+    public String clientRunInTrap(String clientName, String imageName) {
         String trapOwner = trapMap.get(imageName);
         int nbAcornsToTransfer = Math.min(clientCounts.get(clientName), costOfRunningInTrap);
 
@@ -168,10 +168,9 @@ public class Server   {
 
         // remove the trap after it is used
         trapMap.remove(imageName);
-        sendMessageToClient(clientName, MsgClient.TRAP_LOSS,
-                "You've walked into a trap!\nYou loose " + nbAcornsToTransfer + " acorns..."
+        return "You've walked into a trap!\nYou loose " + nbAcornsToTransfer + " acorns..."
                 + ":" + clientCounts.get(clientName)
-                + ":" + teamCounts.get(clientTeams.get(clientName)));
+                + ":" + teamCounts.get(clientTeams.get(clientName));
     }
 
     public void updateTeamCount(String teamName){
@@ -264,7 +263,7 @@ public class Server   {
     public void sendMessageToClient(String client, MsgClient code, String message){
         String userMessage =  code + ":" + message;
         msgsToClients.get(client).push(userMessage);
-        System.out.println("[SERVER] mesage toevoegen bij " + client + ": " + userMessage);
+        System.out.println("[SERVER] message toevoegen bij " + client + ": " + userMessage);
     }
 
     public ArrayList<String> getAllClients(){
@@ -378,34 +377,39 @@ public class Server   {
             String printMessage = "";
             String reply = null;
 
-            // register client if needed, beter met een register message?
-            if (!clientCounts.containsKey(clientName)) {
-                this.clientName = clientName;
-                registerNewClient(clientName, teamName);
-                msgsToClients.put(clientName, new Stack<String>());
-                System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
-                reply = "Welcome to the IceAge Nut Discovery game!\n" +
-                        "Name - " + clientName + "\n" +
-                        "Team -  " + teamName + "\n" +
-                        "Team members - " + teamClients.get(teamName).toString()
-                        + ":" + "0"
-                        + ":" + "0";
-                sendMessageToClient(clientName, MsgClient.CONFIRM_REGISTRATION, reply);
-            } else if (msg.equals("Hello")) {
-                // dit kan mss niet meer werken, omdat oude socket nog aan client is gekoppeld
-                // oplossing is dan dat je de oude met de nieuwe socket vervangt in clientSockets
-                System.out.println("[SERVER] Client (" + clientName + ") has rejoined us!");
-                reply = "Welcome back!\n" +
-                        "Name - " + clientName + "\n" +
-                        "Team -  " + teamName + "\n" +
-                        "Team members - " + teamClients.get(teamName).toString()
-                        + ":" + clientCounts.get(clientName)
-                        + ":" + teamCounts.get(clientTeams.get(clientName));
-                sendMessageToClient(clientName, MsgClient.CONFIRM_REGISTRATION, reply);
-            }
+
             // handle message from client
             MsgClient code = null;
             switch (MsgServer.valueOf(messageCode)) {
+                case REGISTER:
+                    // register client if needed, beter met een register message?
+                    if (!clientCounts.containsKey(clientName)) {
+                        this.clientName = clientName;
+                        registerNewClient(clientName, teamName);
+                        msgsToClients.put(clientName, new Stack<String>());
+                        System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
+                        code = MsgClient.CONFIRM_REGISTRATION;
+                        reply = "Welcome to the IceAge Nut Discovery game!\n" +
+                                    "Name - " + clientName + "\n" +
+                                    "Team -  " + teamName + "\n" +
+                                    "Team members - " + teamClients.get(teamName).toString()
+                                + ":" + "0"
+                                + ":" + "0";
+//                        sendMessageToClient(clientName, MsgClient.CONFIRM_REGISTRATION, reply);
+                    } else {
+                        // dit kan mss niet meer werken, omdat oude socket nog aan client is gekoppeld
+                        // oplossing is dan dat je de oude met de nieuwe socket vervangt in clientSockets
+                        System.out.println("[SERVER] Client (" + clientName + ") has rejoined us!");
+                        code = MsgClient.CONFIRM_REGISTRATION;
+                        reply = "Welcome back!\n" +
+                                    "Name - " + clientName + "\n" +
+                                    "Team -  " + teamName + "\n" +
+                                    "Team members - " + teamClients.get(teamName).toString()
+                                + ":" + clientCounts.get(clientName)
+                                + ":" + teamCounts.get(clientTeams.get(clientName));
+//                        sendMessageToClient(clientName, MsgClient.CONFIRM_REGISTRATION, reply);
+                    }
+                    break;
                 //Client picked up an acorn, add the picture-name to the excluded list
                 //TODO add zones!!
                 case ACORN_PICKUP: // pickup acorn
@@ -480,6 +484,8 @@ public class Server   {
                 case ACORN_REQUEST: //Check if the asked picture is in the excluded list
                     if (isThereATrap(msg)) {
                         printMessage = "[SERVER] " + clientName + " stepped in a trap!";
+                        code = MsgClient.TRAP_LOSS;
+                        reply = clientRunInTrap(clientName, msg);
                     } else if (isThereAnAcorn(msg)) {
                         code = MsgClient.CONFIRM_ACORN;
                         reply = msg;
