@@ -1253,7 +1253,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     // A team mate has picked up an acorn
                     case TEAMMATE_PICKUP:
                         Log.d("CLIENTTASK", "ontvangen: " + rsp);
-                        showToast(rsp); //TODO
+                        showToast(rsp);
                         teamCount = splitResponse[2];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
