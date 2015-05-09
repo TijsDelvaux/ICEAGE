@@ -336,6 +336,7 @@ public class Server   {
         private String clientName;
 
         protected ClientConnection(Socket clientSocket) {
+            System.out.println("[SERVER]: nieuwe clientconnection " + clientSocket.toString());
             this.clientSocket = clientSocket;
         }
 
@@ -355,9 +356,12 @@ public class Server   {
                 try {
                     DataInputStream dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
                     String messageForClient = dataInputStream.readUTF();
+                    System.out.println("[SERVER]: behandel message: " + messageForClient);
                     handleMessage(messageForClient);
                 } catch (EOFException e) {
-                    continue;
+                    System.out.println("[SERVER]: " + clientName + " is gone");
+//                    e.printStackTrace();
+                    return;//de client is afgemeld
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
