@@ -13,6 +13,9 @@ import server.MsgServer;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -1153,7 +1156,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             try {
                 socket = new Socket(serverAddress, serverPort);
                 (new ResponseGetter(socket, responses)).start();
-//                Log.d(LOGTAG, "socket " + userName + " gemaakt");
                 while(true){
                     dataOutputStream = new DataOutputStream(
                             socket.getOutputStream());

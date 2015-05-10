@@ -279,6 +279,7 @@ public class Server   {
     private class SocketServerThread extends Thread {
 
         private int SocketServerPORT = port;
+        private Map<InetAddress,ClientConnection> clientConnectionMap = new HashMap<InetAddress, ClientConnection>();
 
         @Override
         public void run() {
@@ -289,7 +290,19 @@ public class Server   {
                 System.out.println("IP: " + getIpAddress());
                 while (true) {
                     Socket socket = serverSocket.accept();
-                    (new ClientConnection(socket)).start();
+                    if(clientConnectionMap.containsKey(socket.getInetAddress())){
+                        System.out.println("Reconfiguring socket");
+                        clientConnectionMap.get(socket.getInetAddress()).setClientSocket(socket);
+                        //Just to make sure the loop ends
+                        clientConnectionMap.get(socket.getInetAddress()).setLoop(false);
+                        clientConnectionMap.get(socket.getInetAddress()).setLoop(true);
+                        clientConnectionMap.get(socket.getInetAddress()).run();
+                    }else {
+                        System.out.println(socket + " " + socket.getInetAddress());
+                        ClientConnection cc = new ClientConnection(socket);
+                        clientConnectionMap.put(socket.getInetAddress(), cc);
+                        cc.start();
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -333,14 +346,23 @@ public class Server   {
     private class ClientConnection extends Thread {
         private Socket clientSocket;
         private String clientName;
+        private boolean loop = true;
 
         protected ClientConnection(Socket clientSocket) {
             System.out.println("[SERVER]: nieuwe clientconnection " + clientSocket.toString());
             this.clientSocket = clientSocket;
         }
 
+        public void setClientSocket(Socket socket){
+            this.clientSocket = socket;
+        }
+
+        public void setLoop(boolean loop){
+            this.loop = loop;
+        }
+
         public void run() {
-            while (true) {
+            while (loop) {
                 try {
                     DataOutputStream dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
                     if (msgsToClients.get(this.clientName) != null) {
