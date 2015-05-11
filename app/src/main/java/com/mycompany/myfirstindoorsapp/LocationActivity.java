@@ -37,14 +37,16 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
     private List<String> zones;
     private Map<String, Set<String>> adjacentZones;
     private ImageTargets imageTargets;
+    private List<String> allZones;
 
     public LocationActivity(ImageTargets imageTargets){
         zones = new ArrayList<String>();
         detectedZones = new ArrayList<String>();
         this.imageTargets = imageTargets;
         set_adjacentZones();
-        IndoorsFactory.createInstance(imageTargets, "d2b8119f-49b4-4e21-a67b-67fa90a17b45", this, false);
-        Log.d("oncreate", "LocationActivity");
+        this.allZones = new ArrayList<String>(this.adjacentZones.keySet());
+//        IndoorsFactory.createInstance(imageTargets, "d2b8119f-49b4-4e21-a67b-67fa90a17b45", this, false);
+//        Log.d("oncreate", "LocationActivity");
     }
 
     private void set_adjacentZones(){
@@ -100,12 +102,14 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
         //solZ
         Set<String> solZ = new HashSet<String>();
         solZ.add("gang_sols");
+        solZ.add("solN");
         this.adjacentZones.put("solZ",solZ);
         //solN
         Set<String> solN = new HashSet<String>();
         solN.add("gang_sols");
+        solN.add("solZ");
         this.adjacentZones.put("solN",solN);
-
+        Set<String> all_rooms = this.adjacentZones.keySet();
     }
 
     @Override
@@ -157,6 +161,8 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
                 this.zones = new ArrayList<String>(detectedAdjacentZones);
                 this.imageTargets.enteredZones(this.zones);
             }
+        } else{
+            this.imageTargets.enteredZones(this.allZones);
         }
     }
 

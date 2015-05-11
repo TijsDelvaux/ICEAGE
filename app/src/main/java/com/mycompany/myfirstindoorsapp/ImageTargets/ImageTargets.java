@@ -217,7 +217,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
 
-        mDatasetStrings.add("Thuis.xml");
+        // dit aanpassen voor dataset
+//        mDatasetStrings.add("Thuis.xml");
 
         vuforiaAppSession
             .initAR(this, ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -232,7 +233,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
 
         //ICEAGE
-        setTargetsToFollow(new ArrayList<String>());
+        setTargetsToFollow(new ArrayList<String>(this.allZones.keySet()));
 
         showCollectButton = false;
         showSetTrapButton = false;
@@ -528,16 +529,17 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     @IceAge
     private void setTargetsToFollow(List<String> zones) {
-//        mDatasetStrings.clear();
-//
-//        for (String zone : zones) {
-//            int zoneIndex = allZones.get(zone);
-//            mDatasetStrings.add(listDatasetStrings[zoneIndex]);
-//        }
-//
-//        if (mDatasetStrings.isEmpty()) {
-//            mDatasetStrings.add(listDatasetStrings[0]);
-//        }
+        // dit aanpassen voor dataset
+        mDatasetStrings.clear();
+
+        for (String zone : zones) {
+            int zoneIndex = allZones.get(zone);
+            mDatasetStrings.add(listDatasetStrings[zoneIndex]);
+        }
+
+        if (mDatasetStrings.isEmpty()) {
+            mDatasetStrings.add(listDatasetStrings[0]);
+        }
 
         vuforiaAppSession.doReloadTargets();
     }
