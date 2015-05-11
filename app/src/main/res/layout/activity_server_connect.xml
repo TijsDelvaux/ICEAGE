@@ -43,7 +43,7 @@
         android:inputType="textCapWords" />
     <requestFocus/>
 
-    android:textAlignment="center"
+
     <TextView
         android:layout_width="257dp"
         android:layout_height="31dp"

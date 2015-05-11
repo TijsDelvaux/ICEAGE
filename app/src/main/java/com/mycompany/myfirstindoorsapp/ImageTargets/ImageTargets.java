@@ -32,6 +32,7 @@ import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.os.Build;
@@ -109,6 +110,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private TextView mTeamCollectedAcornsView;
     private TextView mCurrentZonesView;
     private TextView mLastReceivedMessage;
+    private TextView fellIntoTrap;
 
     private String lastReceivedMessage = "";
     
@@ -181,6 +183,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private int teamColor;
     private ClientTask clientask;
     private Stack<String> msgsToServer;
+    private long blindedTime = 10000;
 
 
 //    private Socket client;
@@ -252,7 +255,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     public void onClickSetTrapButton(View view){
         String currentImage = mRenderer.collectCurrentPicture();
         sendMessageToServer(MsgServer.SET_TRAP, currentImage);
-
     }
 
     public void setClientCollectedAcorns(int count){
@@ -262,6 +264,15 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     public void setTeamCollectedAcorns(int count){
         teamCollectedAcorns = count;
     }
+
+//    public void walkIntoTrap(){
+//        Long time = System.currentTimeMillis();
+//
+//        while((Math.abs(System.currentTimeMillis() - time) < blindedTime)){
+//        }
+//        fellIntoTrap.setVisibility(View.INVISIBLE);
+//    }
+
 
     //END ICE STUFF
 
@@ -555,6 +566,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         collectButton = countLayout.findViewById(R.id.collect_overlay);
         setTrapButton = settrapLayout.findViewById(R.id.set_trap_button);
+        fellIntoTrap = (TextView) snowLayout.findViewById(R.id.fell_into_trap);
 //        View statusButton = countLayout.findViewById(R.id.status_button);
 //        statusButton.setVisibility(View.VISIBLE);
 
@@ -1268,6 +1280,8 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         teamCount = splitResponse[3];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
+//                        fellIntoTrap.setVisibility(View.VISIBLE);
+//                        walkIntoTrap();
                         break;
                     // A teammate of yours had walked into a trap
                     case TEAMMATE_TRAP_LOSS:
