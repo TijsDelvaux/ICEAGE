@@ -12,8 +12,10 @@ import server.MsgServer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -30,6 +32,7 @@ import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.os.Build;
@@ -106,6 +109,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private TextView mPlayerCollectedAcornsView;
     private TextView mTeamCollectedAcornsView;
     private TextView mCurrentZonesView;
+    private TextView mLastReceivedMessage;
+    private TextView fellIntoTrap;
+
+    private String lastReceivedMessage = "";
     
     private RelativeLayout mUILayout;
     
@@ -126,9 +133,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     private RelativeLayout countLayout;
     private RelativeLayout snowLayout;
+    private RelativeLayout settrapLayout;
     private View collectButton;
+    private View setTrapButton;
 
     private boolean showCollectButton;
+    private boolean showSetTrapButton;
 
 
     @IceAge
@@ -173,6 +183,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private int teamColor;
     private ClientTask clientask;
     private Stack<String> msgsToServer;
+    private long blindedTime = 10000;
 
 
 //    private Socket client;
@@ -200,8 +211,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         playerColor = getResources().getColor(R.color.blue);
         teamColor = getResources().getColor(R.color.red);
 
-
-        sendMessageToServer(MsgServer.DEFAULT, "Hello");
+        sendMessageToServer(MsgServer.REGISTER, "Hello");
         
         vuforiaAppSession = new SampleApplicationSession(this);
         startLoadingAnimation();
@@ -224,6 +234,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         setTargetsToFollow(new ArrayList<String>());
 
         showCollectButton = false;
+        showSetTrapButton = false;
         addOverlayView();
 
         Log.d(LOGTAG, "Vuforia end of onCreate");
@@ -240,13 +251,27 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         sendMessageToServer(MsgServer.ACORN_PICKUP, currentImage);
     }
 
+    @IceAge
+    public void onClickSetTrapButton(View view){
+        String currentImage = mRenderer.collectCurrentPicture();
+        sendMessageToServer(MsgServer.SET_TRAP, currentImage);
+    }
+
     public void setClientCollectedAcorns(int count){
-        playerCollectedAcorns  = count;
+        playerCollectedAcorns = count;
     }
 
     public void setTeamCollectedAcorns(int count){
         teamCollectedAcorns = count;
     }
+
+//    public void walkIntoTrap(){
+//        Long time = System.currentTimeMillis();
+//
+//        while((Math.abs(System.currentTimeMillis() - time) < blindedTime)){
+//        }
+//        fellIntoTrap.setVisibility(View.INVISIBLE);
+//    }
 
 
     //END ICE STUFF
@@ -297,9 +322,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 getAssets()));
         mTextures.add(Texture.loadTextureFromApk("scrat_excited.png",
                 getAssets()));
-        mTextures.add(Texture.loadTextureFromApk("scrat_happy.jpg",
+        mTextures.add(Texture.loadTextureFromApk("scrat_happy_text.png",
                 getAssets()));
         mTextures.add(Texture.loadTextureFromApk("scrat_sad_text.png",
+                getAssets()));
+        mTextures.add(Texture.loadTextureFromApk("scrat_trap_text.png",
                 getAssets()));
     }
     
@@ -324,16 +351,26 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
-                        showCollectButton = false;
-//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
+                        showCollectButton = false; //TODO is deze boolean nodig?
                         break;
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
                         showCollectButton = true;
-//                        Log.d("MESSAGEHANDLER", (String) msg.obj);
                         break;
                     case 3: //Check if the detected image already has been taken
                         sendMessageToServer(MsgServer.ACORN_REQUEST, (String) msg.obj);
+                        break;
+                    case 4:
+                        if(!(setTrapButton == null)) {
+                            setTrapButton.setVisibility(View.INVISIBLE);
+                        }
+                        showSetTrapButton = false;
+                        break;
+                    case 5:
+                        if(!(setTrapButton == null)) {
+                            setTrapButton.setVisibility(View.VISIBLE);
+                        }
+                        showSetTrapButton = true;
                         break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
@@ -513,25 +550,41 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         LayoutInflater inflater = LayoutInflater.from(this);
         countLayout = (RelativeLayout) inflater.inflate(R.layout.collect_overlay, null, false);
         snowLayout = (RelativeLayout) inflater.inflate(R.layout.snow_overlay, null, false);
+        settrapLayout =(RelativeLayout) inflater.inflate(R.layout.set_trap_overlay, null, false);
 
-        countLayout.setVisibility(View.VISIBLE);
         snowLayout.setVisibility(View.VISIBLE);
+        countLayout.setVisibility(View.VISIBLE);
+        settrapLayout.setVisibility(View.VISIBLE);
 
         // Adds the inflated layout to the view
+        addContentView(snowLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
         addContentView(countLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
-        addContentView(snowLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+        addContentView(settrapLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
 
         collectButton = countLayout.findViewById(R.id.collect_overlay);
+        setTrapButton = settrapLayout.findViewById(R.id.set_trap_button);
+        fellIntoTrap = (TextView) snowLayout.findViewById(R.id.fell_into_trap);
 //        View statusButton = countLayout.findViewById(R.id.status_button);
 //        statusButton.setVisibility(View.VISIBLE);
+
+//        collectButton.setVisibility(View.INVISIBLE);
+//        setTrapButton.setVisibility(View.INVISIBLE);
         if(showCollectButton){
+
             collectButton.setVisibility(View.VISIBLE);
         }else {
             collectButton.setVisibility(View.INVISIBLE);
         }
-        countLayout.bringToFront();
+
+        if(showSetTrapButton){
+            setTrapButton.setVisibility(View.VISIBLE);
+        }else {
+            setTrapButton.setVisibility(View.INVISIBLE);
+        }
+//        countLayout.bringToFront();
 
 
     }
@@ -852,6 +905,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     final public static int CMD_UPDATE_COUNT = 5;
     final public static int CMD_CURRENT_ZONES = 6;
     final public static int CMD_NOTHING = 7;
+    final public static int CMD_UPDATE_LAST_TEXT = 8;
     
     
     // This method sets the menu's settings
@@ -865,7 +919,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         TextView teamNameView =(TextView) group.addTextItem("Team: " + teamName, CMD_NOTHING);
         teamNameView.setTextColor(teamColor);
 
-        group = mSampleAppMenu.addGroup("", true);
+//        group = mSampleAppMenu.addGroup("", true);
 
         //Shows the amount of collected acorns
         group.addTextItem("Number of collected acorns: ", CMD_NOTHING);
@@ -874,6 +928,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mTeamCollectedAcornsView = (TextView) group.addTextItem("Your team: " + teamCollectedAcorns, CMD_UPDATE_COUNT);
         mTeamCollectedAcornsView.setTextColor(teamColor);
 
+        mLastReceivedMessage = (TextView) group.addTextItem(lastReceivedMessage, CMD_UPDATE_LAST_TEXT);
         //Show the list of zones you're currently in
         mCurrentZonesView = (TextView) group.addTextItem(zonesString, CMD_CURRENT_ZONES);
 //        group.addSelectionItem(getString(R.string.menu_extended_tracking),
@@ -1012,7 +1067,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 mTeamCollectedAcornsView.setText("Your team: " + teamCollectedAcorns);
                 break;
 
-
             case CMD_CURRENT_ZONES:
                 String zones = zonesString;
                 if(zonesString.equals("") || zonesString == null){
@@ -1023,6 +1077,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 }
                 break;
             case CMD_NOTHING:
+                break;
+            case CMD_UPDATE_LAST_TEXT:
+                mLastReceivedMessage.setText(lastReceivedMessage);
                 break;
             default:
                 if (command >= mStartDatasetsIndex
@@ -1075,7 +1132,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         }
 
-        private void showText(final String text, final int duration){
+        private void showToast(final String text, final int duration){
+//            lastReceivedMessage = text;
+//            menuProcess(CMD_UPDATE_LAST_TEXT);
             new Thread()
             {
                 public void run()
@@ -1085,13 +1144,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         public void run()
                         {
                             Toast.makeText(getApplicationContext(), text, duration).show();
+
                         }
                     });
                 }
             }.start();
         }
-        private void showText(String text){
-            showText(text, Toast.LENGTH_SHORT);
+        private void showToast(final String text){
+            showToast(text, Toast.LENGTH_SHORT);
         }
 
         /*
@@ -1108,7 +1168,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             try {
                 socket = new Socket(serverAddress, serverPort);
                 (new ResponseGetter(socket, responses)).start();
-//                Log.d(LOGTAG, "socket " + userName + " gemaakt");
                 while(true){
                     dataOutputStream = new DataOutputStream(
                             socket.getOutputStream());
@@ -1127,22 +1186,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             } catch (IOException e) {
                 e.printStackTrace();
                 response = "IOException: " + e.toString();
-            } finally {
-                if (socket != null) {
-                    try {
-                        socket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                if (dataOutputStream != null) {
-                    try {
-                        dataOutputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
             }
         }
 
@@ -1163,40 +1206,47 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     //Show a toast
                     case TOAST:
-                        showToastImageTargets(rsp);
+                        showToast(rsp);
                         break;
+
                     //Registration went well
                     case CONFIRM_REGISTRATION:
-                        showText(rsp, Toast.LENGTH_LONG); //TODO
-                        showText("Swipe from left edge to the right to show menu " +
+                        showToast(rsp, Toast.LENGTH_LONG);
+                        String clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        String teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
+                        showToast("Swipe from left to right to show menu " +
                                 "\n------->", Toast.LENGTH_LONG);
                         break;
                     // Registration did not went well
                     case DECLINE_REGISTRATION:
-                        showText(rsp); //TODO
+                        showToast(rsp); //TODO
                         break;
+
                     // Update the list of excluded images
                     case UPDATE_EXCLUDE_LIST:
                         updateExcludedList(rsp);
                         break;
+
                     // Reply from isTaken: there is an acorn here
                     case CONFIRM_ACORN:
                         mRenderer.addToFreeSet(rsp);
-//                            Log.d("CLIENTTASK", "adding image " + splitResponse[2] + " to freeSet");
                         break;
                     // Reply from isTaken: there is NO acorn here
                     case DECLINE_ACORN:
                         mRenderer.addToExcludedSet(rsp);
-//                            Log.d("CLIENTTASK", "adding image " + rsp + " to excludeSet");
                         break;
+
                     // You have successfully picked up an acorn
                     case CONFIRM_PICKUP:
-                        showText(rsp);
+                        showToast(rsp);
                         String imageToPickUp = splitResponse[2];
                         mRenderer.addToMyPickedUpSet(imageToPickUp);
-                        String clientCount = splitResponse[3];
+                        clientCount = splitResponse[3];
                         setClientCollectedAcorns(Integer.parseInt(clientCount));
-                        String teamCount = splitResponse[4];
+                        teamCount = splitResponse[4];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
                         break;
@@ -1211,13 +1261,63 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     // Something went wrong while picking up an acorn
                     case DECLINE_PICKUP:
-                        showText(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
+                        showToast(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
                         mRenderer.removeFromMyPickedUpSet(splitResponse[2]);
                         break;
                     // A team mate has picked up an acorn
                     case TEAMMATE_PICKUP:
                         Log.d("CLIENTTASK", "ontvangen: " + rsp);
-                        showToastImageTargets(rsp); //TODO
+                        showToast(rsp);
+                        teamCount = splitResponse[2];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
+
+                    // Reply from isTaken: there is a trap here and you walked right into it!
+                    case TRAP_LOSS:
+                        showToast(rsp);
+                        clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
+//                        fellIntoTrap.setVisibility(View.VISIBLE);
+//                        walkIntoTrap();
+                        break;
+                    // A teammate of yours had walked into a trap
+                    case TEAMMATE_TRAP_LOSS:
+                        showToast(rsp);
+                        teamCount = splitResponse[2];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
+                        break;
+                    // Someone walked into your trap!
+                    case TRAP_REWARD:
+                        showToast(rsp);
+                        clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
+                        break;
+                    // A teammate of yours had walked into a trap
+                    case TEAMMATE_TRAP_REWARD:
+                        showToast(rsp);
+                        teamCount = splitResponse[2];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
+                        break;
+                    case CONFIRM_PLACEMENT_TRAP:
+                        mRenderer.addToTraps();
+                        showToast(rsp);
+                        clientCount = splitResponse[2];
+                        setClientCollectedAcorns(Integer.parseInt(clientCount));
+                        teamCount = splitResponse[3];
+                        setTeamCollectedAcorns(Integer.parseInt(teamCount));
+                        menuProcess(CMD_UPDATE_COUNT);
+                        break;
+                    case DECLINE_PLACEMENT_TRAP:
+                        showToast(rsp);
+                        break;
 
                     default:
                         break;

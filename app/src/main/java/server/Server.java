@@ -73,7 +73,7 @@ public class Server   {
     /*
     * @return: true if the client was able to pickup the acorn
     */
-    private int clientPickUpAcorn(String clientName, String teamName, String imageName) {
+    public int clientPickUpAcorn(String clientName, String teamName, String imageName) {
         if(clientCounts.containsKey(clientName)) {
             //Acorn not yet picked up
             if (!excludedMap.containsKey(imageName)) {
@@ -89,7 +89,7 @@ public class Server   {
                     for (String client : teamClients.get(teamName)) {
                         // make sure you do not notify yourself
                         if (!client.equals(clientName)) {
-                            notifyOfPickup(clientName);
+                            notifyOfPickup(client, clientName);
                         }
                     }
                 } else {
@@ -112,7 +112,7 @@ public class Server   {
     /*
     * @return: true if the client was able to place a trap here
     */
-    private boolean clientSetTrap(String clientName, String imageName) {
+    public boolean clientSetTrap(String clientName, String imageName) {
         // a trap can only be placed by a registered user
         //                           on a spot where the acorn is taken by one of your teammates
         if(clientCounts.containsKey(clientName) && excludedMap.containsKey(imageName)) { //TODO check requirements
@@ -137,36 +137,40 @@ public class Server   {
     */
     public String clientRunInTrap(String clientName, String imageName) {
         String trapOwner = trapMap.get(imageName);
-        int nbAcornsToTransfer = Math.max(clientCounts.get(clientName),costOfRunningInTrap);
+        int nbAcornsToTransfer = Math.min(clientCounts.get(clientName), costOfRunningInTrap);
 
         // change local counts
-        clientCounts.put(clientName,clientCounts.get(clientName) - nbAcornsToTransfer);
-        clientCounts.put(trapOwner,clientCounts.get(trapOwner) + nbAcornsToTransfer);
+        clientCounts.put(clientName, clientCounts.get(clientName) - nbAcornsToTransfer);
+        clientCounts.put(trapOwner, clientCounts.get(trapOwner) + nbAcornsToTransfer);
         updateTeamCount(clientTeams.get(clientName));
         updateTeamCount(clientTeams.get(trapOwner));
 
         // notify trapOwner
-        sendMessageToClient(trapOwner,MsgClient.TRAP_REWARD,
-                nbAcornsToTransfer + ":Someone walked into your trap!\nYou receive " + nbAcornsToTransfer + " acorns...\nThe trap is now deleted");
+        System.out.println(clientName + " walked into the trap of " + trapOwner);
+        sendMessageToClient(trapOwner, MsgClient.TRAP_REWARD,
+                "Someone walked into your trap!\nYou receive " + nbAcornsToTransfer + " acorns\nThe trap has been dismantled"
+                        + ":" + clientCounts.get(trapOwner)
+                        + ":" + teamCounts.get(clientTeams.get(trapOwner)));
 
         // notify all team players (both from the client as from the trapOwner)
-        for(String client: teamClients.get(clientName)) {
+        for(String client: teamClients.get(clientTeams.get(clientName))) {
             // make sure you do not notify yourself
             if(!client.equals(clientName)) {
-                notifyOfTrapLoss(clientName, nbAcornsToTransfer);
+                notifyOfTrapLoss(client,clientName, nbAcornsToTransfer);
             }
         }
-        for(String client: teamClients.get(trapOwner)) {
+        for(String client: teamClients.get(clientTeams.get(trapOwner))) {
             // make sure you do not notify yourself
             if(!client.equals(trapOwner)) {
-                notifyOfTrapReward(trapOwner, nbAcornsToTransfer);
+                notifyOfTrapReward(client, trapOwner, nbAcornsToTransfer);
             }
         }
 
         // remove the trap after it is used
         trapMap.remove(imageName);
-
-        return nbAcornsToTransfer + ":You've walked into a trap!\nYou loose " + nbAcornsToTransfer + " acorns...";
+        return "You've walked into a trap!\nYou loose " + nbAcornsToTransfer + " acorns..."
+                + ":" + clientCounts.get(clientName)
+                + ":" + teamCounts.get(clientTeams.get(clientName));
     }
 
     public void updateTeamCount(String teamName){
@@ -180,21 +184,21 @@ public class Server   {
     /*
      * @return: true if the acorn is there, false if it is not
      */
-    private boolean isThereAnAcorn(String imageName) {
+    public boolean isThereAnAcorn(String imageName) {
         return !excludedMap.containsKey(imageName);
     }
 
     /*
      * @return: true if the trap is there, false if it is not
      */
-    private boolean isThereATrap(String imageName) {
+    public boolean isThereATrap(String imageName) {
         return trapMap.containsKey(imageName);
     }
 
     /*
      * @return: a pretty String of the current leaderboard
      */
-    private String getLeaderBoardString() {
+    public String getLeaderBoardString() {
         String indent = "    ";
         String leaderboard = "\n" + indent + "LEADERBOARD USERS\n";
         for(String name: clientCounts.keySet()) {
@@ -202,29 +206,38 @@ public class Server   {
         }
         leaderboard += "\n";
         leaderboard += "\n" + indent + "LEADERBOARD TEAMS\n";
-        for(String name: teamCounts.keySet()) {
+        for(String name : teamCounts.keySet()) {
             leaderboard += indent + name + "\t\t" + teamCounts.get(name) + "\n";
         }
         leaderboard += "\n";
         return leaderboard;
     }
 
-    private void notifyOfPickup(String clientName) {
-        sendMessageToClient(clientName, MsgClient.TEAMMATE_PICKUP, ":A teammate picked up an achorn!");
+    public void notifyOfPickup(String clientName, String teamMate) {
+        sendMessageToClient(clientName, MsgClient.TEAMMATE_PICKUP,
+                                                    "Your teammate "+ teamMate + " picked up an acorn!"
+                                                    + ":" + teamCounts.get(clientTeams.get(clientName)));
+
     }
 
-    private void notifyOfTrapLoss(String clientName, int nbAcornsToTransfer) {
-        sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD, ":" + nbAcornsToTransfer + ":A teammate walked into a trap!");
+    public void notifyOfTrapLoss(String clientName, String teamMate, int nbAcornsToTransfer) {
+        sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD,
+                                                "Your teammate "+ teamMate + " walked into a trap!\n"
+                                                        + "Your team lost " + nbAcornsToTransfer + " acorns."
+                                                + ":" + teamCounts.get(clientTeams.get(clientName)));
     }
 
-    private void notifyOfTrapReward(String clientName, int nbAcornsToTransfer) {
-        sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD, ":" + nbAcornsToTransfer + ":Someone walked into a trap of your teammate!");
+    public void notifyOfTrapReward(String clientName, String teamMate, int nbAcornsToTransfer) {
+        sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD,
+                                                "Someone walked into a trap of your teammate" + teamMate + "!\n"
+                                                        + "Your team gained " + nbAcornsToTransfer + " acorns."
+                                                + ":" + teamCounts.get(clientTeams.get(clientName)));
     }
 
     /*
      * @return: true if the registration succeeded
      */
-    private boolean registerNewClient(String clientName, String teamName){
+    public boolean registerNewClient(String clientName, String teamName){
         //TODO if you start a new game with the same name, your current acorns will be lost!
         // register client
         clientCounts.put(clientName,0);
@@ -250,7 +263,15 @@ public class Server   {
     public void sendMessageToClient(String client, MsgClient code, String message){
         String userMessage =  code + ":" + message;
         msgsToClients.get(client).push(userMessage);
-        System.out.println("[SERVER] mesage toevoegen bij " + client + ": " + userMessage);
+        System.out.println("[SERVER] message toevoegen bij " + client + ": " + userMessage);
+    }
+
+    public ArrayList<String> getAllClients(){
+        ArrayList<String> clients = new ArrayList<String>();
+        for(List<String> clientsInTeam : teamClients.values()){
+            clients.addAll(clientsInTeam);
+        }
+        return clients;
     }
 
 
@@ -258,6 +279,7 @@ public class Server   {
     private class SocketServerThread extends Thread {
 
         private int SocketServerPORT = port;
+        private Map<InetAddress,ClientConnection> clientConnectionMap = new HashMap<InetAddress, ClientConnection>();
 
         @Override
         public void run() {
@@ -266,9 +288,21 @@ public class Server   {
                 serverSocket = new ServerSocket(SocketServerPORT);
                 System.out.println("I'm waiting here: " + serverSocket.getLocalPort());
                 System.out.println("IP: " + getIpAddress());
-            while (true) {
-                Socket socket = serverSocket.accept();
-                (new ClientConnection(socket)).start();
+                while (true) {
+                    Socket socket = serverSocket.accept();
+                    if(clientConnectionMap.containsKey(socket.getInetAddress())){
+                        System.out.println("Reconfiguring socket");
+                        clientConnectionMap.get(socket.getInetAddress()).setClientSocket(socket);
+                        //Just to make sure the loop ends
+                        clientConnectionMap.get(socket.getInetAddress()).setLoop(false);
+                        clientConnectionMap.get(socket.getInetAddress()).setLoop(true);
+                        clientConnectionMap.get(socket.getInetAddress()).run();
+                    }else {
+                        System.out.println(socket + " " + socket.getInetAddress());
+                        ClientConnection cc = new ClientConnection(socket);
+                        clientConnectionMap.put(socket.getInetAddress(), cc);
+                        cc.start();
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -309,209 +343,222 @@ public class Server   {
 
 
 
-    private class ClientConnection extends Thread{
+    private class ClientConnection extends Thread {
         private Socket clientSocket;
         private String clientName;
+        private boolean loop = true;
 
-        protected ClientConnection(Socket clientSocket){
+        protected ClientConnection(Socket clientSocket) {
+            System.out.println("[SERVER]: nieuwe clientconnection " + clientSocket.toString());
             this.clientSocket = clientSocket;
         }
 
-        public void run(){
-            Socket socket = null;
-            DataInputStream dataInputStream = null;
-            DataOutputStream dataOutputStream = null;
-            try {
+        public void setClientSocket(Socket socket){
+            this.clientSocket = socket;
+        }
 
-                while (true) {
-                    dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
-                    dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
-                    if(msgsToClients.get(this.clientName) != null) {
+        public void setLoop(boolean loop){
+            this.loop = loop;
+        }
+
+        public void run() {
+            while (loop) {
+                try {
+                    DataOutputStream dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
+                    if (msgsToClients.get(this.clientName) != null) {
                         while (!msgsToClients.get(this.clientName).empty()) {
                             dataOutputStream.writeUTF(msgsToClients.get(this.clientName).pop());
                         }
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                //If no message sent from client, this code will block the program
+                try {
+                    DataInputStream dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
+                    String messageForClient = dataInputStream.readUTF();
+                    System.out.println("[SERVER]: behandel message: " + messageForClient);
+                    handleMessage(messageForClient);
+                } catch (EOFException e) {
+                    System.out.println("[SERVER]: " + clientName + " is gone");
+//                    e.printStackTrace();
+                    return;//de client is afgemeld
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
-                    //If no message sent from client, this code will block the program
-                    String messageFromClient = "";
-                    try {
-                        messageFromClient = dataInputStream.readUTF();
-                    } catch (EOFException e) {
-                        continue;
-                    }
+        private void handleMessage(String messageForClient) {
+            // parse message
+            String[] splitMessage = messageForClient.split(":");
+            String clientName = splitMessage[0];
+            String teamName = splitMessage[1];
+            String messageCode = splitMessage[2];
+            String msg = splitMessage[3];
+            String printMessage = "";
+            String reply = null;
 
-                    // parse message
-                    String[] splitMessage = messageFromClient.split(":");
-                    String clientName = splitMessage[0];
-                    String teamName = splitMessage[1];
-                    String messageCode = splitMessage[2];
-                    String msg = splitMessage[3];
-                    String printMessage = "";
-                    String reply;
 
+            // handle message from client
+            MsgClient code = null;
+            switch (MsgServer.valueOf(messageCode)) {
+                case REGISTER:
                     // register client if needed, beter met een register message?
-                    this.clientName = clientName;
                     if (!clientCounts.containsKey(clientName)) {
+                        this.clientName = clientName;
                         registerNewClient(clientName, teamName);
-
+                        msgsToClients.put(clientName, new Stack<String>());
                         System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
-                        dataOutputStream.writeUTF(MsgClient.CONFIRM_REGISTRATION + ":" + "Welcome to the IceAge Nut Discovery game!\n" +
-                                "You have enrolled as " + clientName + " in team " + teamName + ".\n" +
-                                "Your team members are " + teamClients.get(teamName).toString());
-                        msgsToClients.put(this.clientName, new Stack<String>());
-//                        dit was om te testen
-//                        sendMessageToClient(this.clientName, MsgClient.TEAMMATE_PICKUP, "joepie");
+                        code = MsgClient.CONFIRM_REGISTRATION;
+                        reply = "Welcome to the IceAge Nut Discovery game!\n" +
+                                    "Name - " + clientName + "\n" +
+                                    "Team -  " + teamName + "\n" +
+                                    "Team members - " + teamClients.get(teamName).toString()
+                                + ":" + "0"
+                                + ":" + "0";
+//                        sendMessageToClient(clientName, MsgClient.CONFIRM_REGISTRATION, reply);
+                    } else {
+                        // dit kan mss niet meer werken, omdat oude socket nog aan client is gekoppeld
+                        // oplossing is dan dat je de oude met de nieuwe socket vervangt in clientSockets
+                        System.out.println("[SERVER] Client (" + clientName + ") has rejoined us!");
+                        code = MsgClient.CONFIRM_REGISTRATION;
+                        reply = "Welcome back!\n" +
+                                    "Name - " + clientName + "\n" +
+                                    "Team -  " + teamName + "\n" +
+                                    "Team members - " + teamClients.get(teamName).toString()
+                                + ":" + clientCounts.get(clientName)
+                                + ":" + teamCounts.get(clientTeams.get(clientName));
+//                        sendMessageToClient(clientName, MsgClient.CONFIRM_REGISTRATION, reply);
                     }
+                    break;
+                //Client picked up an acorn, add the picture-name to the excluded list
+                //TODO add zones!!
+                case ACORN_PICKUP: // pickup acorn
 
-
-
-                    // handle message from client
-                    switch (MsgServer.valueOf(messageCode)) {
-                        //Client picked up an acorn, add the picture-name to the excluded list
-                        //TODO add zones!!
-                        case ACORN_PICKUP: // pickup acorn
-
-                            switch (clientPickUpAcorn(clientName, teamName, msg)){
-                                case CLIENT_CAN_PICK_UP_ACORN:
-                                    printMessage = "[SERVER] " + clientName + " picked up an acorn\n" +
-                                            "~~~~~~ " + clientName + ": " + clientCounts.get(clientName) + ";" +
-                                            " total count: " + totalNbPickedUp + "; total left: " + (totalNbAcorns - totalNbPickedUp) + ")"
-                                            + getLeaderBoardString();
-                                    reply = MsgClient.CONFIRM_PICKUP //0
-                                            + ":" + "You have picked up an acorn! \n" +
-                                            totalNbPickedUp + " of the " + totalNbAcorns + " acorns are found" //1
-                                            + ":" + msg //2
-                                            + ":" + clientCounts.get(clientName) //3
-                                            + ":" + teamCounts.get(teamName);    //4
-                                    break;
-                                case CLIENT_OWNS_THIS_ACORN:
-                                    printMessage = "[SERVER] " + clientName + " this acorn is already yours";
-                                    reply = MsgClient.YOU_OWN_THIS_ACORN //0
-                                            + ":" + msg //1
-                                            + ":" + clientCounts.get(clientName) //2
-                                            + ":" + teamCounts.get(teamName);    //3
-                                    break;
-                                case ACORN_OWNED_BY_SOMEONE_ELSE:
-                                    printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
-                                            "but this failed (acorn was not there).";
-                                    reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
-                                            + ":" + msg;
-                                    break;
-                                case CLIENT_IN_WRONG_TEAM:
-                                    printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
-                                            "but this failed (client in the wrong team).";
-                                    reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
-                                            + ":" + msg;
-                                    break;
-                                case CLIENT_NOT_REGISTERED:
-                                    printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
-                                            "but this failed (client was not registered).";
-                                    reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
-                                            + ":" + msg;
-                                    break;
-                                default:
-                                    printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
-                                            "but this failed (no idea what happend).";
-                                    reply = MsgClient.DECLINE_PICKUP + ":" + "Oops, something went wrong, you were not able to pick up the acorn."
-                                            + ":" + msg;
-                                    break;
-                            }
-
+                    switch (clientPickUpAcorn(clientName, teamName, msg)) {
+                        case CLIENT_CAN_PICK_UP_ACORN:
+                            printMessage = "[SERVER] " + clientName + " picked up an acorn\n" +
+                                    "~~~~~~ " + clientName + ": " + clientCounts.get(clientName) + ";" +
+                                    " total count: " + totalNbPickedUp + "; total left: " + (totalNbAcorns - totalNbPickedUp) + ")"
+                                    + getLeaderBoardString();
+                            code = MsgClient.CONFIRM_PICKUP; //0
+                            reply = "You have picked up an acorn! \n" +
+                                    totalNbPickedUp + " of the " + totalNbAcorns + " acorns are found" //1
+                                    + ":" + msg //2
+                                    + ":" + clientCounts.get(clientName) //3
+                                    + ":" + teamCounts.get(teamName);    //4
                             break;
-
-                        case DEFAULT: // other messages
-                            //TODO nothing happens with these messages!
-                            printMessage = "[SERVER] " + clientName + ": " + msg;
-                            reply = MsgClient.TOAST + ":" + "Message received";
+                        case CLIENT_OWNS_THIS_ACORN:
+                            printMessage = "[SERVER] " + clientName + " this acorn is already yours";
+                            code = MsgClient.YOU_OWN_THIS_ACORN;//0
+                            reply = msg //1
+                                    + ":" + clientCounts.get(clientName) //2
+                                    + ":" + teamCounts.get(teamName);    //3
                             break;
-
-                        case ENTER_ZONE: // enter a new zone
-                            //TODO entering new zone, update excluded list on client
-                            printMessage = "[SERVER] " + clientName + " entered a new zone (" + msg + ")";
-                            reply = MsgClient.UPDATE_EXCLUDE_LIST + ":" + msg;
+                        case ACORN_OWNED_BY_SOMEONE_ELSE:
+                            printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
+                                    "but this failed (acorn was not there).";
+                            code = MsgClient.DECLINE_PICKUP;
+                            reply = "Oops, something went wrong, you were not able to pick up the acorn."
+                                    + ":" + msg;
+                            System.out.println("PICKING UP ACORN - Client not registered");
                             break;
-
-                        case ACORN_REQUEST: //Check if the asked picture is in the excluded list
-                            if (isThereATrap(msg)) {
-                                reply = clientRunInTrap(clientName, msg);
-                                printMessage = "[SERVER] " + clientName + " stepped in a trap!";
-                            }
-                            else if (isThereAnAcorn(msg)) {
-                                reply = MsgClient.CONFIRM_ACORN + ":" + msg;
-                                printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
-                                        " and it is free!";
-
-                            } else {
-                                if(excludedMap.get(msg).equals(clientName)){
-                                    printMessage = "[SERVER] " + clientName + " this acorn is already yours";
-                                    reply = MsgClient.YOU_OWN_THIS_ACORN //0
-                                            + ":" + msg //1
-                                            + ":" + clientCounts.get(clientName) //2
-                                            + ":" + teamCounts.get(teamName);    //3
-                                }else {
-                                    reply = MsgClient.DECLINE_ACORN + ":" + msg;
-                                    printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
-                                            ", but it has been taken";
-                                }
-                            }
-
+                        case CLIENT_IN_WRONG_TEAM:
+                            printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
+                                    "but this failed (client in the wrong team).";
+                            code = MsgClient.DECLINE_PICKUP;
+                            reply = "Oops, something went wrong, you were not able to pick up the acorn."
+                                    + ":" + msg;
                             break;
-
-                        case SET_TRAP: //Place a new trap
-                            if (clientSetTrap(clientName, msg)) {
-                                reply = MsgClient.CONFIRM_PLACEMENT_TRAP + ":" + costOfSettingTrap + ":You have successfully placed a trap!\nYou will be notified when someone walks into your trap.";
-                                printMessage = "[SERVER] " + clientName + " has placed a trap";
-                            }
-                            else {
-                                reply = MsgClient.DECLINE_PLACEMENT_TRAP + ":" + msg;
-                                printMessage = "[SERVER] " + clientName + " wanted to place a trap, but it failed";
-                            }
+                        case CLIENT_NOT_REGISTERED:
+                            printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
+                                    "but this failed (client was not registered).";
+                            code = MsgClient.DECLINE_PICKUP;
+                            reply = "Oops, something went wrong, you were not able to pick up the acorn."
+                                    + ":" + msg;
                             break;
-
                         default:
-                            printMessage = "[SERVER] ERROR - Something went wrong, invalid messagecode";
-                            reply = "Oops, something went wrong";
+                            printMessage = "[SERVER] ERROR - " + clientName + " tried to pick up acorn," +
+                                    "but this failed (no idea what happend).";
+                            code = MsgClient.DECLINE_PICKUP;
+                            reply = "Oops, something went wrong, you were not able to pick up the acorn."
+                                    + ":" + msg;
                             break;
-
                     }
-                    if (!printMessage.equals("")) {
-                        System.out.println(printMessage);
+
+                    break;
+
+                case DEFAULT: // other messages
+                    //TODO nothing happens with these messages!
+                    printMessage = "[SERVER] " + clientName + ": " + msg;
+                    code = MsgClient.TOAST;
+                    reply = "Message received";
+                    break;
+
+                case ENTER_ZONE: // enter a new zone
+                    //TODO entering new zone, update excluded list on client
+                    printMessage = "[SERVER] " + clientName + " entered a new zone (" + msg + ")";
+                    code =  MsgClient.UPDATE_EXCLUDE_LIST;
+                    reply = msg;
+                    break;
+
+                case ACORN_REQUEST: //Check if the asked picture is in the excluded list
+                    if (isThereATrap(msg)) {
+                        printMessage = "[SERVER] " + clientName + " stepped in a trap!";
+                        code = MsgClient.TRAP_LOSS;
+                        reply = clientRunInTrap(clientName, msg);
+                    } else if (isThereAnAcorn(msg)) {
+                        code = MsgClient.CONFIRM_ACORN;
+                        reply = msg;
+                        printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
+                                " and it is free!";
+                    } else {
+                        if (excludedMap.get(msg).equals(clientName)) {
+                            printMessage = "[SERVER] " + clientName + " this acorn is already yours";
+                            code = MsgClient.YOU_OWN_THIS_ACORN; //0
+                            reply = msg //1
+                                    + ":" + clientCounts.get(clientName) //2
+                                    + ":" + teamCounts.get(teamName);    //3
+                        } else {
+                            code = MsgClient.DECLINE_ACORN;
+                            reply = msg;
+                            printMessage = "[SERVER] " + clientName + " requested acorn (" + msg + ")" +
+                                    ", but it has been taken";
+                        }
                     }
-                    System.out.println("Reply: " + reply);
-                    dataOutputStream.writeUTF(reply);
+                    break;
 
-                }
-            } catch (IOException e) {
-            e.printStackTrace();
-            final String errMsg = e.toString();
-            System.out.println(errMsg);
+                case SET_TRAP: //Place a new trap
+                    if (clientSetTrap(clientName, msg)) {
+                        code = MsgClient.CONFIRM_PLACEMENT_TRAP;
+                        reply =  "You have successfully placed a trap!\nYou will be notified when someone walks into your trap."
+                                + ":" + clientCounts.get(clientName) //2
+                                + ":" + teamCounts.get(teamName);    //3
+                        printMessage = "[SERVER] " + clientName + " has placed a trap";
+                    } else {
+                        code = MsgClient.DECLINE_PLACEMENT_TRAP;
+                        reply =  msg;
+                        printMessage = "[SERVER] " + clientName + " wanted to place a trap, but it failed";
+                    }
+                    break;
 
-        } finally {
-            if (socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                default:
+                    printMessage = "[SERVER] ERROR - Something went wrong, invalid messagecode";
+                    reply = "Oops, something went wrong";
+                    break;
+
+            }
+            if (!printMessage.equals("")) {
+                System.out.println(printMessage);
+            }
+            if(reply != null) {
+                sendMessageToClient(clientName, code, reply);
             }
 
-            if (dataInputStream != null) {
-                try {
-                    dataInputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            if (dataOutputStream != null) {
-                try {
-                    dataOutputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
-        }
+
+
     }
 
 }

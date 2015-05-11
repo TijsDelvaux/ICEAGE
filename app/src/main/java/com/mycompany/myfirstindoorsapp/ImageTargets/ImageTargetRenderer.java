@@ -80,14 +80,18 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private HashSet<String> excludedImageSet = new HashSet<String>();
     private HashSet<String> freeImageSet = new HashSet<String>();
     private HashSet<String> myPickedUpSet = new HashSet<String>();
+    private HashSet<String> placedTrap = new HashSet<String>();
     private String currentImage;
     private int askCount = 0;
-    private int askCountLimit = 10;
+    private int askCountLimit = 20;
+    private long askTime = 0;
+    private long askTimeLimit = 3000; //Waits at least 3 seconds before asking the server
 
     private static int IMG_ACORN_BROWN = 0;
     private static int IMG_SCRAT_EXCITED = 1;
     private static int IMG_SCRAT_HAPPY = 2;
     private static int IMG_SCRAT_SAD = 3;
+    private static int IMG_SCRAP_TRAP = 4;
 
 
     //ICEAGE
@@ -147,7 +151,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         mRenderer = Renderer.getInstance();
         
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, Vuforia.requiresAlpha() ? 0.0f
-            : 1.0f);
+                : 1.0f);
         for (Texture t : mTextures)
         {
             GLES20.glGenTextures(1, t.mTextureID, 0);
@@ -215,6 +219,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         if(state.getNumTrackableResults() == 0){
 //            displayMessage("Nothing here!", 1);
             disableCollectButton();
+            disableSetTrapButton();
         }
 
         // did we find any trackables this frame?
@@ -227,30 +232,42 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
             int textureIndex;
 
             if(myPickedUpSet.contains(currentImage)){ //YOU PICKED UP THIS ACORN
+                if(placedTrap.contains(currentImage)){
+                    disableSetTrapButton();
+                    objectToShow = picture;
+                    textureIndex = IMG_SCRAP_TRAP;
+                }else{
+                    enableSetTrapButton();
+                    objectToShow = picture;
+                    textureIndex = IMG_SCRAT_HAPPY;
+                }
                 disableCollectButton();
                 objectToShow = picture;
-                textureIndex = IMG_SCRAT_HAPPY;
             }else if(excludedImageSet.contains(currentImage)){ //SOMEONE ELSE PICKED UP THIS ACORN
                 disableCollectButton();
+                disableSetTrapButton();
                 objectToShow = picture;
                 textureIndex = IMG_SCRAT_SAD;
             }else if(!freeImageSet.contains(currentImage)) { //YOU'RE NOT SURE IF THIS ACORN HAS BEEN PICKED UP YET
                 disableCollectButton();
+                disableSetTrapButton();
                 objectToShow = acorn;
                 textureIndex = IMG_ACORN_BROWN;
-                askCount ++;
-                if(askCount >= askCountLimit) {
+//                askCount ++;
+                long timeElapsed = System.currentTimeMillis() - askTime;
+                if(Math.abs(timeElapsed) >= askTimeLimit) {
                     isTaken(currentImage);
-                    askCount = 0;
+                    askTime = System.currentTimeMillis();
                 }
             }else{//THE ACORN HASN'T BEEN PICKED UP YET
                 enableCollectButton();
+                disableSetTrapButton();
                 objectToShow = acorn;
                 textureIndex = IMG_ACORN_BROWN;
-                askCount ++;
-                if(askCount >= askCountLimit) {
+                long timeElapsed = System.currentTimeMillis() - askTime;
+                if(Math.abs(timeElapsed) >= askTimeLimit) {
                     isTaken(currentImage);
-                    askCount = 0;
+                    askTime = System.currentTimeMillis();
                 }
             }
 
@@ -356,6 +373,14 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         displayMessage("Enabling collect button", 2);
     }
 
+    public void disableSetTrapButton(){
+        displayMessage("Disabling set trap button", 4);
+    }
+
+    public void enableSetTrapButton(){
+        displayMessage("Enabling set trap button", 5);
+    }
+
     public void isTaken(String image){
         displayMessage(image, 3);
     }
@@ -388,5 +413,9 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         myPickedUpSet.remove(image);
     }
 
+
+    public void addToTraps(){
+        placedTrap.add(currentImage);
+    }
 
 }

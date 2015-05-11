@@ -6,7 +6,7 @@
     <string name="title_activity_main">Welcome!</string>
     
     <string name="map_button">View position</string>
-    <string name="camera_button">Play game</string>
+    <string name="camera_button">PLAY GAME</string>
     
     <string name="content_scrat">Image of Scrat, the nut searching squirrel</string>
     
@@ -86,6 +86,7 @@
 
     <string name="your_location">Your current location</string>
     <string name="collect">Collect</string>
+    <string name="set_trap">Set a trap (costs 1 acorn)</string>
     <string name="collected">Collected:</string>
     <string name="zero">0</string>
     <string name="collect_button_toast">You\'ve picked up an acorn!</string>

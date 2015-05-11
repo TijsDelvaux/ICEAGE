@@ -3,24 +3,24 @@
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:weightSum="1">
+    android:weightSum="1"
+    android:background="@drawable/snowy_landscape">
 
 
     <Button
         android:id="@+id/play_button"
         android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:text="@string/camera_button"
-        android:onClick="startPlay"/>
+        android:text="BEGIN"
+        android:onClick="startPlay" />
 
     <ImageView
         android:id="@+id/scrat"
-        android:layout_width="881dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="50dp"
         android:contentDescription="@string/content_scrat"
         android:src="@drawable/ic_scrat"
-        android:layout_weight="0.23"
         android:background="@color/transparent"
         android:scaleType="center" />
 
