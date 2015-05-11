@@ -1,10 +1,7 @@
 package server;
 
-import android.util.Log;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -14,7 +11,6 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -35,6 +31,7 @@ public class Server   {
     private Map<String,Integer> clientCounts; // specify for each client how many acorns they have picked up
     private Map<String,Integer> teamCounts; // specify for each team how many acorns they have picked up
     private Map<String, Stack<String>> msgsToClients;
+    private Map<String, Socket> clientSockets = new HashMap<String, Socket>();
 
     private Map<String,String> excludedMap;
     private Map<String,String> trapMap;
@@ -282,7 +279,7 @@ public class Server   {
     private class SocketServerThread extends Thread {
 
         private int SocketServerPORT = port;
-        private Map<InetAddress,ClientConnection> clientConnectionMap = new HashMap<InetAddress, ClientConnection>();
+        private Map<String,ClientConnection> clientConnectionMap = new HashMap<String, ClientConnection>();
 
         @Override
         public void run() {
@@ -293,19 +290,11 @@ public class Server   {
                 System.out.println("IP: " + getIpAddress());
                 while (true) {
                     Socket socket = serverSocket.accept();
-                    if(clientConnectionMap.containsKey(socket.getInetAddress())){
-                        System.out.println("Reconfiguring socket");
-                        clientConnectionMap.get(socket.getInetAddress()).setClientSocket(socket);
-                        //Just to make sure the loop ends
-                        clientConnectionMap.get(socket.getInetAddress()).setLoop(false);
-                        clientConnectionMap.get(socket.getInetAddress()).setLoop(true);
-                        clientConnectionMap.get(socket.getInetAddress()).run();
-                    }else {
-                        System.out.println(socket + " " + socket.getInetAddress());
-                        ClientConnection cc = new ClientConnection(socket);
-                        clientConnectionMap.put(socket.getInetAddress(), cc);
-                        cc.start();
+                    System.out.println("nieuwe connectie");
+                    if(!socket.isClosed()) {
+                        (new ClientConnection(socket)).start();
                     }
+
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -409,6 +398,7 @@ public class Server   {
                     // register client if needed, beter met een register message?
                     if (!clientCounts.containsKey(clientName)) {
                         this.clientName = clientName;
+                        clientSockets.put(clientName, clientSocket);
                         registerNewClient(clientName, teamName);
                         msgsToClients.put(clientName, new Stack<String>());
                         System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
@@ -423,6 +413,12 @@ public class Server   {
                     } else {
                         // dit kan mss niet meer werken, omdat oude socket nog aan client is gekoppeld
                         // oplossing is dan dat je de oude met de nieuwe socket vervangt in clientSockets
+                        try {
+                            clientSockets.get(clientName).close();
+                        } catch (IOException e) {
+//                            e.printStackTrace();
+                        }
+                        clientSockets.put(clientName, clientSocket);
                         System.out.println("[SERVER] Client (" + clientName + ") has rejoined us!");
                         code = MsgClient.CONFIRM_REGISTRATION;
                         reply = "Welcome back!\n" +

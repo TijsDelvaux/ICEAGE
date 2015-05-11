@@ -206,7 +206,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
         msgsToServer = new Stack<String>();
-        clientask = new ClientTask(serverIP, port,this);
+        clientask = new ClientTask(serverIP, port);
         clientask.start();
 
         playerColor = getResources().getColor(R.color.blue);
@@ -1137,12 +1137,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         String serverAddress;
         int serverPort;
-        ImageTargets imageTargets;
+        Stack<String> responses;
+        boolean stop;
 
-        ClientTask(String addr, int port, ImageTargets imgTargets) {
+        ClientTask(String addr, int port) {
             serverAddress = addr;
             serverPort = port;
-            this.imageTargets = imgTargets;
+            responses = new Stack<String>();
+            stop = false;
 
         }
 
@@ -1177,12 +1179,12 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             String response = "";
             Socket socket = null;
             DataOutputStream dataOutputStream = null;
-            Stack<String> responses = new Stack<String>();
+
 
             try {
                 socket = new Socket(serverAddress, serverPort);
-                (new ResponseGetter(socket, responses)).start();
-                while(true){
+                (new ResponseGetter(socket)).start();
+                while(!stop){
                     dataOutputStream = new DataOutputStream(
                             socket.getOutputStream());
                     // wait until you have a message to send
@@ -1201,6 +1203,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 e.printStackTrace();
                 response = "IOException: " + e.toString();
             }
+            // hier nieuwe connectie
+            clientask =new ClientTask(serverIP, port);
+            clientask.start();
+            sendMessageToServer(MsgServer.REGISTER, "Hello again");
+            return;
         }
 
         /*
@@ -1342,38 +1349,37 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             }
         }
 
-    }
-
     public void updateExcludedList(String excludes){
         String[] list = excludes.split(";");
         //TODO the rest
 
     }
 
-    public class ResponseGetter extends Thread{
+    public class ResponseGetter extends Thread {
         Socket socket;
-        Stack<String> responses;
 
-        public ResponseGetter(Socket socket, Stack<String> responses){
+        public ResponseGetter(Socket socket) {
             this.socket = socket;
-            this.responses = responses;
         }
 
         @Override
         public void run() {
             DataInputStream dataInputStream = null;
-            while(true) {
+            while (true) {
                 try {
                     dataInputStream = new DataInputStream(this.socket.getInputStream());
                     String response = dataInputStream.readUTF();
                     Log.d("ClientComm", "response: " + response);
-                    this.responses.push(response);
+                    responses.push(response);
                 } catch (IOException e) {
+                    showToast("connection is gone");
+                    stop = true;
+                    return;
 //                    e.printStackTrace();
+                    }
                 }
             }
+
         }
-
     }
-
 }
