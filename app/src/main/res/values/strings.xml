@@ -93,6 +93,7 @@
     <string name="status1_button_toast">You currently have\u0020</string>
     <string name="status2_button_toast">\u0020acorns!</string>
     <string name="status2_one_button_toast">\u0020acorn!</string>
-    
+
+    <string name="trap_text">You have walked into a trap!\nYou have to wait until the ice has melted...</string>
 
 </resources>
