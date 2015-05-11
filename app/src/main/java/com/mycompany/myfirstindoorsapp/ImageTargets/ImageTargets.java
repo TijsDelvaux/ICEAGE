@@ -139,6 +139,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     private boolean showCollectButton;
     private boolean showSetTrapButton;
+    private boolean showWalkedInTrap;
 
 
     @IceAge
@@ -266,7 +267,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
     public void walkIntoTrap(){
-        fellIntoTrapLayout.setVisibility(View.VISIBLE);
+        mRenderer.setInTrapState(true);
 
         Long startTime = System.currentTimeMillis();
 
@@ -274,7 +275,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             Log.d(LOGTAG, "[TRAP]");
         }
 
-        fellIntoTrapLayout.setVisibility(View.INVISIBLE);
+        mRenderer.setInTrapState(false);
     }
 
 
@@ -375,6 +376,18 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                             setTrapButton.setVisibility(View.VISIBLE);
                         }
                         showSetTrapButton = true;
+                        break;
+                    case 6:
+                        if(!(fellIntoTrapLayout == null)) {
+                            fellIntoTrapLayout.setVisibility(View.INVISIBLE);
+                        }
+                        showWalkedInTrap = false;
+                        break;
+                    case 7:
+                        if(!(fellIntoTrapLayout == null)) {
+                            fellIntoTrapLayout.setVisibility(View.VISIBLE);
+                        }
+                        showWalkedInTrap = true;
                         break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
@@ -573,14 +586,20 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         if(showCollectButton){
             collectButton.setVisibility(View.VISIBLE);
-        }else {
+        } else {
             collectButton.setVisibility(View.INVISIBLE);
         }
 
         if(showSetTrapButton){
             setTrapButton.setVisibility(View.VISIBLE);
-        }else {
+        } else {
             setTrapButton.setVisibility(View.INVISIBLE);
+        }
+
+        if(showWalkedInTrap){
+            fellIntoTrapLayout.setVisibility(View.VISIBLE);
+        } else {
+            fellIntoTrapLayout.setVisibility(View.INVISIBLE);
         }
     }
 

@@ -93,6 +93,12 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
     private static int IMG_SCRAT_SAD = 3;
     private static int IMG_SCRAP_TRAP = 4;
 
+    private boolean inTrapState;
+
+    public void setInTrapState(boolean state) {
+        inTrapState = state;
+    }
+
 
     //ICEAGE
     //Dit is de imageset die gebruikt wordt.
@@ -220,6 +226,13 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 //            displayMessage("Nothing here!", 1);
             disableCollectButton();
             disableSetTrapButton();
+        }
+
+        if(inTrapState) {
+            enableFellInTrap();
+        }
+        else {
+            disableFellInTrap();
         }
 
         // did we find any trackables this frame?
@@ -385,6 +398,14 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
 
     public void enableSetTrapButton(){
         displayMessage("Enabling set trap button", 5);
+    }
+
+    public void disableFellInTrap(){
+        displayMessage("Disabling fell in trap", 6);
+    }
+
+    public void enableFellInTrap(){
+        displayMessage("Enabling fell in trap", 7);
     }
 
     public void isTaken(String image){
