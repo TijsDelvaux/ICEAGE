@@ -424,4 +424,8 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
         placedTrap.add(currentImage);
     }
 
+    public void removeTrap(String image){
+        placedTrap.remove(image);
+    }
+
 }

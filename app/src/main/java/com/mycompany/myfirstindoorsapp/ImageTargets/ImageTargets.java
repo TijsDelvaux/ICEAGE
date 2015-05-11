@@ -1298,6 +1298,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         teamCount = splitResponse[3];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
+                        mRenderer.removeTrap(splitResponse[4]);
                         break;
                     // A teammate of yours had walked into a trap
                     case TEAMMATE_TRAP_REWARD:
@@ -1361,4 +1362,5 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         }
 
     }
+
 }

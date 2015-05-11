@@ -152,7 +152,8 @@ public class Server   {
         sendMessageToClient(trapOwner, MsgClient.TRAP_REWARD,
                 "Someone walked into your trap!\nYou receive " + nbAcornsToTransfer + " acorns\nThe trap has been dismantled"
                         + ":" + clientCounts.get(trapOwner)
-                        + ":" + teamCounts.get(clientTeams.get(trapOwner)));
+                        + ":" + teamCounts.get(clientTeams.get(trapOwner))
+                        + ":" + imageName);
 
         // notify all team players (both from the client as from the trapOwner)
         for(String client: teamClients.get(clientTeams.get(clientName))) {
@@ -350,16 +351,21 @@ public class Server   {
         private String clientName;
         private boolean loop = true;
         Stack<String> responses;
+        ResponseGetter responseGetter;
 
         protected ClientConnection(Socket clientSocket) {
             System.out.println("[SERVER]: nieuwe clientconnection " + clientSocket.toString());
             this.clientSocket = clientSocket;
             this.responses = new Stack<String>();
-            (new ResponseGetter(this.clientSocket, this.responses)).start();
+            this.responseGetter = new ResponseGetter(this.clientSocket, this.responses);
+            this.responseGetter.start();
         }
 
         public void setClientSocket(Socket socket){
+            this.responseGetter.interrupt();
             this.clientSocket = socket;
+            this.responseGetter = new ResponseGetter(this.clientSocket, this.responses);
+            this.responseGetter.start();
         }
 
         public void setLoop(boolean loop){
