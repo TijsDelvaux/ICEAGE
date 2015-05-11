@@ -292,7 +292,8 @@ public class Server   {
                     Socket socket = serverSocket.accept();
                     System.out.println("nieuwe connectie");
                     if(!socket.isClosed()) {
-                        (new ClientConnection(socket)).start();
+                        ClientConnection cc =  new ClientConnection(socket);
+                        cc.start();
                     }
 
                 }
@@ -362,6 +363,14 @@ public class Server   {
         }
 
         public void run() {
+            while(true){
+                try {
+                    this.clientSocket.getOutputStream();
+                    break;
+                }catch(IOException e){
+
+                }
+            }
             while (loop) {
                 try {
                     DataOutputStream dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
@@ -370,7 +379,8 @@ public class Server   {
                             dataOutputStream.writeUTF(msgsToClients.get(this.clientName).pop());
                         }
                     }
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     e.printStackTrace();
                 }
                 //If no message sent from client, this code will block the program

@@ -1183,6 +1183,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
             try {
                 socket = new Socket(serverAddress, serverPort);
+                while(true){
+                    try {
+                        socket.getOutputStream();
+                        break;
+                    }catch(IOException e){
+
+                    }
+                }
                 (new ResponseGetter(socket)).start();
                 while(!stop){
                     dataOutputStream = new DataOutputStream(
