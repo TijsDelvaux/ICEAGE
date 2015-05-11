@@ -1,5 +1,7 @@
 package server;
 
+import android.util.Log;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -347,10 +349,13 @@ public class Server   {
         private Socket clientSocket;
         private String clientName;
         private boolean loop = true;
+        Stack<String> responses;
 
         protected ClientConnection(Socket clientSocket) {
             System.out.println("[SERVER]: nieuwe clientconnection " + clientSocket.toString());
             this.clientSocket = clientSocket;
+            this.responses = new Stack<String>();
+            (new ResponseGetter(this.clientSocket, this.responses)).start();
         }
 
         public void setClientSocket(Socket socket){
@@ -374,17 +379,8 @@ public class Server   {
                     e.printStackTrace();
                 }
                 //If no message sent from client, this code will block the program
-                try {
-                    DataInputStream dataInputStream = new DataInputStream(this.clientSocket.getInputStream());
-                    String messageForClient = dataInputStream.readUTF();
-                    System.out.println("[SERVER]: behandel message: " + messageForClient);
-                    handleMessage(messageForClient);
-                } catch (EOFException e) {
-                    System.out.println("[SERVER]: " + clientName + " is gone");
-//                    e.printStackTrace();
-                    return;//de client is afgemeld
-                } catch (IOException e) {
-                    e.printStackTrace();
+                while(!responses.empty()){
+                    handleMessage(responses.pop());
                 }
             }
         }
@@ -558,7 +554,30 @@ public class Server   {
 
         }
 
+        public class ResponseGetter extends Thread{
+            Socket socket;
+
+            public ResponseGetter(Socket socket, Stack<String> responses){
+                this.socket = socket;
+            }
+
+            @Override
+            public void run() {
+                DataInputStream dataInputStream = null;
+                while(true) {
+                    try {
+                        dataInputStream = new DataInputStream(this.socket.getInputStream());
+                        String response = dataInputStream.readUTF();
+                        System.out.println("response: " + response);
+                        responses.push(response);
+                    } catch (IOException e) {
+//                    e.printStackTrace();
+                    }
+                }
+            }
+
 
     }
 
+}
 }

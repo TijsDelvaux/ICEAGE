@@ -248,6 +248,11 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                 disableSetTrapButton();
                 objectToShow = picture;
                 textureIndex = IMG_SCRAT_SAD;
+                long timeElapsed = System.currentTimeMillis() - askTime;
+                if(Math.abs(timeElapsed) >= askTimeLimit) {
+                    isTaken(currentImage);
+                    askTime = System.currentTimeMillis();
+                }
             }else if(!freeImageSet.contains(currentImage)) { //YOU'RE NOT SURE IF THIS ACORN HAS BEEN PICKED UP YET
                 disableCollectButton();
                 disableSetTrapButton();
@@ -259,6 +264,7 @@ public class ImageTargetRenderer implements GLSurfaceView.Renderer
                     isTaken(currentImage);
                     askTime = System.currentTimeMillis();
                 }
+
             }else{//THE ACORN HASN'T BEEN PICKED UP YET
                 enableCollectButton();
                 disableSetTrapButton();
