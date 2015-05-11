@@ -381,7 +381,8 @@ public class Server   {
                     }
                 }
                 catch (IOException e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
+                    continue;
                 }
                 //If no message sent from client, this code will block the program
                 while(!responses.empty()){

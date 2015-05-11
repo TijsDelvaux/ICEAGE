@@ -1132,6 +1132,17 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         msgsToServer.push(userMessage);
     }
 
+    public void makeNewConnection(Socket old_socket){
+        try {
+            old_socket.close();
+        } catch (IOException e) {
+
+        }
+        clientask =new ClientTask(serverIP, port);
+        clientask.start();
+        sendMessageToServer(MsgServer.REGISTER, "Hello again");
+    }
+
     @IceAge
     public class ClientTask extends Thread {
 
@@ -1182,15 +1193,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
 
             try {
-                socket = new Socket(serverAddress, serverPort);
-                while(true){
+                while(true) {
                     try {
+                        socket = new Socket(serverAddress, serverPort);
                         socket.getOutputStream();
                         break;
-                    }catch(IOException e){
-
-                    }
+                    } catch (IOException e1) {}
                 }
+                Log.d("CONNECTION", "clienttask start while");
                 (new ResponseGetter(socket)).start();
                 while(!stop){
                     dataOutputStream = new DataOutputStream(
@@ -1212,9 +1222,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 response = "IOException: " + e.toString();
             }
             // hier nieuwe connectie
-            clientask =new ClientTask(serverIP, port);
-            clientask.start();
-            sendMessageToServer(MsgServer.REGISTER, "Hello again");
+            makeNewConnection(socket);
             return;
         }
 
@@ -1372,10 +1380,18 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         @Override
         public void run() {
-            DataInputStream dataInputStream = null;
+            while(true) {
+                try {
+                    this.socket.getInputStream();
+                    break;
+                } catch (IOException e) {
+
+                }
+            }
+            Log.d("CONNECTION", "responsegetter start while");
             while (true) {
                 try {
-                    dataInputStream = new DataInputStream(this.socket.getInputStream());
+                    DataInputStream dataInputStream = new DataInputStream(this.socket.getInputStream());
                     String response = dataInputStream.readUTF();
                     Log.d("ClientComm", "response: " + response);
                     responses.push(response);
