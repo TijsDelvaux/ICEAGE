@@ -1209,11 +1209,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 while(true) {
                     try {
                         socket = new Socket(serverAddress, serverPort);
-                        socket.getOutputStream();
                         break;
                     } catch (IOException e1) {}
                 }
-                Log.d("CONNECTION", "clienttask start while");
                 ResponseGetter responsegetter = new ResponseGetter(socket);
                 responsegetter.start();
                 while(!stop){
@@ -1399,15 +1397,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         @Override
         public void run() {
-            while(true) {
-                try {
-                    this.socket.getInputStream();
-                    break;
-                } catch (IOException e) {
-
-                }
-            }
-            Log.d("CONNECTION", "responsegetter start while");
             while (true) {
                 if (Thread.currentThread().isInterrupted()) {
                     return;
