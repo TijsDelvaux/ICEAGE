@@ -110,7 +110,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private TextView mTeamCollectedAcornsView;
     private TextView mCurrentZonesView;
     private TextView mLastReceivedMessage;
-    private TextView fellIntoTrap;
 
     private String lastReceivedMessage = "";
     
@@ -134,11 +133,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private RelativeLayout countLayout;
     private RelativeLayout snowLayout;
     private RelativeLayout settrapLayout;
+    private RelativeLayout fellIntoTrapLayout;
     private View collectButton;
     private View setTrapButton;
 
     private boolean showCollectButton;
     private boolean showSetTrapButton;
+    private boolean showWalkedInTrap;
 
 
     @IceAge
@@ -265,13 +266,17 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamCollectedAcorns = count;
     }
 
-//    public void walkIntoTrap(){
-//        Long time = System.currentTimeMillis();
-//
-//        while((Math.abs(System.currentTimeMillis() - time) < blindedTime)){
-//        }
-//        fellIntoTrap.setVisibility(View.INVISIBLE);
-//    }
+    public void walkIntoTrap(){
+        mRenderer.setInTrapState(true);
+
+        Long startTime = System.currentTimeMillis();
+
+        while((Math.abs(System.currentTimeMillis() - startTime) < blindedTime)){
+            Log.d(LOGTAG, "[TRAP]");
+        }
+
+        mRenderer.setInTrapState(false);
+    }
 
 
     //END ICE STUFF
@@ -372,6 +377,18 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         }
                         showSetTrapButton = true;
                         break;
+                    case 6:
+                        if(!(fellIntoTrapLayout == null)) {
+                            fellIntoTrapLayout.setVisibility(View.INVISIBLE);
+                        }
+                        showWalkedInTrap = false;
+                        break;
+                    case 7:
+                        if(!(fellIntoTrapLayout == null)) {
+                            fellIntoTrapLayout.setVisibility(View.VISIBLE);
+                        }
+                        showWalkedInTrap = true;
+                        break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
                         break;
@@ -403,7 +420,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             mGlView.setVisibility(View.VISIBLE);
             mGlView.onResume();
         }
-        
     }
 
     
@@ -417,7 +433,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         
         vuforiaAppSession.onConfigurationChanged();
 
-
         // Removes the current layout and inflates a proper layout
         // for the new screen orientation
 
@@ -428,9 +443,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         }
 
-
         addOverlayView();
-
     }
     
     
@@ -550,11 +563,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         LayoutInflater inflater = LayoutInflater.from(this);
         countLayout = (RelativeLayout) inflater.inflate(R.layout.collect_overlay, null, false);
         snowLayout = (RelativeLayout) inflater.inflate(R.layout.snow_overlay, null, false);
-        settrapLayout =(RelativeLayout) inflater.inflate(R.layout.set_trap_overlay, null, false);
+        settrapLayout = (RelativeLayout) inflater.inflate(R.layout.set_trap_overlay, null, false);
+        fellIntoTrapLayout = (RelativeLayout) inflater.inflate(R.layout.fell_into_trap_overlay, null, false);
 
         snowLayout.setVisibility(View.VISIBLE);
         countLayout.setVisibility(View.VISIBLE);
         settrapLayout.setVisibility(View.VISIBLE);
+        fellIntoTrapLayout.setVisibility(View.INVISIBLE);
 
         // Adds the inflated layout to the view
         addContentView(snowLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
@@ -563,30 +578,29 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 LayoutParams.MATCH_PARENT));
         addContentView(settrapLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
+        addContentView(fellIntoTrapLayout, new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT));
 
         collectButton = countLayout.findViewById(R.id.collect_overlay);
         setTrapButton = settrapLayout.findViewById(R.id.set_trap_button);
-        fellIntoTrap = (TextView) snowLayout.findViewById(R.id.fell_into_trap);
-//        View statusButton = countLayout.findViewById(R.id.status_button);
-//        statusButton.setVisibility(View.VISIBLE);
 
-//        collectButton.setVisibility(View.INVISIBLE);
-//        setTrapButton.setVisibility(View.INVISIBLE);
         if(showCollectButton){
-
             collectButton.setVisibility(View.VISIBLE);
-        }else {
+        } else {
             collectButton.setVisibility(View.INVISIBLE);
         }
 
         if(showSetTrapButton){
             setTrapButton.setVisibility(View.VISIBLE);
-        }else {
+        } else {
             setTrapButton.setVisibility(View.INVISIBLE);
         }
-//        countLayout.bringToFront();
 
-
+        if(showWalkedInTrap){
+            fellIntoTrapLayout.setVisibility(View.VISIBLE);
+        } else {
+            fellIntoTrapLayout.setVisibility(View.INVISIBLE);
+        }
     }
 
 
@@ -600,7 +614,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mUILayout.setBackgroundColor(Color.BLACK);
 
 
-        
         // Gets a reference to the loading dialog
         loadingDialogHandler.mLoadingDialogContainer = mUILayout
             .findViewById(R.id.loading_indicator);
@@ -612,7 +625,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         // Adds the inflated layout to the view
         addContentView(mUILayout, new LayoutParams(LayoutParams.MATCH_PARENT,
             LayoutParams.MATCH_PARENT));
-        
     }
     
     
@@ -1151,7 +1163,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             }.start();
         }
         private void showToast(final String text){
-            showToast(text, Toast.LENGTH_SHORT);
+            showToast(text, Toast.LENGTH_LONG);
         }
 
         /*
@@ -1280,8 +1292,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         teamCount = splitResponse[3];
                         setTeamCollectedAcorns(Integer.parseInt(teamCount));
                         menuProcess(CMD_UPDATE_COUNT);
-//                        fellIntoTrap.setVisibility(View.VISIBLE);
-//                        walkIntoTrap();
+                        walkIntoTrap();
                         break;
                     // A teammate of yours had walked into a trap
                     case TEAMMATE_TRAP_LOSS:
