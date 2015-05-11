@@ -1203,7 +1203,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             String response = "";
             Socket socket = null;
             DataOutputStream dataOutputStream = null;
-
+            showToast("new connection");
 
             try {
                 while(true) {
