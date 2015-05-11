@@ -206,9 +206,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
         msgsToServer = new Stack<String>();
-        clientask = new ClientTask(serverIP, port);
-        clientask.start();
-
+        if(clientask == null) {
+            clientask = new ClientTask(serverIP, port);
+            clientask.start();
+        }
         playerColor = getResources().getColor(R.color.blue);
         teamColor = getResources().getColor(R.color.red);
 
@@ -244,6 +245,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     }
 
+    @Override
+    public void onStop(){
+        super.onStop();
+        clientask.interrupt();
+    }
 
     @IceAge
     public void onClickCollectButton(View view){
@@ -1132,13 +1138,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         msgsToServer.push(userMessage);
     }
 
-    public void makeNewConnection(Socket old_socket){
+    public void makeNewConnection(Socket old_socket, Stack<String> old_responses){
         try {
             old_socket.close();
         } catch (IOException e) {
 
         }
-        clientask =new ClientTask(serverIP, port);
+        Log.d("CONNECTION", "new clienttask");
+        clientask =new ClientTask(serverIP, port, old_responses);
         clientask.start();
         sendMessageToServer(MsgServer.REGISTER, "Hello again");
     }
@@ -1156,7 +1163,13 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             serverPort = port;
             responses = new Stack<String>();
             stop = false;
+        }
 
+        ClientTask(String addr, int port, Stack<String> responses){
+            serverAddress = addr;
+            serverPort = port;
+            this.responses = responses;
+            stop = false;
         }
 
         private void showToast(final String text, final int duration){
@@ -1201,8 +1214,14 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     } catch (IOException e1) {}
                 }
                 Log.d("CONNECTION", "clienttask start while");
-                (new ResponseGetter(socket)).start();
+                ResponseGetter responsegetter = new ResponseGetter(socket);
+                responsegetter.start();
                 while(!stop){
+                    if (Thread.currentThread().isInterrupted()) {
+                        responsegetter.interrupt();
+                        socket.close();
+                        return;
+                    }
                     dataOutputStream = new DataOutputStream(
                             socket.getOutputStream());
                     // wait until you have a message to send
@@ -1222,7 +1241,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 response = "IOException: " + e.toString();
             }
             // hier nieuwe connectie
-            makeNewConnection(socket);
+            makeNewConnection(socket, this.responses);
             return;
         }
 
@@ -1390,6 +1409,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             }
             Log.d("CONNECTION", "responsegetter start while");
             while (true) {
+                if (Thread.currentThread().isInterrupted()) {
+                    return;
+                }
                 try {
                     DataInputStream dataInputStream = new DataInputStream(this.socket.getInputStream());
                     String response = dataInputStream.readUTF();
