@@ -1210,12 +1210,15 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     try {
                         socket = new Socket(serverAddress, serverPort);
                         break;
-                    } catch (IOException e1) {}
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 ResponseGetter responsegetter = new ResponseGetter(socket);
                 responsegetter.start();
                 while(!stop){
                     if (Thread.currentThread().isInterrupted()) {
+                        Log.d("ClientComm", "thread is interupted");
                         responsegetter.interrupt();
                         socket.close();
                         return;

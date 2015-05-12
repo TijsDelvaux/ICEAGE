@@ -363,19 +363,12 @@ public class Server   {
         }
 
         public void run() {
-            while(true){
-                try {
-                    this.clientSocket.getOutputStream();
-                    break;
-                }catch(IOException e){
-
-                }
-            }
             while (loop) {
                 try {
                     DataOutputStream dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
                     if (msgsToClients.get(this.clientName) != null) {
                         while (!msgsToClients.get(this.clientName).empty()) {
+                            System.out.println("[SERVER]: send to " + this.clientName);
                             dataOutputStream.writeUTF(msgsToClients.get(this.clientName).pop());
                         }
                     }
