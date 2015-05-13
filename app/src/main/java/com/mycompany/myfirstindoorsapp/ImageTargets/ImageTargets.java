@@ -1140,6 +1140,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     public void makeNewConnection(Socket old_socket, Stack<String> old_responses){
         Log.d("CONNECTION", "new clienttask");
+        try {
+            old_socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         clientask =new ClientTask(serverIP, port, old_responses);
         clientask.start();
         sendMessageToServer(MsgServer.REGISTER, "Hello again");
@@ -1199,18 +1204,23 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             Socket socket = null;
             DataOutputStream dataOutputStream = null;
             try {
-                try {
-                    socket = new Socket(serverAddress, serverPort);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                while(socket==null) {
+                    try {
+                        socket = new Socket(serverAddress, serverPort);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
+
                 showToast("new connection");
+                socket.toString();
                 Log.d("ClientComm", "new connection " + socket.toString());
                 ResponseGetter responsegetter = new ResponseGetter(socket);
                 responsegetter.start();
                 while(!stop){
                     if (Thread.currentThread().isInterrupted()) {
                         responsegetter.interrupt();
+                        socket.close();
                         Log.d("ClientComm", "Clienttask is interupted " + socket.toString());
                         return;
                     }
@@ -1396,6 +1406,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             while (true) {
                 if (Thread.currentThread().isInterrupted()) {
                     Log.d("ClientComm", "responsGetter is interupted " + socket.toString());
+                    showToast("connection is gone");
                     return;
                 }
                 try {
@@ -1404,6 +1415,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     Log.d("ClientComm", "response" + socket.toString()+ ": " + response);
                     responses.push(response);
                 } catch (IOException e) {
+                    Log.d("ClientComm", "responsGetter stopped " + socket.toString());
                     showToast("connection is gone");
                     stop = true;
                     return;
