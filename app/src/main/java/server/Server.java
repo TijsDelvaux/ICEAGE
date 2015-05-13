@@ -347,14 +347,14 @@ public class Server   {
             System.out.println("[SERVER]: nieuwe clientconnection " + clientSocket.toString());
             this.clientSocket = clientSocket;
             this.responses = new Stack<String>();
-            this.responseGetter = new ResponseGetter();
+            this.responseGetter = new ResponseGetter(this);
             this.responseGetter.start();
         }
 
         public void setClientSocket(Socket socket){
             this.responseGetter.interrupt();
             this.clientSocket = socket;
-            this.responseGetter = new ResponseGetter();
+            this.responseGetter = new ResponseGetter(this);
             this.responseGetter.start();
         }
 
@@ -364,16 +364,19 @@ public class Server   {
 
         public void run() {
             while (loop) {
-                if ( Thread.currentThread().isInterrupted()) {
+                if( this.isInterrupted()) {
                     System.out.println("[SERVER] thread is interupted " + clientSocket.toString());
                     this.responseGetter.interrupt();
-                    try {
-                        clientSocket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                     return;
                 }
+                while(!responses.empty()){
+                    handleMessage(responses.pop());
+                    if( this.isInterrupted()) {
+                        break;
+                    }
+                }
+
+
                 try {
                     DataOutputStream dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
                     if (msgsToClients.get(this.clientName) != null) {
@@ -383,18 +386,18 @@ public class Server   {
                         }
                     }
                 }
+
                 catch (IOException e) {
 //                    e.printStackTrace();
                     continue;
                 }
                 //If no message sent from client, this code will block the program
-                while(!responses.empty()){
-                    handleMessage(responses.pop());
-                }
+
             }
         }
 
         private void handleMessage(String messageForClient) {
+            System.out.println("[SERVER] handlemessage " + clientSocket.toString() +" " + messageForClient);
             // parse message
             String[] splitMessage = messageForClient.split(":");
             String clientName = splitMessage[0];
@@ -427,12 +430,13 @@ public class Server   {
 //                        sendMessageToClient(clientName, MsgClient.CONFIRM_REGISTRATION, reply);
                     } else {
                         if(registered){
-                            Thread.currentThread().interrupt();
+                            this.interrupt();
                             return;
                         }
                         // dit kan mss niet meer werken, omdat oude socket nog aan client is gekoppeld
                         // oplossing is dan dat je de oude met de nieuwe socket vervangt in clientSockets
                         registered = true;
+                        this.clientName = clientName;
                         clientSockets.put(clientName, clientSocket);
                         System.out.println("[SERVER] Client (" + clientName + ") has rejoined us!");
                         code = MsgClient.CONFIRM_REGISTRATION;
@@ -572,16 +576,20 @@ public class Server   {
         }
 
         public class ResponseGetter extends Thread{
+            private ClientConnection connection;
 
-            public ResponseGetter(){
-
+            public ResponseGetter(ClientConnection conn){
+                this.connection = conn;
             }
 
             @Override
             public void run() {
                 DataInputStream dataInputStream = null;
+                System.out.println("[SERVER] new responsegetter " + clientSocket.toString());
                 while(true) {
                     if (Thread.currentThread().isInterrupted()) {
+                        System.out.println("[SERVER] responsegetter is interupted " + clientSocket.toString());
+                        connection.interrupt();
                         return;
                     }
                     try {
@@ -590,6 +598,9 @@ public class Server   {
                         System.out.println("response: " + response);
                         responses.push(response);
                     } catch (IOException e) {
+                        System.out.println("[SERVER] responsegetter is interupted " + clientSocket.toString());
+                        connection.interrupt();
+                        return;
 //                    e.printStackTrace();
                     }
                 }
