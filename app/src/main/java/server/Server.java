@@ -1,5 +1,7 @@
 package server;
 
+import android.util.Log;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -290,11 +292,8 @@ public class Server   {
                 System.out.println("IP: " + getIpAddress());
                 while (true) {
                     Socket socket = serverSocket.accept();
-                    System.out.println("nieuwe connectie");
-                    if(!socket.isClosed()) {
-                        ClientConnection cc =  new ClientConnection(socket);
-                        cc.start();
-                    }
+                    ClientConnection cc =  new ClientConnection(socket);
+                    cc.start();
 
                 }
             } catch (IOException e) {
@@ -342,19 +341,20 @@ public class Server   {
         private boolean loop = true;
         Stack<String> responses;
         ResponseGetter responseGetter;
+        boolean registered = false;
 
         protected ClientConnection(Socket clientSocket) {
             System.out.println("[SERVER]: nieuwe clientconnection " + clientSocket.toString());
             this.clientSocket = clientSocket;
             this.responses = new Stack<String>();
-            this.responseGetter = new ResponseGetter(this.clientSocket, this.responses);
+            this.responseGetter = new ResponseGetter();
             this.responseGetter.start();
         }
 
         public void setClientSocket(Socket socket){
             this.responseGetter.interrupt();
             this.clientSocket = socket;
-            this.responseGetter = new ResponseGetter(this.clientSocket, this.responses);
+            this.responseGetter = new ResponseGetter();
             this.responseGetter.start();
         }
 
@@ -364,11 +364,21 @@ public class Server   {
 
         public void run() {
             while (loop) {
+                if ( Thread.currentThread().isInterrupted()) {
+                    System.out.println("[SERVER] thread is interupted " + clientSocket.toString());
+                    this.responseGetter.interrupt();
+                    try {
+                        clientSocket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return;
+                }
                 try {
                     DataOutputStream dataOutputStream = new DataOutputStream(this.clientSocket.getOutputStream());
                     if (msgsToClients.get(this.clientName) != null) {
                         while (!msgsToClients.get(this.clientName).empty()) {
-                            System.out.println("[SERVER]: send to " + this.clientName);
+                            System.out.println("[SERVER] "+ clientSocket.toString()+" : send to " + this.clientName);
                             dataOutputStream.writeUTF(msgsToClients.get(this.clientName).pop());
                         }
                     }
@@ -401,8 +411,9 @@ public class Server   {
                 case REGISTER:
                     // register client if needed, beter met een register message?
                     if (!clientCounts.containsKey(clientName)) {
+                        registered = true;
                         this.clientName = clientName;
-                        clientSockets.put(clientName, clientSocket);
+                        clientSockets.put(clientName, this.clientSocket);
                         registerNewClient(clientName, teamName);
                         msgsToClients.put(clientName, new Stack<String>());
                         System.out.println("[SERVER] A new client (" + clientName + ") has registered in team " + teamName);
@@ -415,13 +426,13 @@ public class Server   {
                                 + ":" + "0";
 //                        sendMessageToClient(clientName, MsgClient.CONFIRM_REGISTRATION, reply);
                     } else {
+                        if(registered){
+                            Thread.currentThread().interrupt();
+                            return;
+                        }
                         // dit kan mss niet meer werken, omdat oude socket nog aan client is gekoppeld
                         // oplossing is dan dat je de oude met de nieuwe socket vervangt in clientSockets
-                        try {
-                            clientSockets.get(clientName).close();
-                        } catch (IOException e) {
-//                            e.printStackTrace();
-                        }
+                        registered = true;
                         clientSockets.put(clientName, clientSocket);
                         System.out.println("[SERVER] Client (" + clientName + ") has rejoined us!");
                         code = MsgClient.CONFIRM_REGISTRATION;
@@ -561,18 +572,20 @@ public class Server   {
         }
 
         public class ResponseGetter extends Thread{
-            Socket socket;
 
-            public ResponseGetter(Socket socket, Stack<String> responses){
-                this.socket = socket;
+            public ResponseGetter(){
+
             }
 
             @Override
             public void run() {
                 DataInputStream dataInputStream = null;
                 while(true) {
+                    if (Thread.currentThread().isInterrupted()) {
+                        return;
+                    }
                     try {
-                        dataInputStream = new DataInputStream(this.socket.getInputStream());
+                        dataInputStream = new DataInputStream(clientSocket.getInputStream());
                         String response = dataInputStream.readUTF();
                         System.out.println("response: " + response);
                         responses.push(response);

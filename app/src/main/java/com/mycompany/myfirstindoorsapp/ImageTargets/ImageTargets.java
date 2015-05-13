@@ -1139,11 +1139,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     }
 
     public void makeNewConnection(Socket old_socket, Stack<String> old_responses){
-        try {
-            old_socket.close();
-        } catch (IOException e) {
-
-        }
         Log.d("CONNECTION", "new clienttask");
         clientask =new ClientTask(serverIP, port, old_responses);
         clientask.start();
@@ -1203,24 +1198,20 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             String response = "";
             Socket socket = null;
             DataOutputStream dataOutputStream = null;
-            showToast("new connection");
-
             try {
-                while(true) {
-                    try {
-                        socket = new Socket(serverAddress, serverPort);
-                        break;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    socket = new Socket(serverAddress, serverPort);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+                showToast("new connection");
+                Log.d("ClientComm", "new connection " + socket.toString());
                 ResponseGetter responsegetter = new ResponseGetter(socket);
                 responsegetter.start();
                 while(!stop){
                     if (Thread.currentThread().isInterrupted()) {
-                        Log.d("ClientComm", "thread is interupted");
                         responsegetter.interrupt();
-                        socket.close();
+                        Log.d("ClientComm", "Clienttask is interupted " + socket.toString());
                         return;
                     }
                     dataOutputStream = new DataOutputStream(
@@ -1231,6 +1222,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     }
                     // wait for a response
                     while(!responses.empty()){
+                        Log.d("ClientComm", "handle response " + socket.toString());
                         handleResponse(responses.pop());
                     }
                 }
@@ -1400,14 +1392,16 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         @Override
         public void run() {
+            Log.d("ClientComm", "new responsGetter " + socket.toString());
             while (true) {
                 if (Thread.currentThread().isInterrupted()) {
+                    Log.d("ClientComm", "responsGetter is interupted " + socket.toString());
                     return;
                 }
                 try {
                     DataInputStream dataInputStream = new DataInputStream(this.socket.getInputStream());
                     String response = dataInputStream.readUTF();
-                    Log.d("ClientComm", "response: " + response);
+                    Log.d("ClientComm", "response" + socket.toString()+ ": " + response);
                     responses.push(response);
                 } catch (IOException e) {
                     showToast("connection is gone");
