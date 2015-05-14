@@ -272,11 +272,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
         Long startTime = System.currentTimeMillis();
 
-        while((Math.abs(System.currentTimeMillis() - startTime) < blindedTime)){
-            Log.d(LOGTAG, "[TRAP]");
-        }
+        while((Math.abs(System.currentTimeMillis() - startTime) < blindedTime)){ }
 
-        mRenderer.setInTrapState(false);
+        mRenderer.setInTrapState(false
+        );
     }
 
 
