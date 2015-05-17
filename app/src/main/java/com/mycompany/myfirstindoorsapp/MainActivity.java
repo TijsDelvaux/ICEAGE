@@ -18,7 +18,7 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
     }
-    
+
 //    public void startPlay(View view) { startActivity(new Intent(this, ImageTargets.class));
 //    }
     public void startPlay(View view) {  startActivity(new Intent(this,ServerConnectActivity.class));

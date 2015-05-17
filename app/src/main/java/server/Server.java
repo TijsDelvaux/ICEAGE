@@ -231,7 +231,7 @@ public class Server   {
 
     public void notifyOfTrapReward(String clientName, String teamMate, int nbAcornsToTransfer) {
         sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD,
-                "Someone walked into a trap of your teammate" + teamMate + "!\n"
+                "Someone walked into a trap of your teammate " + teamMate + "!\n"
                         + "Your team gained " + nbAcornsToTransfer + " acorns."
                         + ":" + teamCounts.get(clientTeams.get(clientName)));
     }

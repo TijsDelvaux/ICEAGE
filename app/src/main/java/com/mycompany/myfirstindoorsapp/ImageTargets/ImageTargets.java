@@ -171,6 +171,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG,"after targets init");
     }
 
+
     private int playerCollectedAcorns;
     private int teamCollectedAcorns;
     private String serverIP;
@@ -253,6 +254,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //        teamCollectedAcorns++;
         sendMessageToServer(MsgServer.ACORN_PICKUP, currentImage);
     }
+
 
     @IceAge
     public void onClickSetTrapButton(View view){
@@ -371,7 +373,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         }
                         break;
                     case 5:
-                        if(!(setTrapButton == null)) {
+                        if(!(setTrapButton == null) && (playerCollectedAcorns > 0)) {
                             setTrapButton.setVisibility(View.VISIBLE);
                         }
                         break;
