@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.View;
-import com.mycompany.myfirstindoorsapp.ImageTargets.*;
+
 /**
  * Sample Android project, powered by indoo.rs :)
  * 
