@@ -18,6 +18,7 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/trap_text"
         android:id="@+id/trap_text"
+        android:gravity="center"
         android:layout_below="@+id/trap_scrat"
         android:layout_centerHorizontal="true"
         android:textStyle="bold"

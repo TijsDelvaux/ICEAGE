@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.View;
-import com.mycompany.myfirstindoorsapp.ImageTargets.*;
+
 /**
  * Sample Android project, powered by indoo.rs :)
  * 
@@ -18,7 +18,7 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
     }
-    
+
 //    public void startPlay(View view) { startActivity(new Intent(this, ImageTargets.class));
 //    }
     public void startPlay(View view) {  startActivity(new Intent(this,ServerConnectActivity.class));

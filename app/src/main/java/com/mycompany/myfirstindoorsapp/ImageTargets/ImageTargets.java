@@ -109,7 +109,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private TextView mPlayerCollectedAcornsView;
     private TextView mTeamCollectedAcornsView;
     private TextView mCurrentZonesView;
-    private TextView mLastReceivedMessage;
+//    private TextView mLastReceivedMessage;
 
     private String lastReceivedMessage = "";
     
@@ -137,9 +137,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     private View collectButton;
     private View setTrapButton;
 
-    private boolean showCollectButton;
-    private boolean showSetTrapButton;
-    private boolean showWalkedInTrap;
 
 
     @IceAge
@@ -174,6 +171,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         Log.d(LOGTAG,"after targets init");
     }
 
+
     private int playerCollectedAcorns;
     private int teamCollectedAcorns;
     private String serverIP;
@@ -206,9 +204,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         teamName = b.getString("teamname");
         port = 4444;
         msgsToServer = new Stack<String>();
-        clientask = new ClientTask(serverIP, port,this);
-        clientask.start();
-
+        if(clientask == null) {
+            clientask = new ClientTask(serverIP, port);
+            clientask.start();
+        }
         playerColor = getResources().getColor(R.color.blue);
         teamColor = getResources().getColor(R.color.red);
 
@@ -235,8 +234,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         //ICEAGE
         setTargetsToFollow(new ArrayList<String>(this.allZones.keySet()));
 
-        showCollectButton = false;
-        showSetTrapButton = false;
         addOverlayView();
 
         Log.d(LOGTAG, "Vuforia end of onCreate");
@@ -244,6 +241,11 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     }
 
+    @Override
+    public void onStop(){
+        super.onStop();
+        clientask.interrupt();
+    }
 
     @IceAge
     public void onClickCollectButton(View view){
@@ -252,6 +254,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 //        teamCollectedAcorns++;
         sendMessageToServer(MsgServer.ACORN_PICKUP, currentImage);
     }
+
 
     @IceAge
     public void onClickSetTrapButton(View view){
@@ -356,11 +359,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     case 1: //Hide the collect button
                         collectButton.setVisibility(View.INVISIBLE);
-                        showCollectButton = false; //TODO is deze boolean nodig?
                         break;
                     case 2: //Show the collect button
                         collectButton.setVisibility(View.VISIBLE);
-                        showCollectButton = true;
                         break;
                     case 3: //Check if the detected image already has been taken
                         sendMessageToServer(MsgServer.ACORN_REQUEST, (String) msg.obj);
@@ -369,25 +370,21 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         if(!(setTrapButton == null)) {
                             setTrapButton.setVisibility(View.INVISIBLE);
                         }
-                        showSetTrapButton = false;
                         break;
                     case 5:
-                        if(!(setTrapButton == null)) {
+                        if(!(setTrapButton == null) && (playerCollectedAcorns > 0)) {
                             setTrapButton.setVisibility(View.VISIBLE);
                         }
-                        showSetTrapButton = true;
                         break;
                     case 6:
                         if(!(fellIntoTrapLayout == null)) {
                             fellIntoTrapLayout.setVisibility(View.INVISIBLE);
                         }
-                        showWalkedInTrap = false;
                         break;
                     case 7:
                         if(!(fellIntoTrapLayout == null)) {
                             fellIntoTrapLayout.setVisibility(View.VISIBLE);
                         }
-                        showWalkedInTrap = true;
                         break;
                     default:
 //                        Log.d("ImageTargetHandler", "Nothing");
@@ -559,7 +556,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
 
     @IceAge
     private void addOverlayView(){
-//        Log.d("addOverlayView", "showCollectButton: " + showCollectButton);
         // Inflates the Overlay Layout to be displayed above the Camera View
         LayoutInflater inflater = LayoutInflater.from(this);
         countLayout = (RelativeLayout) inflater.inflate(R.layout.collect_overlay, null, false);
@@ -585,23 +581,10 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         collectButton = countLayout.findViewById(R.id.collect_overlay);
         setTrapButton = settrapLayout.findViewById(R.id.set_trap_button);
 
-        if(showCollectButton){
-            collectButton.setVisibility(View.VISIBLE);
-        } else {
-            collectButton.setVisibility(View.INVISIBLE);
-        }
 
-        if(showSetTrapButton){
-            setTrapButton.setVisibility(View.VISIBLE);
-        } else {
-            setTrapButton.setVisibility(View.INVISIBLE);
-        }
-
-        if(showWalkedInTrap){
-            fellIntoTrapLayout.setVisibility(View.VISIBLE);
-        } else {
-            fellIntoTrapLayout.setVisibility(View.INVISIBLE);
-        }
+        collectButton.setVisibility(View.INVISIBLE);
+        setTrapButton.setVisibility(View.INVISIBLE);
+        fellIntoTrapLayout.setVisibility(View.INVISIBLE);
     }
 
 
@@ -720,7 +703,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         if (exception == null)
         {
             initApplicationAR();
-//            showCollectButton = true;
             mRenderer.mIsActive = true;
             
             // Now add the GL surface view. It is important
@@ -918,7 +900,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
     final public static int CMD_UPDATE_COUNT = 5;
     final public static int CMD_CURRENT_ZONES = 6;
     final public static int CMD_NOTHING = 7;
-    final public static int CMD_UPDATE_LAST_TEXT = 8;
+//    final public static int CMD_UPDATE_LAST_TEXT = 8;
     
     
     // This method sets the menu's settings
@@ -932,8 +914,6 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         TextView teamNameView =(TextView) group.addTextItem("Team: " + teamName, CMD_NOTHING);
         teamNameView.setTextColor(teamColor);
 
-//        group = mSampleAppMenu.addGroup("", true);
-
         //Shows the amount of collected acorns
         group.addTextItem("Number of collected acorns: ", CMD_NOTHING);
         mPlayerCollectedAcornsView = (TextView) group.addTextItem("You: " + playerCollectedAcorns, CMD_UPDATE_COUNT);
@@ -941,11 +921,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         mTeamCollectedAcornsView = (TextView) group.addTextItem("Your team: " + teamCollectedAcorns, CMD_UPDATE_COUNT);
         mTeamCollectedAcornsView.setTextColor(teamColor);
 
-        mLastReceivedMessage = (TextView) group.addTextItem(lastReceivedMessage, CMD_UPDATE_LAST_TEXT);
+//        mLastReceivedMessage = (TextView) group.addTextItem(lastReceivedMessage, CMD_UPDATE_LAST_TEXT);
         //Show the list of zones you're currently in
         mCurrentZonesView = (TextView) group.addTextItem(zonesString, CMD_CURRENT_ZONES);
-//        group.addSelectionItem(getString(R.string.menu_extended_tracking),
-//            CMD_EXTENDED_TRACKING, false);
         group.addSelectionItem(getString(R.string.menu_contAutofocus),
             CMD_AUTOFOCUS, mContAutofocus);
         mFlashOptionView = group.addSelectionItem(
@@ -1091,9 +1069,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 break;
             case CMD_NOTHING:
                 break;
-            case CMD_UPDATE_LAST_TEXT:
-                mLastReceivedMessage.setText(lastReceivedMessage);
-                break;
+//            case CMD_UPDATE_LAST_TEXT:
+//                mLastReceivedMessage.setText(lastReceivedMessage);
+//                break;
             default:
                 if (command >= mStartDatasetsIndex
                     && command < mStartDatasetsIndex + mDatasetsNumber)
@@ -1131,18 +1109,38 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
         msgsToServer.push(userMessage);
     }
 
+    public void makeNewConnection(Socket old_socket, Stack<String> old_responses){
+        Log.d("CONNECTION", "new clienttask");
+        try {
+            old_socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        clientask =new ClientTask(serverIP, port, old_responses);
+        clientask.start();
+        sendMessageToServer(MsgServer.REGISTER, "Hello again");
+    }
+
     @IceAge
     public class ClientTask extends Thread {
 
         String serverAddress;
         int serverPort;
-        ImageTargets imageTargets;
+        Stack<String> responses;
+        boolean stop;
 
-        ClientTask(String addr, int port, ImageTargets imgTargets) {
+        ClientTask(String addr, int port) {
             serverAddress = addr;
             serverPort = port;
-            this.imageTargets = imgTargets;
+            responses = new Stack<String>();
+            stop = false;
+        }
 
+        ClientTask(String addr, int port, Stack<String> responses){
+            serverAddress = addr;
+            serverPort = port;
+            this.responses = responses;
+            stop = false;
         }
 
         private void showToast(final String text, final int duration){
@@ -1176,12 +1174,27 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             String response = "";
             Socket socket = null;
             DataOutputStream dataOutputStream = null;
-            Stack<String> responses = new Stack<String>();
-
             try {
-                socket = new Socket(serverAddress, serverPort);
-                (new ResponseGetter(socket, responses)).start();
-                while(true){
+                while(socket==null) {
+                    try {
+                        socket = new Socket(serverAddress, serverPort);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+//                showToast("new connection");
+                socket.toString();
+                Log.d("ClientComm", "new connection " + socket.toString());
+                ResponseGetter responsegetter = new ResponseGetter(socket);
+                responsegetter.start();
+                while(!stop){
+                    if (Thread.currentThread().isInterrupted()) {
+                        responsegetter.interrupt();
+                        socket.close();
+                        Log.d("ClientComm", "Clienttask is interupted " + socket.toString());
+                        return;
+                    }
                     dataOutputStream = new DataOutputStream(
                             socket.getOutputStream());
                     // wait until you have a message to send
@@ -1190,6 +1203,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                     }
                     // wait for a response
                     while(!responses.empty()){
+                        Log.d("ClientComm", "handle response " + socket.toString());
                         handleResponse(responses.pop());
                     }
                 }
@@ -1200,6 +1214,9 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                 e.printStackTrace();
                 response = "IOException: " + e.toString();
             }
+            // hier nieuwe connectie
+            makeNewConnection(socket, this.responses);
+            return;
         }
 
         /*
@@ -1274,7 +1291,7 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
                         break;
                     // Something went wrong while picking up an acorn
                     case DECLINE_PICKUP:
-                        showToast(rsp); //TODO new request for acorn (maybe someone else has taken it in the meantime)
+                        showToast(rsp);
                         mRenderer.removeFromMyPickedUpSet(splitResponse[2]);
                         break;
                     // A team mate has picked up an acorn
@@ -1341,38 +1358,43 @@ public class ImageTargets extends Activity implements SampleApplicationControl,
             }
         }
 
-    }
-
     public void updateExcludedList(String excludes){
         String[] list = excludes.split(";");
         //TODO the rest
 
     }
 
-    public class ResponseGetter extends Thread{
+    public class ResponseGetter extends Thread {
         Socket socket;
-        Stack<String> responses;
 
-        public ResponseGetter(Socket socket, Stack<String> responses){
+        public ResponseGetter(Socket socket) {
             this.socket = socket;
-            this.responses = responses;
         }
 
         @Override
         public void run() {
-            DataInputStream dataInputStream = null;
-            while(true) {
+            Log.d("ClientComm", "new responsGetter " + socket.toString());
+            while (true) {
+                if (Thread.currentThread().isInterrupted()) {
+                    Log.d("ClientComm", "responsGetter is interupted " + socket.toString());
+//                    showToast("connection is gone");
+                    return;
+                }
                 try {
-                    dataInputStream = new DataInputStream(this.socket.getInputStream());
+                    DataInputStream dataInputStream = new DataInputStream(this.socket.getInputStream());
                     String response = dataInputStream.readUTF();
-                    Log.d("ClientComm", "response: " + response);
-                    this.responses.push(response);
+                    Log.d("ClientComm", "response" + socket.toString()+ ": " + response);
+                    responses.push(response);
                 } catch (IOException e) {
+                    Log.d("ClientComm", "responsGetter stopped " + socket.toString());
+//                    showToast("connection is gone");
+                    stop = true;
+                    return;
 //                    e.printStackTrace();
+                    }
                 }
             }
+
         }
-
     }
-
 }
