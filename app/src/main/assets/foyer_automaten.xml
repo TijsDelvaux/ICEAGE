@@ -1,6 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
   <Tracking>
-    <ImageTarget name="foyer_automaten1" size="300.000000 225.044510" />
+    <ImageTarget name="foyer_automaten1" size="600.000000 229.232193" />
+    <ImageTarget name="automaten4" size="400.000000 159.112518" />
+    <ImageTarget name="automaten1" size="400.000000 318.584076" />
+    <ImageTarget name="20150520_135036" size="400.000000 518.607422" />
+    <ImageTarget name="20150520_134954" size="400.000000 285.596710" />
+    <ImageTarget name="20150520_134946" size="400.000000 133.956970" />
+    <ImageTarget name="20150520_134925" size="400.000000 301.900452" />
+    <ImageTarget name="20150520_134912" size="400.000000 157.894730" />
+    <ImageTarget name="20150520_134848" size="400.000000 199.463806" />
+    <ImageTarget name="20150520_134821" size="400.000000 206.349213" />
+    <ImageTarget name="20150520_134807" size="400.000000 149.633255" />
+    <ImageTarget name="20150520_134756" size="400.000000 343.333344" />
+    <ImageTarget name="20150520_134708" size="400.000000 396.006653" />
+    <ImageTarget name="20150520_134653" size="400.000000 525.542542" />
+    <ImageTarget name="20150520_134636" size="400.000000 382.658966" />
+    <ImageTarget name="20150520_134604" size="400.000000 133.698624" />
+    <ImageTarget name="20150520_134515" size="400.000000 186.155136" />
+    <ImageTarget name="20150520_134448" size="400.000000 151.327438" />
+    <ImageTarget name="20150520_134434" size="400.000000 80.675423" />
+    <ImageTarget name="20150520_134407" size="400.000000 395.390533" />
+    <ImageTarget name="20150520_134359" size="400.000000 189.733063" />
   </Tracking>
 </QCARConfig>
