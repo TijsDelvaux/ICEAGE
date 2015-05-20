@@ -149,7 +149,7 @@ public class Server   {
         // notify trapOwner
         System.out.println(clientName + " walked into the trap of " + trapOwner);
         sendMessageToClient(trapOwner, MsgClient.TRAP_REWARD,
-                "Someone walked into your trap!\nYou receive " + nbAcornsToTransfer + " acorns\nThe trap has been dismantled"
+                clientName + " walked into your trap!\nYou receive " + nbAcornsToTransfer + " acorns\nThe trap has been dismantled"
                         + ":" + clientCounts.get(trapOwner)
                         + ":" + teamCounts.get(clientTeams.get(trapOwner))
                         + ":" + imageName);
@@ -164,7 +164,7 @@ public class Server   {
         for(String client: teamClients.get(clientTeams.get(trapOwner))) {
             // make sure you do not notify yourself
             if(!client.equals(trapOwner)) {
-                notifyOfTrapReward(client, trapOwner, nbAcornsToTransfer);
+                notifyOfTrapReward(client, trapOwner, clientName, nbAcornsToTransfer);
             }
         }
 
@@ -229,9 +229,9 @@ public class Server   {
                                                 + ":" + teamCounts.get(clientTeams.get(clientName)));
     }
 
-    public void notifyOfTrapReward(String clientName, String teamMate, int nbAcornsToTransfer) {
+    public void notifyOfTrapReward(String clientName, String teamMate, String loser, int nbAcornsToTransfer) {
         sendMessageToClient(clientName, MsgClient.TEAMMATE_TRAP_REWARD,
-                "Someone walked into a trap of your teammate " + teamMate + "!\n"
+                loser +  " walked into a trap of your teammate " + teamMate + "!\n"
                         + "Your team gained " + nbAcornsToTransfer + " acorns."
                         + ":" + teamCounts.get(clientTeams.get(clientName)));
     }
