@@ -170,7 +170,7 @@ public class Server   {
 
         // remove the trap after it is used
         trapMap.remove(imageName);
-        return "You've walked into a trap!\nYou loose " + nbAcornsToTransfer + " acorns..."
+        return "You've walked into " + trapOwner +  "'s trap!\nYou loose " + nbAcornsToTransfer + " acorns..."
                 + ":" + clientCounts.get(clientName)
                 + ":" + teamCounts.get(clientTeams.get(clientName));
     }
