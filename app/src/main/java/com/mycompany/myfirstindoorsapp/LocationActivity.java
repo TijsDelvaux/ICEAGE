@@ -45,7 +45,7 @@ public class LocationActivity extends FragmentActivity implements IndoorsService
         this.imageTargets = imageTargets;
         set_adjacentZones();
         this.allZones = new ArrayList<String>(this.adjacentZones.keySet());
-        IndoorsFactory.createInstance(imageTargets, "d2b8119f-49b4-4e21-a67b-67fa90a17b45", this, false);
+//        IndoorsFactory.createInstance(imageTargets, "d2b8119f-49b4-4e21-a67b-67fa90a17b45", this, false);
 //        Log.d("oncreate", "LocationActivity");
     }
 
