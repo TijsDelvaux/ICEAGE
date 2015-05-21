@@ -32,6 +32,8 @@ Divide the players into teams, making sure you input the exact same teamname.
 
 [START PLAYING!]
 
+The Server prints out up-to-date highscores when playing the game as well as confirmations of connection to the server.
+
 When the camera is ready you can start your hunt for acorns.
 
 When you swipe the screen from the left edge to the right, a menu appears with most of the information you will need.
