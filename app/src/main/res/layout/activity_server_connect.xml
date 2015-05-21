@@ -77,7 +77,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/server_ip"
-        android:text="10.43.48.213"
+        android:text="10.43.48.90"
         android:layout_marginBottom="20dp"
         android:textSize="20sp"
         android:inputType="phone"
